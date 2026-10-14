@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f7f4ec">
+  <meta name="description" content="A little library of browser games. Pick something fun and start playing.">
+  <title>Games — Your little arcade</title>
+  <link rel="stylesheet" href="library.css">
+  <script src="games.js" defer></script>
+  <script src="library.js" defer></script>
+</head>
+<body>
+  <div class="library">
+    <header class="header">
+      <a class="logo" href="./index.html" aria-label="Games library home"><span aria-hidden="true">✦</span> Games<span class="dot">.</span></a>
+      <span class="header-note">A little library. A lot of play.</span>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">YOUR LITTLE ARCADE</p>
+          <h1 id="page-title">Pick your next<br><em>little adventure.</em></h1>
+          <p class="intro-copy">Learn something. Chase a high score. Find your happy place.<br>Good things come in little games.</p>
+        </div>
+        <div class="arcade-art" aria-hidden="true">
+          <span class="spark spark-one">✧</span><span class="spark spark-two">✦</span>
+          <div class="controller"><div class="dpad"><i></i><i></i></div><div class="buttons"><i></i><i></i></div><div class="controller-detail"></div></div>
+          <span class="art-caption">a little more play, please.</span>
+        </div>
+      </section>
+      <section class="collection" aria-label="Game collection">
+        <div class="collection-toolbar">
+          <div class="collection-title"><h2>The collection</h2><span id="game-count">2 games</span></div>
+          <label class="search"><span aria-hidden="true">⌕</span><span class="sr-only">Find a game</span><input id="game-search" type="search" placeholder="Find a little fun…" autocomplete="off"></label>
+        </div>
+        <div id="game-filters" class="filters" aria-label="Filter games by category"></div>
+        <div id="game-grid" class="game-grid"></div>
+        <p id="empty-message" class="empty-message" role="status" hidden>No games found. Try another search or category.</p>
+        <noscript><div class="noscript-game"><h3>Type &amp; Tails</h3><p>A cozy typing adventure with Pip.</p><a href="type-tails/index.html">Play Type &amp; Tails ↗</a><h3>Bomb Major</h3><p>Dodge the chasing bomb and collect coins.</p><a href="bomb-major/index.html">Play Bomb Major ↗</a><p>Enable JavaScript to play the games.</p></div></noscript>
+      </section>
+    </main>
+    <footer><span>Small games. Happy moments.</span><span>Pick a game & make yourself at home. ♡</span></footer>
+  </div>
+</body>
+</html>

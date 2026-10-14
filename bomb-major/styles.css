@@ -1,0 +1,203 @@
+* { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: clamp(16px, 4vw, 48px);
+            background: #222222;
+            color: #eeeeee;
+            font-family: system-ui, sans-serif;
+            text-align: center;
+        }
+        h1 { margin: 0 0 12px; }
+        p { color: #cccccc; }
+        .playSpace {
+            position: relative;
+            width: min(100%, 1000px);
+            height: clamp(280px, 62vh, 650px);
+            margin: 24px auto;
+            overflow: hidden;
+            background: #99bc91;
+            border: 4px solid #526c4c;
+            border-radius: 16px;
+        }
+        .character, .bomb {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: grid;
+            place-items: center;
+            width: 64px;
+            height: 64px;
+            font-size: 48px;
+            line-height: 1;
+            user-select: none;
+        }
+        .character {
+            z-index: 2;
+            padding: 0;
+            background: #ffffff33;
+            border: 0;
+            border-radius: 50%;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .character:focus-visible { outline: 3px solid white; }
+        .character:disabled { cursor: default; }
+        .character.cat { background: #ffe4ae88; }
+        .character.bomb-target { outline: 3px solid #e53935; outline-offset: 2px; }
+        .character.cat-running {
+            z-index: 3;
+            background: transparent;
+            pointer-events: none;
+            transition: transform 900ms ease-in;
+        }
+        .cat-running .character-number { display: none; }
+        .character-number {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 20px;
+            padding: 3px;
+            border-radius: 50%;
+            background: #26354a;
+            color: white;
+            font: bold 12px system-ui, sans-serif;
+        }
+        .bomb { pointer-events: none; z-index: 2; }
+        .freeze-meter {
+            position: absolute;
+            bottom: 2px;
+            left: 0;
+            width: 64px;
+            padding: 3px;
+            border-radius: 5px;
+            background: #173b57;
+            color: white;
+            font: bold 12px system-ui, sans-serif;
+        }
+        .freeze-track {
+            height: 5px;
+            margin-top: 3px;
+            overflow: hidden;
+            border-radius: 3px;
+            background: #456277;
+        }
+        .freeze-fill { height: 100%; background: #a8edff; transform-origin: left; }
+        .scoreboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px 24px;
+            margin: 20px 0 12px;
+            font-weight: bold;
+        }
+        .coin {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 24px;
+            height: 24px;
+            display: grid;
+            place-items: center;
+            border: 3px solid #bd7f00;
+            border-radius: 50%;
+            background: #ffe17b;
+            color: #805100;
+            font: bold 15px system-ui, sans-serif;
+            pointer-events: none;
+        }
+        .coin.attracted { box-shadow: 0 0 10px #fff4a3; }
+        .magnet {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            display: grid;
+            place-items: center;
+            z-index: 3;
+            border: 2px solid #173b57;
+            border-radius: 10px;
+            background: #d8f5ff;
+            box-shadow: 0 0 12px #e3faff;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .magnet:focus-visible { outline: 3px solid white; }
+        .clickyBlock.magnet-active { box-shadow: 0 0 20px #ffe17b; }
+        .bomb.frozen {
+            background: #b5efffcc;
+            border-radius: 50%;
+            box-shadow: 0 0 16px #e3faff;
+        }
+        .clickyBlock {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 96px;
+            height: 96px;
+            z-index: 1;
+            border: 0;
+            border-radius: 10px;
+            background: #245cdb;
+            color: white;
+            font: bold 16px system-ui, sans-serif;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .clickyBlock.clicked { background: #e53935; }
+        .explosion {
+            position: absolute;
+            z-index: 3;
+            width: 120px;
+            height: 120px;
+            display: grid;
+            place-items: center;
+            font-size: 100px;
+            pointer-events: none;
+            animation: explode 650ms ease-out forwards;
+        }
+        @keyframes explode {
+            from { transform: scale(0.3); opacity: 1; }
+            to { transform: scale(1.8); opacity: 0; }
+        }
+        .gameOver {
+            position: absolute;
+            inset: 0;
+            z-index: 4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #222222dd;
+        }
+        .gameOver h2 { font-size: 40px; margin: 0; }
+        .restart {
+            padding: 12px 24px;
+            border: 0;
+            border-radius: 8px;
+            background: #ffe083;
+            color: #222222;
+            font: bold 18px system-ui, sans-serif;
+            cursor: pointer;
+        }
+        .sound-toggle {
+            padding: 8px 14px;
+            margin: 0 0 12px;
+            border: 1px solid #778899;
+            border-radius: 8px;
+            background: #334454;
+            color: #eeeeee;
+            font: bold 14px system-ui, sans-serif;
+            cursor: pointer;
+        }
+        .sound-toggle:focus-visible { outline: 3px solid #ffe083; }
+        .sound-toggle:disabled { opacity: 0.6; cursor: default; }
+        [hidden] { display: none !important; }
+
+/* Navigation back to the shared game library. */
+.library-navigation { width: min(100%, 1000px); margin: 0 auto 20px; text-align: left; }
+.library-navigation a { color: #c9d9c4; font-size: 13px; text-decoration: none; }
+.library-navigation a:hover { color: #ffe083; text-decoration: underline; }
+.library-navigation a:focus-visible { outline: 3px solid #ffe083; outline-offset: 4px; }

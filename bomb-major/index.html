@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bomb Major</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="game.js" defer></script>
+</head>
+<body>
+    <nav class="library-navigation" aria-label="Library"><a href="../index.html">← Games library</a></nav>
+    <h1>Bomb Major</h1>
+    <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">Sound on</button>
+    <div class="scoreboard">
+        <span>Saved coins: <span id="coinTotal">0</span></span>
+        <span>This round: <span id="roundCoins">0</span></span>
+        <span>Alive: <span id="aliveCount">1</span></span>
+        <span id="nextCharacter">Next character in 10 coins</span>
+    </div>
+    <p id="coinSaveNote" hidden>Coin saving is unavailable in this browser. Coins will stay for this session only.</p>
+    <div id="status" role="status">Click the character or Click Me block to start.</div>
+    <div class="playSpace" aria-label="Game area">
+        <button class="clickyBlock" type="button">Click Me</button>
+        <button class="character" type="button" aria-label="Move character to a random position">
+            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                <path d="M25 43 L24 57 M39 43 L40 57" fill="none" stroke="#26354a" stroke-width="9" stroke-linecap="round"/>
+                <path d="M23 29 L14 40 M41 29 L50 40" fill="none" stroke="#ffcd94" stroke-width="7" stroke-linecap="round"/>
+                <rect x="21" y="25" width="22" height="22" rx="7" fill="#2476e5"/>
+                <circle cx="32" cy="15" r="12" fill="#ffcd94" stroke="#26354a" stroke-width="2"/>
+                <circle cx="28" cy="14" r="1.5" fill="#26354a"/>
+                <circle cx="36" cy="14" r="1.5" fill="#26354a"/>
+                <path d="M28 19 Q32 23 36 19" fill="none" stroke="#26354a" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <template id="catTemplate">
+            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                <path d="M42 46 Q60 48 55 30" fill="none" stroke="#cf8429" stroke-width="7" stroke-linecap="round"/>
+                <ellipse cx="30" cy="43" rx="15" ry="16" fill="#e8a343"/>
+                <path d="M15 22 L12 5 L26 15 M35 15 L49 5 L46 24" fill="#e8a343" stroke="#85511b" stroke-width="2" stroke-linejoin="round"/>
+                <ellipse cx="30" cy="25" rx="18" ry="15" fill="#f6be67"/>
+                <ellipse cx="23" cy="24" rx="2" ry="3" fill="#26354a"/>
+                <ellipse cx="37" cy="24" rx="2" ry="3" fill="#26354a"/>
+                <path d="M27 29 L33 29 L30 32 Z" fill="#bd6171"/>
+                <path d="M30 32 Q26 37 23 33 M30 32 Q34 37 37 33 M10 28 L21 30 M10 34 L21 32 M39 30 L50 28 M39 32 L50 34" fill="none" stroke="#85511b" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M21 54 L21 58 M37 54 L37 58" stroke="#85511b" stroke-width="7" stroke-linecap="round"/>
+            </svg>
+        </template>
+        <template id="magnetTemplate">
+            <button class="magnet" type="button" aria-label="Activate magnet to pull all coins to ClickyBlock">
+                <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+                    <path d="M10 8 V24 A10 10 0 0 0 30 24 V8" fill="none" stroke="#e53935" stroke-width="8"/>
+                    <path d="M10 5 V13 M30 5 V13" stroke="#173b57" stroke-width="8"/>
+                </svg>
+            </button>
+        </template>
+        <div class="bomb" aria-label="Chasing bomb">
+            <span aria-hidden="true">💣</span>
+            <div class="freeze-meter" hidden aria-hidden="true">
+                <span id="freezeCountdown"></span>
+                <div class="freeze-track"><div class="freeze-fill"></div></div>
+            </div>
+        </div>
+        <div class="gameOver" hidden>
+            <h2>Game over!</h2>
+            <p id="result"></p>
+            <button class="restart" type="button">Play again</button>
+        </div>
+    </div>
+
+</body>
+</html>
