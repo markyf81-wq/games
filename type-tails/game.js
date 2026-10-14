@@ -1,58 +1,65 @@
 'use strict';
 (() => {
   const $ = id => document.getElementById(id);
-  // Ordered QWERTY lessons: introduce reaches gradually, then build useful patterns.
-  // Each level has two 20-word lessons, alternated when a full round is completed.
+  // Randomized QWERTY practice: introduce reaches gradually, then build useful patterns.
+  // Each round samples 20 different words from its difficulty's combined focus groups.
+  const PRACTICE_LETTERS = ['asdfghjkl','erui','top','qwy','cvbnm','zx','',''];
   const LEVELS = [
     { name: 'Beginner', icon: '🌱', unlockWpm: 0, seconds: 14, base: 40,
       description: 'Home-row foundations. Rest on F and J.', keys: 'A S D F G H J K L',
       lessons: [
-        { name: 'Home-row foundations', words: 'a as sad lad dad add ask all fall hall half dash glad flag flask flash salad glass shall falls' },
-        { name: 'Home-row letter patterns', words: 'ash has gas gag sag fad fads dads lads adds lash gash hash flag flags glad gala salad flash glass' }
+        { name: 'Home-row foundations', words: 'a as all ash add adds ad ads ask asks dad dads fad fads sad lad lads lass lasses fall falls half hall halls has had dash dashes flash flashes lash lashes' },
+        { name: 'Home-row letter patterns', words: 'gas gag gags sag sags glad flag flags flask flasks gala galas salad salads glass glasses gash gashes hash hashes slash slashes shall sash sashes gall galls alas aha sass' }
       ] },
     { name: 'Explorer', icon: '🧭', unlockWpm: 12, seconds: 13, base: 50,
       description: 'Reach up to E, R, U, and I, then return home.', keys: '+ E R U I',
       lessons: [
-        { name: 'First upper-row reaches', words: 'aid air ear are era sir ride side slide hide idea aide fire file life like sail sale seal dear' },
-        { name: 'Home-to-upper-row rhythm', words: 'die lie lid led red rag far jar jade jail rail rare rule rise real hear here hired skilled fulfilled' }
+        { name: 'First upper-row reaches', words: 'aid aids air airs ear ears are era eras sir sirs ride rides side sides slide slides hide hides idea ideas aide aides fire fires file files life like likes sail sails sale sales seal seals dear dears read reads reader readers lead leads leader leaders red reed reeds freed free fees fee feel feels fear fears fair fairs' },
+        { name: 'Home-to-upper-row rhythm', words: 'die dies lied lie lies lid lids led rag rags far jar jars jade jades jail jails rail rails rare rarer rule rules rise rises real hear hears here herd herds heir heirs hire hires hired hill hills fill fills filled skill skills skilled full fuller fulfill fulfilled share shares shared sheer shade shades shake shakes safe safer safeguard' }
       ] },
     { name: 'Adventurer', icon: '🍃', unlockWpm: 18, seconds: 12, base: 60,
       description: 'Add T, O, and P with familiar short words.', keys: '+ T O P',
       lessons: [
-        { name: 'Index and right-hand reaches', words: 'it to at top tap tip pet pot put pair pear rope road read tale tile tire tide title trail' },
-        { name: 'Smooth upper-row transitions', words: 'tea eat ate hat hot hit hop hope pile pale pole part sort shop drop trip tree root stood street' }
+        { name: 'Index and right-hand reaches', words: 'it to at top tap tip pet pot put pair pear rope road read tale tile tire tide title trail out our up or oil oils old older sore rose lose loss door doors floor floors poor pool pools proof roof roofs foot feet tooth teeth letter letters little litter pilot pilots hotel hotels' },
+        { name: 'Smooth upper-row transitions', words: 'tea eat ate hat hot hit hop hope pile pale pole part sort shop drop trip tree root stood street later latter late latest plate plates paper papers order orders other others their there these those this that three third thirst straight please pleased repeat repeats report reports reporter reporters prepare prepared repair repaired proper spare spares sport sports spider spiders stripe stripes' }
       ] },
     { name: 'Wordsmith', icon: '✍️', unlockWpm: 22, seconds: 12, base: 65,
       description: 'Finish the upper row with Q, W, and Y.', keys: '+ Q W Y',
       lessons: [
-        { name: 'Upper-row confidence', words: 'we why way say day dry shy fly try toy row owl low law lay play stay away your quiet' },
-        { name: 'Both hands working together', words: 'was saw wear year yard word work wish with worry easy early sweet towel yellow follow flower square quality queue' }
+        { name: 'Upper-row confidence', words: 'we why way say day dry shy fly try toy row owl low law lay play stay away your quiet you yes yet too two few wet week weeks weed weeds wood woods wool world worlds would wild wider wide yellow yell yells yelled wish wishes whole while white wheat who whose where whether weather water waters wayward weekday weekdays' },
+        { name: 'Both hands working together', words: 'was saw wear year yard word work wish with worry easy early sweet towel yellow follow flower square quality queue quieter quietly quite quit quits quill quills quilt quilts query queries weary weekly worried yesterday ready really royal royalty loyalty tidy title style stylus story stories steady quest quests request requests require requires required equal equals equally equality sweater sweaters sweeter sweetly whisper whispers whispered' }
       ] },
     { name: 'Trailblazer', icon: '🔥', unlockWpm: 26, seconds: 11, base: 75,
       description: 'Reach down to C, V, B, N, and M.', keys: '+ C V B N M',
       lessons: [
-        { name: 'First lower-row reaches', words: 'can man van cab cap map mat nap net men new now cow come move name main home book calm' },
-        { name: 'Lower-row word families', words: 'bed bad bag big bun bus bat bit bind mind mine nice mice milk meal make bake back brick bloom' }
+        { name: 'First lower-row reaches', words: 'can man van cab cap map mat nap net men new now cow come move name main home book calm cat cats dog dogs cows bird birds bunny rabbit mouse mice horse sheep pig pigs goat goats bear bears lion lions tiger frog frogs duck ducks chick chicken homes room rooms names family friend friends number numbers learn learning' },
+        { name: 'Lower-row word families', words: 'bed bad bag big bun bus bat bit bind mind mine nice mice milk meal make bake back brick bloom hand hands finger fingers thumb thumbs button buttons carpet curtain curtains cabin bench branch chair couch blanket garden green grass seed seeds plant plants blooms beach ocean sand moon morning night sun sunny rain rainy cloud cloudy music melody coffee cocoa cookie cookies honey bread butter candle' }
       ] },
     { name: 'Expert', icon: '💎', unlockWpm: 30, seconds: 11, base: 85,
       description: 'Complete the letter keys with Z and X.', keys: '+ Z X',
       lessons: [
-        { name: 'Z and X without the rush', words: 'zip zap zig zag zoo zero zone zest size fizz buzz jazz box fox wax mix six fix next exit' },
-        { name: 'All three rows in motion', words: 'axe axed taxi text extra exact relax complex puzzle frozen zipper zigzag fuzzy dizzy lazy crazy amaze example expert explain' }
+        { name: 'Z and X without the rush', words: 'zip zips zipped zipping zap zaps zig zag zero zeros zone zones zoom zooms zoo zoos zest zesty size sized sizes prize prizes fizz fizzy buzz buzzy buzzing jazz jazzy box boxes fox foxes wax waxy mix mixes mixed mixing six sixty fix fixes fixed fixing next exit exits extra extras text texts taxi taxis' },
+        { name: 'All three rows in motion', words: 'axe axed axle axis oxygen foxglove index pixel pixels pizza dozen hazel zebra blazer bronze breeze frozen freeze freezing freezer example examples examine examined exercise exercises explain explained expert experts explore explored relax relaxed remix amazing maximum minimum complex complexity puzzle puzzles puzzled zipper zippers zigzag zigzags cozy fuzzy dizzy lazy crazy amaze' }
       ] },
     { name: 'Master', icon: '👑', unlockWpm: 35, seconds: 10, base: 95,
       description: 'Build muscle memory for TH, SH, CH, and ST.', keys: 'TH · SH · CH · ST',
       lessons: [
-        { name: 'Common TH and SH patterns', words: 'thin then than them think thing thank three throw thought she ship shop shell shine share shape short shoot should' },
-        { name: 'Common CH and ST patterns', words: 'chat chin chip chop chair chain check chest child choose stop step star stand start stone still string strong stretch' }
+        { name: 'Common TH and SH patterns', words: 'thin then than them they their there these those thing things think thinks thinking thank thanks thankful three third thirty threw throw thrown throws through thought thoughts thick thickness thaw thawed thumb thumbs thunder theme themes thermal thread threads thrill thrills thrive she ship ships shipping shop shops shopping shell shells shelf shelves shine shines shining share shares shared sharing shape shapes short shorts shorter shoot shoots should shower showers shadow shadows shelter shelters shout shouts shouted sharp sharper sheep sheet sheets shoe shoes shake shakes shook shore shrink shrunk' },
+        { name: 'Common CH and ST patterns', words: 'chat chats chatting chin chip chips chop chops chair chairs chain chains check checks checked checking chest child children choose chosen choice choices chase chased change changes changed cheese cherry cheer cheers chilly chicken chocolate stop stops stopped step steps stepping star stars stand stands standing start starts started stone stones still stitch stitches story stories store stores street streets string strings strong stronger strength stretch stretched straight stripe stripes steady study studies student students' }
       ] },
     { name: 'Legend', icon: '🌟', unlockWpm: 40, seconds: 10, base: 100,
       description: 'Find a steady flow with everyday word families.', keys: 'ER · ING · ED · FUL',
       lessons: [
-        { name: 'Everyday words and endings', words: 'play player playing played help helper helping helped work worker working worked read reader reading write writer writing type typing' },
-        { name: 'A confident, comfortable flow', words: 'care careful caring cared hope hopeful hoping hoped use useful using used move moving moved music practice progress together confidence' }
+        { name: 'Everyday words and endings', words: 'play player players playing played help helper helpers helping helped work worker workers working worked read reader readers reading write writer writers writing wrote type typed types typing learn learner learners learning learned paint painter painters painting painted walk walker walkers walking walked talk talking talked cook cooking cooked bake baker bakers baking baked' },
+        { name: 'A confident, comfortable flow', words: 'care careful carefully caring cared hope hopeful hopefully hoping hoped use useful usefully using used move moves moving moved music musical practice practiced practicing progress together confidence comfort comfortable kindness happy happily happiness ready really nearly slowly quickly softly gently loudly quietly brightly safely wonder wonderful joy joyful joyfully beauty beautiful beautifully color colorful helpful playful peaceful thankful friendly friendship' }
       ] }
-  ].map(level => ({ ...level, lessons: level.lessons.map(lesson => ({ ...lesson, words: lesson.words.split(' ') })) }));
+  ].map((level, index) => {
+    const lessons = level.lessons.map(lesson => ({ ...lesson, words: [...new Set(lesson.words.split(' '))] }));
+    const allowed = new Set(PRACTICE_LETTERS.slice(0,index + 1).join(''));
+    // Combine both focus groups, deduplicate, and keep every word within learned keys.
+    const wordPool = [...new Set(lessons.flatMap(lesson => lesson.words))].filter(word => [...word].every(letter => allowed.has(letter)));
+    return { ...level, lessons, wordPool };
+  });
 
   const ITEMS = [
     { id: 'bow', name: 'Sunday bow', desc: 'A fancy little neck hug.', price: 300, category: 'pet', slot: 'bow', art: '🎀' },
@@ -298,6 +305,14 @@
   }
   $('pet-button').addEventListener('click', () => { petReaction(true); audio.effect('boop'); focusTypingInput(); });
 
+  function selectRoundWords(level) {
+    const words = level.wordPool.slice();
+    for (let index = words.length - 1; index > 0; index--) {
+      const other = Math.floor(Math.random() * (index + 1));
+      [words[index],words[other]] = [words[other],words[index]];
+    }
+    return words.slice(0,20);
+  }
   function focusTypingInput(select = false) {
     if (!round || round.paused || round.transitioning) return;
     $('typing-input').focus({ preventScroll: true });
@@ -318,8 +333,8 @@
     if (round || state.selected > unlocked()) return;
     audio.init(); audio.effect('start');
     const now = performance.now();
-    const level = LEVELS[state.selected], lessonIndex = state.lessonRounds[state.selected] % level.lessons.length;
-    round = { level: state.selected, lessonIndex, words: level.lessons[lessonIndex].words.slice(), index: 0, correct: 0, score: 0, streak: 0, bestStreak: 0, chars: 0, typed: 0, mistakes: 0, startLevel: unlocked(), started: now, pausedMs: 0, paused: false, transitioning: false, typedSeconds: 0 };
+    const level = LEVELS[state.selected];
+    round = { level: state.selected, words: selectRoundWords(level), index: 0, correct: 0, score: 0, streak: 0, bestStreak: 0, chars: 0, typed: 0, mistakes: 0, startLevel: unlocked(), started: now, pausedMs: 0, paused: false, transitioning: false, typedSeconds: 0 };
     setPlaying(true); $('round-score').textContent = '0'; $('round-correct').textContent = '0 / 20';
     say("I'll handle the cheering. You handle the typing!",4000);
     showWord(); cancelAnimationFrame(frame); frame = requestAnimationFrame(tick);
@@ -337,7 +352,7 @@
     $('typing-input').classList.remove('has-error');
     $('round-progress').textContent = 'WORD ' + String(round.index + 1).padStart(2,'0') + ' / 20';
     $('combo-display').textContent = round.streak >= 2 ? '✦ ' + round.streak + ' word streak' : '✦ You got this';
-    $('practice-cue').textContent = level.lessons[round.lessonIndex].name + ' · lesson ' + (round.lessonIndex + 1) + ' of ' + level.lessons.length;
+    $('practice-cue').textContent = level.name + ' practice · 20 random words';
     $('target-word').classList.toggle('long', target.length >= 13); renderWord(); fitWord();
     $('input-hint').textContent = 'No enter key needed. Just type!';
     $('time-left').textContent = level.seconds.toFixed(1) + 's'; $('timer-fill').style.width = '100%'; $('timer-fill').classList.remove('urgent');
