@@ -9,7 +9,7 @@ A shared library for small browser games. Open `index.html` in Google Chrome and
 | Type & Tails | [Play](type-tails/index.html) | [AGENTS.md](type-tails/AGENTS.md) |
 | Bomb Major | [Play](bomb-major/index.html) | [AGENTS.md](bomb-major/AGENTS.md) |
 
-Type & Tails is a cozy typing game with 20-word rounds, eight unlockable difficulties, a pet and room shop, music, sound effects, and browser-local saved progress.
+Type & Tails is a cozy typing game with 20-word rounds, eight difficulties unlocked by completed-round WPM, 16 ordered touch-typing lessons, a pet and room shop, music, sound effects, and browser-local saved progress.
 
 Bomb Major is a survival arcade game with a chasing bomb, a bouncing freeze block, coin collection, extra characters, cat and magnet drops, and generated audio. Its original single HTML file is now split into HTML, CSS, and JavaScript inside `bomb-major/`.
 

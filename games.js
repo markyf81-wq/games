@@ -5,14 +5,14 @@ const GAME_CATALOG = [
     id: 'type-tails',
     title: 'Type & Tails',
     subtitle: 'A little practice. A lot of personality.',
-    description: 'Grow your typing skills with Pip, your playful cat. Unlock harder words, earn coins, and decorate your cozy little room.',
+    description: 'Practice touch typing with Pip, your playful cat. Follow home-row and keyboard-reach lessons, unlock new difficulties by speed, earn coins, and decorate your cozy little room.',
     category: 'Learning',
     tags: ['Typing', 'Pets', 'Cozy'],
     path: 'type-tails/index.html',
     image: 'previews/type-tails.svg',
     imageAlt: 'Pip the cat in a sunny room with a sofa, window, and toys',
     accent: '#dce7d8',
-    detail: '20 words per round · 8 difficulties'
+    detail: '16 typing lessons · 8 difficulties'
   },
   {
     id: 'bomb-major',

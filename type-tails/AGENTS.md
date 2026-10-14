@@ -16,13 +16,14 @@ Open `index.html` directly in Google Chrome, or enter from the library at `../in
 
 ## Mechanics and controls
 
-- `LEVELS` defines eight difficulties: Beginner (0 lifetime points), Explorer (1,400), Adventurer (4,000), Wordsmith (7,500), Trailblazer (12,000), Expert (18,000), Master (26,000), and Legend (36,000).
-- A round shuffles its chosen level's unique word pool and selects exactly 20 words. Every level must retain at least 20 unique words.
+- `LEVELS` defines eight difficulties. Unlock Explorer by completing Beginner at 12 WPM, Adventurer by completing Explorer at 18 WPM, Wordsmith by completing Adventurer at 22 WPM, Trailblazer by completing Wordsmith at 26 WPM, Expert by completing Trailblazer at 30 WPM, Master by completing Expert at 35 WPM, and Legend by completing Master at 40 WPM. The `unlockWpm` value belongs to the level being unlocked. Lifetime XP/coins never unlock further levels.
+- Each level contains two ordered 20-word lessons. `lessonRounds[level]` selects them in alternation after completed rounds; early exits replay the same lesson. Never shuffle these lessons or introduce unlearned keys before their stage. Home-row words come first, then E/R/U/I, T/O/P, Q/W/Y, C/V/B/N/M, Z/X, common TH/SH/CH/ST patterns, and everyday word endings. Every lesson must contain exactly 20 words. Keep the eight level indices stable for existing saves.
+- `start-footnote` must exist in the HTML: `setPlaying()` updates it. A missing ID previously threw before `showWord()` and prevented the word/timer from starting. `showWord()` displays the first target and uses `focusTypingInput(true)` to focus/select the cleared input; round start repeats focus on the next animation frame to handle dialog focus restoration. Keep synchronous focus for mobile keyboards.
 - Level selection happens before a round. Locked options display their thresholds. Any unlocked level can be replayed. Do not force players to play their highest tier.
 - The per-word countdown is 14 seconds at Beginner and falls to 10 at Master/Legend. This is not a single timer for the whole round.
 - `handleTyping()` compares the input case-insensitively to the displayed word. A match submits automatically; Enter is unnecessary. Backspace corrects mistakes. Paste/drop is blocked to keep speed rewards based on typing. Preserve composition handling for text input.
 - Correct words earn the level's 40–100 base points, a speed bonus up to 80, and a streak bonus increasing by five per additional consecutive word up to 25. Timeout resets the streak and advances the round without a reward.
-- Correct words credit lifetime XP and spendable coins immediately and save them. Spending coins must never decrease lifetime XP or relock levels.
+- Correct words credit lifetime XP and spendable coins immediately and save them. Spending coins must never decrease lifetime XP or relock levels. `bestWpmByLevel` is updated only after a completed 20-word round; early exits cannot unlock levels. `unlockedLevel` retains earned access permanently. Speed uses correct characters divided by five over active word time (including timed-out words, excluding pauses/transitions), rounded down so borderline results do not unlock early.
 - Every correct word triggers a randomized funny pet action and bubble. `reactions`, `petReaction()`, and the `pet-*` CSS animations work together.
 - Escape/Pause opens the pause dialog; switching to another tab also pauses. Resume restores the remaining word time without charging paused time. Pausing during a word transition must continue with the next word on resume, without crediting a word twice or skipping one.
 - Finishing early keeps already-earned points. Results show correct words, rewards, typing accuracy, streak, and WPM; WPM uses correct characters divided by five and active word time.
@@ -31,7 +32,7 @@ Open `index.html` directly in Google Chrome, or enter from the library at `../in
 
 `SAVE_KEY` is `type-and-tails-v1`. Keep it stable or implement an explicit compatible migration.
 
-Persisted fields: `xp`, `coins`, `owned` (item ID array), `equipped` (slot-to-item-ID object), `selected` (difficulty index), `rounds`, `bestWpm`, `music`, and `sound`. Loaded values are validated. Unknown items and unowned equipment are ignored. Storage failures must allow play and show the saving limitation.
+Persisted fields: `xp`, `coins`, `owned` (item ID array), `equipped` (slot-to-item-ID object), `selected` (difficulty index), `rounds`, `lessonRounds` (eight nonnegative per-level completion counters), `bestWpmByLevel` (eight completed-round speed records), `unlockedLevel` (highest permanently earned difficulty), `bestWpm`, `music`, and `sound`. Loaded values are validated. Older saves without `lessonRounds` start each course at lesson one without changing XP, coins, or inventory. If `unlockedLevel` is absent, `LEGACY_POINT_TIERS` preserves difficulties already earned under the former point-based system once; subsequent unlocks use only completed-round WPM. Never use the legacy point tiers to grant new unlocks after migration. Unknown items and unowned equipment are ignored. Storage failures must allow play and show the saving limitation.
 
 Active-round state and animation/timer handles are transient. Reloading does not restore an in-progress round, but rewards already credited are saved. Do not replace or clear a player's stored progress during ordinary edits. Browser storage is scoped to the page origin; moving between hosts or local-file locations may expose different storage.
 
@@ -43,12 +44,12 @@ Active-round state and animation/timer handles are transient. Reloading does not
 
 ## Audio and presentation
 
-The `audio` object synthesizes background melody/chords and effects with Web Audio oscillator/envelope nodes. No audio assets or network requests are needed. Create/resume its AudioContext only after a real user gesture. Music and effects have separate gains and saved switches. Hide/mute scheduling follows page visibility. Disconnect completed notes and avoid adding duplicate music intervals when starting another round or toggling audio.
+`MUSIC_SCORE` expands four eight-bar sections into two varied passes (64 bars, 512 steps at 0.42 seconds each; about 3m 35s). `MUSIC_PHRASES`, `MUSIC_HARMONIES`, and `MUSIC_SECTIONS` define melodies, voiced/arpeggiated chords, bass, rests, and quieter sections. Keep the arrangement varied and avoid reverting to a short repeating phrase. The `audio` object synthesizes background melody/chords and effects with Web Audio oscillator/envelope nodes. No audio assets or network requests are needed. Create/resume its AudioContext only after a real user gesture. Music and effects have separate gains and saved switches. Hide/mute scheduling follows page visibility. Disconnect completed notes and avoid adding duplicate music intervals when starting another round or toggling audio.
 
-`fitWord()` sizes long words to the typing card and runs on resize. Keep beginner words large, expert words readable, mobile input usable, and motion preferences respected. The library link must point to `../index.html`.
+`fitWord()` sizes long words to the typing card and runs on resize. Keep beginner words large, expert words readable, mobile input usable, and motion preferences respected. The library link must point to `../index.html`. The speech bubble is raised above Pip; during play on narrow screens it sits beside Pip to avoid both the cat and the typing card. `.room-card.is-playing` controls this responsive placement.
 
 ## Editing and verification
 
-For tuning difficulty, edit `LEVELS`; for outfits/decorations, edit `ITEMS`, `HATS`, and `applyDecorations()` together; for reactions, edit `reactions` and matching CSS keyframes. Update this guide and `README.txt` when mechanics or unlock tiers change.
+For tuning difficulty and lessons, edit `LEVELS`; for outfits/decorations, edit `ITEMS`, `HATS`, and `applyDecorations()` together; for reactions, edit `reactions` and matching CSS keyframes. Update this guide and `README.txt` when mechanics or speed targets change.
 
 Follow the root verification policy: source review is normal; do not automatically run browser checks or test tools. There is currently no automated test suite. If Mark requests a focused browser check, relevant scenarios are correct/incorrect/timeout input, pause/resume around the last word, unlocked/locked selection, shop affordability/equipping, independent audio switches, saved progress after reload, narrow-screen words, and the return link. Report only checks actually performed.

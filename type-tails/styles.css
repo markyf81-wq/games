@@ -44,7 +44,7 @@ button:not(:disabled):active{transform:translateY(2px)}
 .welcome-card>span:not(.welcome-star){display:block;font-family:var(--serif);font-size:20px;letter-spacing:-.5px}
 .welcome-star{display:block;font-size:25px;color:#ab895d;margin-bottom:3px}
 .welcome-card small{display:block;font-size:10px;color:#88917c;margin-top:7px}
-.pet-bubble{position:absolute;bottom:37%;left:50%;transform:translateX(-50%);font-size:10px;background:#fffcf1;padding:8px 14px;border-radius:11px;box-shadow:0 3px 9px #79674b0d;white-space:nowrap;max-width:95%}
+.pet-bubble{position:absolute;bottom:50%;left:50%;transform:translateX(-50%);font-size:10px;background:#fffcf1;padding:8px 14px;border-radius:11px;box-shadow:0 3px 9px #79674b0d;white-space:nowrap;max-width:95%}
 .pet-bubble:after{content:'';position:absolute;top:100%;left:45%;border:6px solid transparent;border-top-color:#fffcf1}
 .typing-area{position:absolute;top:6%;left:50%;transform:translateX(-50%);width:62%;max-width:470px;min-width:260px;background:#fffdf3ed;padding:17px 24px 13px;border:1px solid #fffdf6;border-radius:14px;box-shadow:0 9px 30px #5b695611;backdrop-filter:blur(8px);text-align:center}
 .word-meta{display:flex;justify-content:space-between;font-size:8px;letter-spacing:1.1px;color:#8b927e;font-weight:700}
@@ -286,7 +286,7 @@ dialog{padding:26px 22px}
 .target-word.long{font-size:25px}
 .typing-area input{padding:7px 8px;font-size:13px}
 .input-hint{font-size:8px}
-.pet-bubble{bottom:36%;font-size:8px;padding:5px 8px}
+.pet-bubble{bottom:50%;font-size:8px;padding:5px 8px}
 .welcome-card{width:245px;padding:13px}
 .welcome-card>span:not(.welcome-star){font-size:18px}
 .room-top{min-height:42px;padding:0 13px;font-size:10px}
@@ -315,3 +315,7 @@ footer{gap:12px}
 .library-back{display:inline-block;margin-top:16px;color:#86917b;font-size:11px;text-decoration:none}
 .library-back:hover{color:#456b51;text-decoration:underline}
 .library-back:focus-visible{outline:3px solid #ce995c;outline-offset:4px}
+
+/* The speech bubble stays above Pip, including hats; lesson cues identify the practice. */
+.practice-cue{font-size:9px;color:#819073;margin:7px 0 0;line-height:1.4}
+@media(max-width:780px){.room-card.is-playing .pet-bubble{left:18%;bottom:30%;max-width:29%;white-space:normal;text-align:center}.practice-cue{font-size:8px}}

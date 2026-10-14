@@ -1,16 +1,58 @@
 'use strict';
 (() => {
   const $ = id => document.getElementById(id);
+  // Ordered QWERTY lessons: introduce reaches gradually, then build useful patterns.
+  // Each level has two 20-word lessons, alternated when a full round is completed.
   const LEVELS = [
-    { name: 'Beginner', icon: '🌱', tier: 0, seconds: 14, base: 40, description: 'Small words. Big beginnings.', words: 'cat dog sun hat cup bed red fox pen box pig bus map jam top pot egg bag ant bat run sit hop get fun hot log ten lip wet big cow bug sky day toy six win net ink nut' },
-    { name: 'Explorer', icon: '🧭', tier: 1400, seconds: 13, base: 50, description: 'Find your rhythm with 4-letter words.', words: 'home frog moon star tree leaf fish bird rain book cake milk play warm kind jump blue pink gold kite duck bear boat nest seed soft cozy paws tail word fire snow love wave wind hill camp lamp drum' },
-    { name: 'Adventurer', icon: '🍃', tier: 4000, seconds: 12, base: 60, description: 'A little stretch. A little adventure.', words: 'happy plant smile cloud dream beach brave house green bloom light music dance laugh sweet sunny water quiet apple peach magic river forest pocket little kitten garden typing cookie gentle yellow window flower feather puzzle' },
-    { name: 'Wordsmith', icon: '✍️', tier: 7500, seconds: 12, base: 65, description: 'Longer words, lovely little victories.', words: 'morning blanket sparkle sunshine playful curious rainbow whisper journey cushion meadow adventure mountain careful kindness treasure glowing peaceful twinkle welcome colorful balance explore autumn curious picture weekend imagine lantern blossom practice planet' },
-    { name: 'Trailblazer', icon: '🔥', tier: 12000, seconds: 11, base: 75, description: 'Build confidence with tricky letter patterns.', words: 'butterfly wonderful delighted chocolate friendship telescope waterfall fantastic pineapple sunflower mysterious celebrate confidence discovery delicious beautiful creativity happiness beginning attention rhythm squirrel flourish courageous knowledge biscuit tomorrow surprise strength scissors exercise' },
-    { name: 'Expert', icon: '💎', tier: 18000, seconds: 11, base: 85, description: 'Precision, patience, and a few surprises.', words: 'extraordinary imagination kaleidoscope encyclopedia enthusiastic mischievous opportunity perseverance pronunciation constellation appreciation comfortable environment temperature spectacular adventurous independent architecture magnificent accomplishment responsibility breathtaking unforgettable conversation photograph generosity determination experience silhouette magnificent' },
-    { name: 'Master', icon: '👑', tier: 26000, seconds: 10, base: 95, description: 'Take on words with serious personality.', words: 'onomatopoeia quintessential synchronization idiosyncratic conscientious simultaneously rehabilitation extraterrestrial metamorphosis entrepreneurial reconnaissance philosophical sophistication transcendental indistinguishable disproportionate characterization incomprehensible electromagnetic interdisciplinary susceptibility inconsequential juxtaposition bureaucratic comprehensive authenticity extraordinary abbreviation phenomenological crystallization' },
-    { name: 'Legend', icon: '🌟', tier: 36000, seconds: 10, base: 100, description: 'The ultimate finger gymnastics. You got this.', words: 'electroencephalogram counterrevolutionary indistinguishability compartmentalization institutionalization internationalization uncharacteristically incomprehensibility psychophysiological multidisciplinary telecommunications disproportionateness crystallographically acknowledgement susceptibility conscientiousness misinterpretation entrepreneurship anthropomorphization deoxyribonucleic photosynthesis thermodynamics epistemological synchronization quintessential extracurricular serendipitous incontrovertible unconventionally discombobulation' }
-  ].map(level => ({ ...level, words: [...new Set(level.words.split(' '))] }));
+    { name: 'Beginner', icon: '🌱', unlockWpm: 0, seconds: 14, base: 40,
+      description: 'Home-row foundations. Rest on F and J.', keys: 'A S D F G H J K L',
+      lessons: [
+        { name: 'Home-row foundations', words: 'a as sad lad dad add ask all fall hall half dash glad flag flask flash salad glass shall falls' },
+        { name: 'Home-row letter patterns', words: 'ash has gas gag sag fad fads dads lads adds lash gash hash flag flags glad gala salad flash glass' }
+      ] },
+    { name: 'Explorer', icon: '🧭', unlockWpm: 12, seconds: 13, base: 50,
+      description: 'Reach up to E, R, U, and I, then return home.', keys: '+ E R U I',
+      lessons: [
+        { name: 'First upper-row reaches', words: 'aid air ear are era sir ride side slide hide idea aide fire file life like sail sale seal dear' },
+        { name: 'Home-to-upper-row rhythm', words: 'die lie lid led red rag far jar jade jail rail rare rule rise real hear here hired skilled fulfilled' }
+      ] },
+    { name: 'Adventurer', icon: '🍃', unlockWpm: 18, seconds: 12, base: 60,
+      description: 'Add T, O, and P with familiar short words.', keys: '+ T O P',
+      lessons: [
+        { name: 'Index and right-hand reaches', words: 'it to at top tap tip pet pot put pair pear rope road read tale tile tire tide title trail' },
+        { name: 'Smooth upper-row transitions', words: 'tea eat ate hat hot hit hop hope pile pale pole part sort shop drop trip tree root stood street' }
+      ] },
+    { name: 'Wordsmith', icon: '✍️', unlockWpm: 22, seconds: 12, base: 65,
+      description: 'Finish the upper row with Q, W, and Y.', keys: '+ Q W Y',
+      lessons: [
+        { name: 'Upper-row confidence', words: 'we why way say day dry shy fly try toy row owl low law lay play stay away your quiet' },
+        { name: 'Both hands working together', words: 'was saw wear year yard word work wish with worry easy early sweet towel yellow follow flower square quality queue' }
+      ] },
+    { name: 'Trailblazer', icon: '🔥', unlockWpm: 26, seconds: 11, base: 75,
+      description: 'Reach down to C, V, B, N, and M.', keys: '+ C V B N M',
+      lessons: [
+        { name: 'First lower-row reaches', words: 'can man van cab cap map mat nap net men new now cow come move name main home book calm' },
+        { name: 'Lower-row word families', words: 'bed bad bag big bun bus bat bit bind mind mine nice mice milk meal make bake back brick bloom' }
+      ] },
+    { name: 'Expert', icon: '💎', unlockWpm: 30, seconds: 11, base: 85,
+      description: 'Complete the letter keys with Z and X.', keys: '+ Z X',
+      lessons: [
+        { name: 'Z and X without the rush', words: 'zip zap zig zag zoo zero zone zest size fizz buzz jazz box fox wax mix six fix next exit' },
+        { name: 'All three rows in motion', words: 'axe axed taxi text extra exact relax complex puzzle frozen zipper zigzag fuzzy dizzy lazy crazy amaze example expert explain' }
+      ] },
+    { name: 'Master', icon: '👑', unlockWpm: 35, seconds: 10, base: 95,
+      description: 'Build muscle memory for TH, SH, CH, and ST.', keys: 'TH · SH · CH · ST',
+      lessons: [
+        { name: 'Common TH and SH patterns', words: 'thin then than them think thing thank three throw thought she ship shop shell shine share shape short shoot should' },
+        { name: 'Common CH and ST patterns', words: 'chat chin chip chop chair chain check chest child choose stop step star stand start stone still string strong stretch' }
+      ] },
+    { name: 'Legend', icon: '🌟', unlockWpm: 40, seconds: 10, base: 100,
+      description: 'Find a steady flow with everyday word families.', keys: 'ER · ING · ED · FUL',
+      lessons: [
+        { name: 'Everyday words and endings', words: 'play player playing played help helper helping helped work worker working worked read reader reading write writer writing type typing' },
+        { name: 'A confident, comfortable flow', words: 'care careful caring cared hope hopeful hoping hoped use useful using used move moving moved music practice progress together confidence' }
+      ] }
+  ].map(level => ({ ...level, lessons: level.lessons.map(lesson => ({ ...lesson, words: lesson.words.split(' ') })) }));
 
   const ITEMS = [
     { id: 'bow', name: 'Sunday bow', desc: 'A fancy little neck hug.', price: 300, category: 'pet', slot: 'bow', art: '🎀' },
@@ -37,23 +79,33 @@
     beret: '<ellipse cx="0" cy="-63" rx="40" ry="17" fill="#b66d63" transform="rotate(-10 0 -63)"/><path d="M-24 -54H27" stroke="#8e544b" stroke-width="7" stroke-linecap="round"/><path d="M1 -76L-2 -84" stroke="#8e544b" stroke-width="5" stroke-linecap="round"/>'
   };
   const SAVE_KEY = 'type-and-tails-v1';
-  const defaults = () => ({ xp: 0, coins: 0, owned: [], equipped: {}, selected: 0, rounds: 0, bestWpm: 0, music: true, sound: true });
+  // Used once to preserve difficulties already earned under the old point-based system.
+  const LEGACY_POINT_TIERS = [0,1400,4000,7500,12000,18000,26000,36000];
+  const defaults = () => ({ xp: 0, coins: 0, owned: [], equipped: {}, selected: 0, rounds: 0, lessonRounds: LEVELS.map(() => 0), bestWpmByLevel: LEVELS.map(() => 0), unlockedLevel: 0, bestWpm: 0, music: true, sound: true });
   let state = defaults();
   try {
     const data = JSON.parse(localStorage.getItem(SAVE_KEY));
     if (data && typeof data === 'object') {
       for (const key of ['xp', 'coins', 'rounds', 'bestWpm']) if (Number.isFinite(data[key]) && data[key] >= 0) state[key] = Math.floor(data[key]);
+      if (Array.isArray(data.bestWpmByLevel)) state.bestWpmByLevel = LEVELS.map((_, index) => Number.isSafeInteger(data.bestWpmByLevel[index]) && data.bestWpmByLevel[index] >= 0 ? data.bestWpmByLevel[index] : 0);
+      if (Number.isInteger(data.unlockedLevel) && data.unlockedLevel >= 0 && data.unlockedLevel < LEVELS.length) state.unlockedLevel = data.unlockedLevel;
+      else if (data.unlockedLevel === undefined) state.unlockedLevel = LEGACY_POINT_TIERS.reduce((highest, tier, index) => state.xp >= tier ? index : highest, 0);
+      if (Array.isArray(data.lessonRounds)) state.lessonRounds = LEVELS.map((_, index) => Number.isSafeInteger(data.lessonRounds[index]) && data.lessonRounds[index] >= 0 ? data.lessonRounds[index] : 0);
       state.owned = Array.isArray(data.owned) ? data.owned.filter(id => ITEMS.some(item => item.id === id)) : [];
       if (data.equipped && typeof data.equipped === 'object') for (const [slot, id] of Object.entries(data.equipped)) if (ITEMS.some(item => item.id === id && item.slot === slot) && state.owned.includes(id)) state.equipped[slot] = id;
       for (const key of ['music', 'sound']) if (typeof data[key] === 'boolean') state[key] = data[key];
-      if (Number.isInteger(data.selected) && data.selected >= 0 && data.selected < LEVELS.length && state.xp >= LEVELS[data.selected].tier) state.selected = data.selected;
+      if (Number.isInteger(data.selected) && data.selected >= 0 && data.selected < LEVELS.length && data.selected <= unlocked()) state.selected = data.selected;
     }
   } catch (_) { /* Browser storage may be unavailable; the game still runs. */ }
   let round = null, frame = 0, shopCategory = 'pet', toastTimer, reactionTimer, bubbleTimer, advanceTimer;
   let wordStarted = 0, wordDeadline = 0, pauseStarted = 0, remainingOnPause = 0;
   let inputHistory = '', composing = false;
   const fmt = number => number.toLocaleString();
-  const unlocked = () => LEVELS.reduce((highest, level, index) => state.xp >= level.tier ? index : highest, 0);
+  function unlocked() {
+    let highest = state.unlockedLevel;
+    while (highest < LEVELS.length - 1 && state.bestWpmByLevel[highest] >= LEVELS[highest + 1].unlockWpm) highest++;
+    return highest;
+  }
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function save() {
@@ -65,21 +117,22 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('visible'), 2800);
   }
   function updateProgress() {
-    const highest = unlocked(), rank = LEVELS[highest], next = LEVELS[highest + 1];
+    const highest = unlocked(), rank = LEVELS[highest];
+    const selected = round ? round.level : state.selected;
+    const next = LEVELS[selected + 1], best = state.bestWpmByLevel[selected];
     $('wallet').textContent = fmt(state.coins); $('shop-wallet').textContent = fmt(state.coins);
     $('rank-icon').textContent = rank.icon; $('rank-name').textContent = rank.name; $('rank-caption').textContent = rank.description;
-    $('xp-value').textContent = fmt(state.xp) + (next ? ' / ' + fmt(next.tier) : ' XP');
-    $('xp-fill').style.width = (next ? Math.min(100, 100 * (state.xp - rank.tier) / (next.tier - rank.tier)) : 100) + '%';
-    $('next-level').textContent = next ? fmt(next.tier - state.xp) + ' points to unlock ' + next.name : 'Every level unlocked. Keep making little wins!';
-    const selected = round ? round.level : state.selected;
+    $('xp-value').textContent = best + (next ? ' / ' + next.unlockWpm : '') + ' WPM';
+    $('xp-fill').style.width = (next ? Math.min(100,100 * best / next.unlockWpm) : 100) + '%';
+    $('next-level').textContent = !next ? 'All levels unlocked. Keep building your best speed!' : selected < highest ? next.name + ' already unlocked · keep practicing your rhythm.' : 'Finish a round at ' + next.unlockWpm + ' WPM to unlock ' + next.name;
     $('level-select').replaceChildren(...LEVELS.map((level, index) => {
       const option = document.createElement('option'); option.value = index;
-      option.textContent = (index > highest ? '🔒 ' : level.icon + ' ') + level.name + (index > highest ? ' — ' + fmt(level.tier) + ' pts' : '');
+      option.textContent = (index > highest ? '🔒 ' : level.icon + ' ') + level.name + (index > highest ? ' — ' + LEVELS[index - 1].name + ' at ' + level.unlockWpm + ' WPM' : '');
       option.disabled = index > highest; return option;
     }));
     $('level-select').value = selected;
     const level = LEVELS[selected];
-    $('level-details').textContent = level.description + ' ' + level.seconds + ' seconds per word.';
+    $('level-details').textContent = level.description + ' Focus: ' + level.keys + ' · ' + level.seconds + ' seconds per word.';
   }
   function applyDecorations() {
     const equipped = state.equipped;
@@ -89,6 +142,42 @@
     $('wall-fill').setAttribute('fill', equipped.wall === 'wall-peach' ? '#edddce' : equipped.wall === 'wall-blue' ? '#d6e3e6' : '#dce7d8');
     $('rug-fill').setAttribute('fill', equipped.rug === 'rug-rose' ? '#cfa49d' : equipped.rug === 'rug-mint' ? '#a6bda3' : '#c7b59c');
   }
+
+  // 64 bars / 512 steps: about 3m 35s before the full arrangement repeats.
+  // Four sections have distinct melodies, chord voicings, and a sparser second pass.
+  const MUSIC_STEP_SECONDS = .42;
+  const MUSIC_PHRASES = [
+    [64,null,67,69,67,null,64,null], [62,64,65,null,69,67,null,null],
+    [60,null,64,67,64,62,60,null], [62,null,65,69,67,null,62,null],
+    [67,69,72,null,71,69,67,null], [65,null,69,72,69,67,65,null],
+    [64,67,null,71,69,null,67,64], [62,65,69,null,67,65,62,null],
+    [60,null,62,null,64,null,67,null], [59,null,62,65,null,62,59,null],
+    [57,null,60,64,62,null,60,null], [55,59,null,62,64,62,null,null],
+    [72,71,69,null,67,64,null,null], [69,null,67,65,64,null,62,null],
+    [67,64,60,null,62,64,67,null], [65,64,62,null,60,null,null,null]
+  ];
+  const MUSIC_HARMONIES = [
+    [48,52,55], [53,57,60], [45,48,52], [43,47,50],
+    [50,53,57], [52,55,59], [48,55,60], [53,60,64]
+  ];
+  const MUSIC_SECTIONS = [
+    { phrases: [0,1,2,3,0,2,1,3], chords: [0,1,2,4,6,2,7,3] },
+    { phrases: [4,5,6,7,6,4,5,7], chords: [2,1,0,3,5,2,7,3] },
+    { phrases: [8,9,10,11,10,8,11,9], chords: [6,4,2,3,1,5,4,3] },
+    { phrases: [12,13,14,15,12,14,13,15], chords: [1,3,0,2,7,4,3,6] }
+  ];
+  const MUSIC_SCORE = [0,1].flatMap(pass => MUSIC_SECTIONS.flatMap((section, sectionIndex) =>
+    section.phrases.flatMap((_, bar) => {
+      const phrase = MUSIC_PHRASES[section.phrases[(bar + pass * 2) % section.phrases.length]];
+      const harmony = MUSIC_HARMONIES[section.chords[bar]];
+      return phrase.map((note, beat) => ({
+        note: pass === 1 && bar % 2 === 1 && beat === 3 ? null : note,
+        chord: beat === 0 ? harmony : null,
+        bass: beat === 4 && sectionIndex !== 2 ? harmony[0] - 12 : null,
+        soft: sectionIndex === 2 || pass === 1
+      }));
+    })
+  ));
 
   // All music and effects are synthesized here; no audio downloads are required.
   const audio = {
@@ -128,18 +217,20 @@
     },
     schedule() {
       if (!this.context || !state.music || document.hidden) return;
-      const melody = [64,67,71,67,62,66,69,66,60,64,67,64,62,66,69,67,64,67,72,71,67,64,62,66,60,64,67,69,67,64,62,null];
-      const chords = [[48,52,55],[50,54,57],[45,48,52],[47,50,55]];
       if (this.nextNote < this.context.currentTime) this.nextNote = this.context.currentTime + .05;
       while (this.nextNote < this.context.currentTime + .45) {
-        const index = this.note % melody.length, midi = melody[index];
-        if (midi !== null) {
-          const frequency = 440 * 2 ** ((midi - 69) / 12);
-          this.tone(frequency, this.nextNote, .85, .32, 'sine', true);
-          this.tone(frequency * 2, this.nextNote, .3, .035, 'sine', true);
+        const step = MUSIC_SCORE[this.note % MUSIC_SCORE.length];
+        if (step.note !== null) {
+          const frequency = 440 * 2 ** ((step.note - 69) / 12);
+          this.tone(frequency, this.nextNote, step.soft ? 1.1 : .9, step.soft ? .15 : .22, 'sine', true);
+          this.tone(frequency * 2, this.nextNote, .35, .015, 'sine', true);
         }
-        if (index % 8 === 0) for (const chordNote of chords[Math.floor(index / 8)]) this.tone(440 * 2 ** ((chordNote - 69) / 12), this.nextNote, 2.2, .11, 'triangle', true);
-        this.nextNote += .39; this.note++;
+        if (step.chord) for (const [index, note] of step.chord.entries()) {
+          // Lightly arpeggiated accompaniment leaves space around the melody.
+          this.tone(440 * 2 ** ((note - 69) / 12), this.nextNote + index * .06, 3.1, step.soft ? .055 : .075, 'triangle', true);
+        }
+        if (step.bass !== null) this.tone(440 * 2 ** ((step.bass - 69) / 12), this.nextNote, 1.35, .07, 'sine', true);
+        this.nextNote += MUSIC_STEP_SECONDS; this.note++;
       }
     },
     effect(name) {
@@ -205,14 +296,15 @@
       $('particles').append(particle); setTimeout(() => particle.remove(), 1100);
     }
   }
-  $('pet-button').addEventListener('click', () => { petReaction(true); audio.effect('boop'); if (round && !round.paused) $('typing-input').focus(); });
+  $('pet-button').addEventListener('click', () => { petReaction(true); audio.effect('boop'); focusTypingInput(); });
 
-  function shuffle(words) {
-    const copy = words.slice();
-    for (let i = copy.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [copy[i],copy[j]] = [copy[j],copy[i]]; }
-    return copy;
+  function focusTypingInput(select = false) {
+    if (!round || round.paused || round.transitioning) return;
+    $('typing-input').focus({ preventScroll: true });
+    if (select) $('typing-input').select();
   }
   function setPlaying(playing) {
+    $('room-card').classList.toggle('is-playing', playing);
     $('typing-area').hidden = !playing; $('welcome-card').hidden = playing;
     $('timer-panel').hidden = !playing; $('round-stats').hidden = !playing;
     $('pause-button').hidden = !playing; $('room-mode').hidden = playing;
@@ -226,10 +318,13 @@
     if (round || state.selected > unlocked()) return;
     audio.init(); audio.effect('start');
     const now = performance.now();
-    round = { level: state.selected, words: shuffle(LEVELS[state.selected].words).slice(0,20), index: 0, correct: 0, score: 0, streak: 0, bestStreak: 0, chars: 0, typed: 0, mistakes: 0, startXp: state.xp, started: now, pausedMs: 0, paused: false, transitioning: false, typedSeconds: 0 };
+    const level = LEVELS[state.selected], lessonIndex = state.lessonRounds[state.selected] % level.lessons.length;
+    round = { level: state.selected, lessonIndex, words: level.lessons[lessonIndex].words.slice(), index: 0, correct: 0, score: 0, streak: 0, bestStreak: 0, chars: 0, typed: 0, mistakes: 0, startLevel: unlocked(), started: now, pausedMs: 0, paused: false, transitioning: false, typedSeconds: 0 };
     setPlaying(true); $('round-score').textContent = '0'; $('round-correct').textContent = '0 / 20';
     say("I'll handle the cheering. You handle the typing!",4000);
     showWord(); cancelAnimationFrame(frame); frame = requestAnimationFrame(tick);
+    // Keep synchronous focus for mobile keyboards, then restore it after dialog close/layout.
+    requestAnimationFrame(() => focusTypingInput(true));
     if (window.innerWidth < 780) $('room-scene').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'center' });
   }
   function showWord() {
@@ -239,12 +334,14 @@
     const level = LEVELS[round.level], target = round.words[round.index];
     wordStarted = performance.now(); wordDeadline = wordStarted + level.seconds * 1000;
     inputHistory = ''; $('typing-input').value = ''; $('typing-input').disabled = false;
-    $('typing-input').classList.remove('has-error'); $('typing-input').focus({ preventScroll: true });
+    $('typing-input').classList.remove('has-error');
     $('round-progress').textContent = 'WORD ' + String(round.index + 1).padStart(2,'0') + ' / 20';
     $('combo-display').textContent = round.streak >= 2 ? '✦ ' + round.streak + ' word streak' : '✦ You got this';
+    $('practice-cue').textContent = level.lessons[round.lessonIndex].name + ' · lesson ' + (round.lessonIndex + 1) + ' of ' + level.lessons.length;
     $('target-word').classList.toggle('long', target.length >= 13); renderWord(); fitWord();
     $('input-hint').textContent = 'No enter key needed. Just type!';
     $('time-left').textContent = level.seconds.toFixed(1) + 's'; $('timer-fill').style.width = '100%'; $('timer-fill').classList.remove('urgent');
+    focusTypingInput(true);
   }
   function renderWord() {
     if (!round) return;
@@ -341,23 +438,29 @@
     round.pausedMs += duration; round.paused = false;
     $('pause-dialog').close(); $('room-card').classList.remove('paused');
     if (round.transitioning) showWord();
-    else { wordStarted += duration; wordDeadline = now + remainingOnPause; $('typing-input').disabled = false; $('typing-input').focus({ preventScroll: true }); }
+    else { wordStarted += duration; wordDeadline = now + remainingOnPause; $('typing-input').disabled = false; focusTypingInput(); }
   }
   function finishRound(early = false) {
     if (!round) return;
     clearTimeout(advanceTimer); cancelAnimationFrame(frame);
     if (round.paused) { round.pausedMs += performance.now() - pauseStarted; $('pause-dialog').close(); }
     const result = round;
-    const priorLevel = LEVELS.reduce((highest,level,index) => result.startXp >= level.tier ? index : highest,0);
-    const currentLevel = unlocked();
+    const priorLevel = result.startLevel;
     // Standard typing speed: correct characters / five / active typing minutes.
-    const wpm = result.typedSeconds > 0 ? Math.round((result.chars / 5) / (result.typedSeconds / 60)) : 0;
+    const wpm = result.typedSeconds > 0 ? Math.floor((result.chars / 5) / (result.typedSeconds / 60)) : 0;
     const accuracy = result.typed ? Math.max(0,Math.round((1 - result.mistakes / result.typed) * 100)) : 0;
-    if (!early) state.rounds++;
+    if (!early) {
+      state.rounds++; state.lessonRounds[result.level]++;
+      state.bestWpmByLevel[result.level] = Math.max(state.bestWpmByLevel[result.level],wpm);
+      state.unlockedLevel = unlocked();
+    }
+    const currentLevel = unlocked();
     state.bestWpm = Math.max(state.bestWpm,wpm);
     round = null; $('room-card').classList.remove('paused'); setPlaying(false); updateProgress(); save();
     $('summary-title').textContent = early ? 'Every little bit counts.' : result.correct === 20 ? 'A perfect little round!' : result.correct >= 12 ? 'Look at you go!' : 'Practice makes progress.';
     $('summary-copy').textContent = early ? 'You finished early. Your points and coins are saved.' : LEVELS[result.level].name + ' complete · ' + accuracy + '% typing accuracy · best streak: ' + result.bestStreak;
+    const nextGoal = LEVELS[result.level + 1];
+    $('summary-goal').textContent = early ? 'Complete all 20 word attempts to record a speed and unlock new levels.' : nextGoal && currentLevel <= result.level ? 'Best completed round: ' + state.bestWpmByLevel[result.level] + ' WPM · reach ' + nextGoal.unlockWpm + ' WPM to unlock ' + nextGoal.name + '.' : 'Best completed round at this difficulty: ' + state.bestWpmByLevel[result.level] + ' WPM.';
     $('summary-points').textContent = fmt(result.score); $('summary-correct').textContent = result.correct + '/20'; $('summary-wpm').textContent = wpm;
     $('unlock-message').hidden = currentLevel <= priorLevel;
     if (currentLevel > priorLevel) {
