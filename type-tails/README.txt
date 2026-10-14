@@ -17,7 +17,7 @@ Master            Expert at 35 WPM
 Legend            Master at 40 WPM
 
 WPM uses correct characters divided by five, over active word time; time spent on missed words counts, pauses and transitions do not. Existing levels unlocked before this update remain available.
-The shop opens between rounds. Purchases equip automatically. Owned items can be equipped or put away for free. One hat, rug, or wall color is equipped at a time; other decorations can be combined.
+The shop opens between rounds. Purchases equip automatically. Owned items can be equipped or put away for free. One hat, rug, or wall color is equipped at a time; other decorations can be combined. Purchased rugs replace the plain rug underneath Pip: rose has cream diamonds and meadow has a leafy pattern. The shop preview matches the room design; existing purchases use these designs automatically.
 
 PRACTICE PROGRESSION
 The eight practice pools contain 53, 118, 117, 123, 125, 108, 165, and 114 eligible words respectively.

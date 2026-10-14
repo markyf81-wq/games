@@ -40,7 +40,7 @@ Active-round state and animation/timer handles are transient. Reloading does not
 
 `ITEMS` defines price, category (`pet`/`room`), equipment slot, and item ID. Owned items can be equipped or put away freely. Buying equips automatically. Only one item per equipment slot is active; different slots can combine. The shop is unavailable during a round.
 
-`applyDecorations()` maps equipped items to SVG element visibility and colors. `HATS` contains trusted inline SVG for hats. Coordinate changes must remain compatible with the nested `pet`/`pet-motion` groups and accessory IDs. Keep lifetime progress independent of shop balance, validate affordability, and save after transactions.
+`applyDecorations()` maps equipped items to SVG element visibility and colors. Rugs replace the plain oval beneath Pip: `RUG_STYLES` defines strong rose/mint palettes and `paintRug()` activates the corresponding cream diamond/leaf pattern while resetting inactive patterns. `rugPreview()` clones the actual room rug, strips all IDs to avoid duplicate DOM IDs, and uses the same painting helper for accurate shop previews. Keep existing rug item IDs and saved equipment compatible; purchasing or equipping must apply the pattern immediately and restore it after reload. Putting a rug away restores the original plain rug. Do not revert purchased rugs to a barely visible recolor or emoji-only previews. `HATS` contains trusted inline SVG for hats. Coordinate changes must remain compatible with the nested `pet`/`pet-motion` groups and accessory IDs. Keep lifetime progress independent of shop balance, validate affordability, and save after transactions.
 
 ## Audio and presentation
 

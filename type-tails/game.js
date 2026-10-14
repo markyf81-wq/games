@@ -74,8 +74,8 @@
     { id: 'bunting', name: 'Happy bunting', desc: 'Good vibes, on a string.', price: 900, category: 'room', slot: 'bunting', art: '🚩' },
     { id: 'ball', name: 'Minty yarn ball', desc: 'A very tempting tangle.', price: 350, category: 'room', slot: 'ball', art: '🧶' },
     { id: 'stars', name: 'Wall sparkles', desc: 'For dreaming a little bigger.', price: 1600, category: 'room', slot: 'stars', art: '✨' },
-    { id: 'rug-rose', name: 'Rose-colored rug', desc: 'Soft paws. Softer landings.', price: 1100, category: 'room', slot: 'rug', art: '🌸' },
-    { id: 'rug-mint', name: 'Meadow rug', desc: 'Bring a little outdoors in.', price: 1100, category: 'room', slot: 'rug', art: '🍀' },
+    { id: 'rug-rose', name: 'Rose-colored rug', desc: 'A rosy weave with cream diamonds.', price: 1100, category: 'room', slot: 'rug', art: '🌸' },
+    { id: 'rug-mint', name: 'Meadow rug', desc: 'A green weave with a leafy pattern.', price: 1100, category: 'room', slot: 'rug', art: '🍀' },
     { id: 'wall-peach', name: 'Peachy walls', desc: 'A fresh coat of happy.', price: 1500, category: 'room', slot: 'wall', art: '🍑' },
     { id: 'wall-blue', name: 'Daydream walls', desc: 'As calm as a clear sky.', price: 1500, category: 'room', slot: 'wall', art: '☁️' }
   ];
@@ -84,6 +84,11 @@
     crown: '<path d="M-31 -58L-38 -91L-17 -78L0 -101L17 -78L38 -91L31 -58Z" fill="#e4be69" stroke="#b7934e" stroke-width="2"/><path d="M-30 -61H30" stroke="#f8dd91" stroke-width="5"/><circle cy="-72" r="5" fill="#c68478"/>',
     wizard: '<path d="M-28 -54L-8 -116Q10 -111 17 -99L11 -88L30 -54Z" fill="#7f88af"/><ellipse cy="-52" rx="43" ry="10" fill="#949cc1"/><path d="M1 -88L4 -82L11 -81L5 -76L6 -69L0 -72L-6 -69L-5 -76L-11 -81L-4 -82Z" fill="#f6d79a"/>',
     beret: '<ellipse cx="0" cy="-63" rx="40" ry="17" fill="#b66d63" transform="rotate(-10 0 -63)"/><path d="M-24 -54H27" stroke="#8e544b" stroke-width="7" stroke-linecap="round"/><path d="M1 -76L-2 -84" stroke="#8e544b" stroke-width="5" stroke-linecap="round"/>'
+  };
+  const RUG_STYLES = {
+    default: { fill: '#c7b59c', border: '#eee1ca', inner: '#eee1ca' },
+    'rug-rose': { fill: '#ca8095', border: '#874858', inner: '#ffe7d9' },
+    'rug-mint': { fill: '#75a989', border: '#3b7057', inner: '#ecedbd' }
   };
   const SAVE_KEY = 'type-and-tails-v1';
   // Used once to preserve difficulties already earned under the old point-based system.
@@ -141,13 +146,31 @@
     const level = LEVELS[selected];
     $('level-details').textContent = level.description + ' Focus: ' + level.keys + ' · ' + level.seconds + ' seconds per word.';
   }
+  function paintRug(rug, itemId) {
+    const style = RUG_STYLES[itemId] || RUG_STYLES.default;
+    rug.querySelector('.rug-base').setAttribute('fill',style.fill);
+    rug.querySelector('.rug-border').setAttribute('stroke',style.border);
+    rug.querySelector('.rug-border').setAttribute('stroke-width',itemId ? 6 : 3);
+    rug.querySelector('.rug-inner-border').setAttribute('stroke',style.inner);
+    rug.querySelector('.rug-inner-border').setAttribute('opacity',itemId ? 1 : .65);
+    for (const pattern of rug.querySelectorAll('[data-rug-style]')) pattern.style.display = pattern.dataset.rugStyle === itemId ? '' : 'none';
+  }
+  function rugPreview(itemId) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox','240 478 462 145');
+    const rug = $('rug').cloneNode(true);
+    // Preview clones must not duplicate the room's IDs.
+    for (const element of [rug,...rug.querySelectorAll('[id]')]) element.removeAttribute('id');
+    paintRug(rug,itemId); svg.append(rug);
+    return svg;
+  }
   function applyDecorations() {
     const equipped = state.equipped;
     for (const slot of ['plant', 'art', 'lamp', 'bunting', 'ball', 'stars']) $('decor-' + slot).style.display = equipped[slot] ? '' : 'none';
     $('pet-bow').style.display = equipped.bow ? '' : 'none'; $('pet-glasses').style.display = equipped.glasses ? '' : 'none';
     $('pet-hat').style.display = equipped.hat ? '' : 'none'; $('pet-hat').innerHTML = HATS[equipped.hat] || '';
     $('wall-fill').setAttribute('fill', equipped.wall === 'wall-peach' ? '#edddce' : equipped.wall === 'wall-blue' ? '#d6e3e6' : '#dce7d8');
-    $('rug-fill').setAttribute('fill', equipped.rug === 'rug-rose' ? '#cfa49d' : equipped.rug === 'rug-mint' ? '#a6bda3' : '#c7b59c');
+    paintRug($('rug'),equipped.rug);
   }
 
   // 64 bars / 512 steps: about 3m 35s before the full arrangement repeats.
@@ -506,6 +529,7 @@
       const card = document.createElement('article'); card.className = 'shop-item' + (equipped ? ' equipped' : '');
       const art = document.createElement('div'); art.className = 'item-art'; art.setAttribute('aria-hidden','true');
       if (item.slot === 'hat') art.innerHTML = '<svg viewBox="-60 -130 120 110">' + HATS[item.id] + '</svg>';
+      else if (item.slot === 'rug') art.append(rugPreview(item.id));
       else art.textContent = item.art;
       const details = document.createElement('div'); details.className = 'item-details';
       const title = document.createElement('h3'); title.textContent = item.name;
