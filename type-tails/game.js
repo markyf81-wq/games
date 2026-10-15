@@ -90,10 +90,34 @@
   const LEGACY_ITEM_IDS = { crown: 'medal', wizard: 'cape', beret: 'socks', 'wall-peach': 'curtains', 'wall-blue': 'cloud-mobile' };
   const LEGACY_EXCLUSIVE_ITEMS = new Set(['party','crown','wizard','beret','rug-rose','rug-mint','wall-peach','wall-blue']);
   const normalizeItemId = id => LEGACY_ITEM_IDS[id] || id;
+  // Shared face/accessory coordinates keep every outfit compatible with every animal.
+  const PETS = [
+    { id: 'cat', name: 'Pip', species: 'Cat', colors: ['#d8915d','#dfa06c','#f1c994','#df9f6c','#cd8754','#edb59a'], whiskers: true,
+      ears: '<path d="M-45 -14L-44 -67L-16 -47Q0 -54 17 -46L47 -65L46 -13Z" fill="var(--fur)"/><path d="M-38 -48L-37 -29L-23 -39ZM37 -48L25 -39L38 -29Z" fill="#e9b3a0"/>',
+      markings: '<path d="M-13 -54L-9 -39M0 -57V-41M13 -54L9 -39" stroke="#b7784b" stroke-width="5" stroke-linecap="round"/>',
+      tail: '<path d="M43 49Q96 58 92 19Q88 -2 75 11" fill="none" stroke="#c37d4e" stroke-width="19" stroke-linecap="round"/>' },
+    { id: 'dog', name: 'Biscuit', species: 'Dog', colors: ['#c49b72','#dfbd91','#f5dfb8','#c49b72','#ae805c','#e7b3a0'], whiskers: false,
+      ears: '<path d="M-29 -49Q-67 -72 -68 -20Q-69 15 -48 9L-31 -21ZM29 -49Q67 -72 68 -20Q69 15 48 9L31 -21Z" fill="#91664e"/>',
+      markings: '<ellipse cx="0" cy="5" rx="25" ry="18" fill="#f5dfb8"/><path d="M-8 -57L-6 -31Q0 -25 6 -31L8 -57Z" fill="#f5dfb8"/>',
+      tail: '<path d="M42 52Q82 47 77 23" fill="none" stroke="#ae805c" stroke-width="18" stroke-linecap="round"/>' },
+    { id: 'rabbit', name: 'Clover', species: 'Rabbit', colors: ['#c8bccb','#ddd2de','#f4eaf0','#cfc0d0','#b5a4ba','#edbdc9'], whiskers: true,
+      ears: '<ellipse cx="-36" cy="-69" rx="15" ry="47" transform="rotate(-15 -36 -69)" fill="var(--fur)"/><ellipse cx="36" cy="-69" rx="15" ry="47" transform="rotate(15 36 -69)" fill="var(--fur)"/><ellipse cx="-36" cy="-73" rx="7" ry="31" transform="rotate(-15 -36 -73)" fill="#e8b9c8"/><ellipse cx="36" cy="-73" rx="7" ry="31" transform="rotate(15 36 -73)" fill="#e8b9c8"/>',
+      markings: '<ellipse cx="0" cy="6" rx="23" ry="17" fill="#f4eaf0"/><rect x="-5" y="10" width="10" height="9" rx="2" fill="#fffaf2"/>',
+      tail: '<circle cx="53" cy="54" r="21" fill="#f4eaf0"/>' },
+    { id: 'fox', name: 'Maple', species: 'Fox', colors: ['#ce754a','#e79862','#ffedca','#695149','#8d5742','#efb094'], whiskers: true,
+      ears: '<path d="M-47 -18L-51 -84L-16 -51ZM47 -18L51 -84L16 -51Z" fill="#805344"/><path d="M-41 -33L-44 -67L-24 -48ZM41 -33L44 -67L24 -48Z" fill="#eab49b"/>',
+      markings: '<path d="M-51 -8Q-32 -9 0 12Q32 -9 51 -8Q43 29 0 29Q-43 29 -51 -8Z" fill="#ffedca"/>',
+      tail: '<path d="M36 62Q104 84 105 12Q68 20 64 45Z" fill="#ce754a"/><path d="M105 12Q81 17 73 29L88 39L101 36Q105 25 105 12Z" fill="#ffedca"/>' },
+    { id: 'panda', name: 'Mochi', species: 'Panda', colors: ['#eee9db','#f8f1df','#faf4e5','#575957','#575957','#edc3b4'], whiskers: false,
+      ears: '<circle cx="-39" cy="-52" r="22" fill="#575957"/><circle cx="39" cy="-52" r="22" fill="#575957"/><circle cx="-39" cy="-52" r="10" fill="#85817d"/><circle cx="39" cy="-52" r="10" fill="#85817d"/>',
+      markings: '<ellipse cx="-19" cy="-14" rx="14" ry="18" transform="rotate(25 -19 -14)" fill="#777872"/><ellipse cx="19" cy="-14" rx="14" ry="18" transform="rotate(-25 19 -14)" fill="#777872"/>',
+      tail: '<circle cx="48" cy="57" r="15" fill="#575957"/>' }
+  ];
+  const PET_COLOR_KEYS = ['fur','face','belly','paws','arms','blush'];
   const SAVE_KEY = 'type-and-tails-v1';
   // Used once to preserve difficulties already earned under the old point-based system.
   const LEGACY_POINT_TIERS = [0,1400,4000,7500,12000,18000,26000,36000];
-  const defaults = () => ({ xp: 0, coins: 0, owned: [], equipped: [], selected: 0, rounds: 0, lessonRounds: LEVELS.map(() => 0), bestWpmByLevel: LEVELS.map(() => 0), unlockedLevel: 0, bestWpm: 0, music: true, sound: true });
+  const defaults = () => ({ xp: 0, coins: 0, owned: [], equipped: [], pet: 'cat', selected: 0, rounds: 0, lessonRounds: LEVELS.map(() => 0), bestWpmByLevel: LEVELS.map(() => 0), unlockedLevel: 0, bestWpm: 0, music: true, sound: true });
   let state = defaults();
   try {
     const data = JSON.parse(localStorage.getItem(SAVE_KEY));
@@ -113,6 +137,7 @@
         const freed = previousOwned.filter(id => LEGACY_EXCLUSIVE_ITEMS.has(id));
         state.equipped = [...new Set([...shown,...freed].map(normalizeItemId).filter(id => state.owned.includes(id)))];
       }
+      if (PETS.some(pet => pet.id === data.pet)) state.pet = data.pet;
       for (const key of ['music', 'sound']) if (typeof data[key] === 'boolean') state[key] = data[key];
       if (Number.isInteger(data.selected) && data.selected >= 0 && data.selected < LEVELS.length && data.selected <= unlocked()) state.selected = data.selected;
     }
@@ -187,6 +212,55 @@
     paintRug(sideRug,'rug-mint');
     sideRug.style.display = visible('rug-mint') ? '' : 'none';
   }
+
+  function currentPet() { return PETS.find(pet => pet.id === state.pet); }
+  function colorPet(element, pet) {
+    PET_COLOR_KEYS.forEach((key, index) => element.style.setProperty('--' + key, pet.colors[index]));
+  }
+  function applyPet() {
+    const pet = currentPet();
+    colorPet($('pet'), pet);
+    $('pet-ears').innerHTML = pet.ears;
+    $('pet-markings').innerHTML = pet.markings;
+    $('pet-tail').innerHTML = pet.tail;
+    $('pet-whiskers').style.display = pet.whiskers ? '' : 'none';
+    $('pet-name').textContent = pet.name;
+    document.querySelector('.room-art').setAttribute('aria-label', 'A sunny room with your playful ' + pet.species.toLowerCase() + ', ' + pet.name);
+    if (!round) $('room-label').textContent = pet.name + "'s happy place";
+    $('pause-copy').textContent = 'Your timer is paused. ' + pet.name + ' will keep your seat warm.';
+  }
+  function petPortrait(pet) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox','-80 -125 160 165'); svg.setAttribute('aria-hidden','true');
+    colorPet(svg,pet);
+    svg.innerHTML = pet.ears + '<ellipse cy="-15" rx="52" ry="44" fill="var(--face)"/>' + pet.markings +
+      '<ellipse cx="-31" rx="10" ry="6" fill="var(--blush)"/><ellipse cx="31" rx="10" ry="6" fill="var(--blush)"/><ellipse cx="-18" cy="-14" rx="5" ry="7" fill="#4a3a30"/><ellipse cx="18" cy="-14" rx="5" ry="7" fill="#4a3a30"/><path d="M-5 -1Q0 -5 5 -1L0 5Z" fill="#aa695e"/><path d="M0 5V9Q-7 17 -12 9M0 9Q7 17 12 9" fill="none" stroke="#805741" stroke-width="2.5" stroke-linecap="round"/>';
+    return svg;
+  }
+  function renderPets() {
+    $('pet-grid').replaceChildren(...PETS.map(pet => {
+      const button = document.createElement('button'); button.className = 'pet-choice';
+      const selected = state.pet === pet.id;
+      button.setAttribute('aria-pressed', String(selected));
+      button.setAttribute('aria-label', pet.name + ' the ' + pet.species.toLowerCase() + (selected ? ', selected' : ', free'));
+      const name = document.createElement('strong'); name.textContent = pet.name;
+      const species = document.createElement('small'); species.textContent = pet.species;
+      const status = document.createElement('span'); status.className = 'pet-choice-status'; status.textContent = selected ? '✓ Your buddy' : 'Free · choose';
+      button.append(petPortrait(pet),name,species,status);
+      button.addEventListener('click', () => {
+        if (round) return;
+        state.pet = pet.id; applyPet(); save(); audio.init(); audio.effect('equip');
+        $('pet-dialog').close(); say("Hi, I'm " + pet.name + '. Let’s grow together!', 0);
+        $('choose-pet').focus({ preventScroll: true });
+      });
+      return button;
+    }));
+  }
+  $('choose-pet').addEventListener('click', () => {
+    if (round) return;
+    renderPets(); $('pet-dialog').showModal();
+    $('pet-grid').querySelector('[aria-pressed="true"]').focus();
+  });
 
   // 64 bars / 512 steps: about 3m 35s in the room, or 2m 54s during a level.
   // Four sections have distinct melodies, chord voicings, and a sparser second pass.
@@ -346,8 +420,8 @@
   });
 
   const reactions = [
-    ['bounce','Boing! Certified bouncy cat.'], ['wiggle','The victory wiggle!'],
-    ['spin','Pip.exe is spinning…'], ['flip','Did someone say plot twist?'],
+    ['bounce','Boing! Certified bouncy buddy.'], ['wiggle','The victory wiggle!'],
+    ['spin','{name}.exe is spinning…'], ['flip','Did someone say plot twist?'],
     ['dance','Tiny paws. Big dance moves.'], ['squish','I am a very fluffy pancake.'],
     ['zoom','Zoomies: activated!'], ['wave','High five, typing buddy!'],
     ['celebrate','Paws up! You nailed it.']
@@ -366,7 +440,7 @@
     $('room-scene').className = 'room-scene';
     // Separate frames allow a repeated animation to restart naturally.
     requestAnimationFrame(() => { $('room-scene').classList.add('pet-' + (boop ? 'boop' : action)); });
-    say(boop ? 'Boop received. Friendship increased. ♡' : line);
+    say(boop ? 'Boop received. Friendship increased. ♡' : line.replace('{name}', currentPet().name));
     reactionTimer = setTimeout(() => { $('room-scene').className = 'room-scene'; }, 1100);
     if (!reducedMotion) for (let index = 0; index < 6; index++) {
       const particle = document.createElement('span'); particle.className = 'particle';
@@ -398,9 +472,9 @@
     $('timer-panel').hidden = !playing; $('round-stats').hidden = !playing;
     $('pause-button').hidden = !playing; $('room-mode').hidden = playing;
     $('start-button').disabled = playing; $('level-select').disabled = playing;
-    $('shop-button').disabled = playing;
+    $('shop-button').disabled = playing; $('choose-pet').disabled = playing;
     $('start-button').innerHTML = playing ? 'Round in progress <span>✦</span>' : "Let's practice <span>↗</span>";
-    $('room-label').textContent = playing ? LEVELS[round.level].name + ' · find your flow' : "Pip's happy place";
+    $('room-label').textContent = playing ? LEVELS[round.level].name + ' · find your flow' : currentPet().name + "'s happy place";
     $('start-footnote').textContent = playing ? 'Press Esc or Pause for a little breather.' : 'A few minutes for a happier, faster you.';
     audio.sync();
   }
@@ -627,5 +701,5 @@
     const rect = dialog.getBoundingClientRect();
     if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
   });
-  updateAudioButtons(); updateProgress(); applyDecorations(); save();
+  updateAudioButtons(); updateProgress(); applyDecorations(); applyPet(); say("Hi, I'm " + currentPet().name + ". Let’s grow together!", 0); save();
 })();

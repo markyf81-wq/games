@@ -159,7 +159,9 @@ kbd{border:1px solid #d7dcc7;padding:1px 5px;border-radius:3px;background:#e8ecd
 .particle{position:absolute;font-size:20px;left:50%;top:70%;animation:particle 1s ease-out forwards;color:#e0aa62}
 .room-art .eyes{transform-box:fill-box;transform-origin:center;animation:blink 6s infinite}
 .steam{animation:steam 3s infinite alternate}
-.tail{transform-origin:495px 520px}
+#pet{--fur:#d8915d;--face:#dfa06c;--belly:#f1c994;--paws:#df9f6c;--arms:#cd8754;--blush:#edb59a}
+/* The fixed wrapper locates each shoulder; only its inner group rotates. */
+.arm-left,.arm-right{transform-box:view-box;transform-origin:0 0}
 .pet-boop #pet-motion{animation:hop .75s ease-in-out}
 .pet-bounce #pet-motion{animation:hop .8s ease-in-out}
 .pet-wiggle #pet-motion{animation:wiggle .9s ease-in-out}
@@ -168,8 +170,9 @@ kbd{border:1px solid #d7dcc7;padding:1px 5px;border-radius:3px;background:#e8ecd
 .pet-dance #pet-motion{animation:dance 1s ease-in-out;transform-origin:50.2% 77%;transform-box:view-box}
 .pet-squish #pet-motion{animation:squish .85s ease-in-out;transform-origin:50.2% 83%;transform-box:view-box}
 .pet-zoom #pet-motion{animation:zoomies 1s ease-in-out}
-.pet-wave .arm-right{animation:wave 1s ease-in-out;transform-origin:484px 505px}
-.pet-celebrate .arm-left,.pet-celebrate .arm-right{animation:cheer 1s ease-in-out;transform-box:fill-box;transform-origin:top center}
+.pet-wave .arm-right{animation:wave 1s ease-in-out}
+.pet-celebrate .arm-left{animation:cheer-left 1s ease-in-out}
+.pet-celebrate .arm-right{animation:cheer 1s ease-in-out}
 .paused .room-art .eyes,.paused .steam{animation-play-state:paused}
 
 @keyframes blink{0%,43%,47%,100%{transform:scaleY(1)}
@@ -205,11 +208,12 @@ kbd{border:1px solid #d7dcc7;padding:1px 5px;border-radius:3px;background:#e8ecd
 50%{transform:translateX(-130px)}
 75%{transform:translateX(50px)}
 }
-@keyframes wave{20%,60%{transform:rotate(-65deg)}
-40%,80%{transform:rotate(-20deg)}
+@keyframes wave{0%,100%{transform:rotate(0)}
+20%,60%{transform:rotate(-135deg)}
+40%,80%{transform:rotate(-90deg)}
 }
-@keyframes cheer{30%,70%{transform:rotate(150deg)}
-}
+@keyframes cheer{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(-150deg)}}
+@keyframes cheer-left{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(150deg)}}
 @keyframes scoreFloat{0%{opacity:0;transform:translate(-50%,0)}
 15%{opacity:1}
 80%{opacity:1}
@@ -319,3 +323,14 @@ footer{gap:12px}
 /* The speech bubble stays above Pip, including hats; lesson cues identify the practice. */
 .practice-cue{font-size:9px;color:#819073;margin:7px 0 0;line-height:1.4}
 @media(max-width:780px){.room-card.is-playing .pet-bubble{left:18%;bottom:30%;max-width:29%;white-space:normal;text-align:center}.practice-cue{font-size:8px}}
+
+.pet-controls{display:flex;align-items:center;gap:14px}
+.pet-dialog{width:650px;max-width:calc(100vw - 28px)}
+.pet-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:22px}
+.pet-choice{display:flex;flex-direction:column;align-items:center;padding:10px 5px 12px;border:1px solid var(--border);border-radius:12px;background:#faf8ef}
+.pet-choice[aria-pressed=true]{border-color:#78956c;background:#e8efdd;box-shadow:0 0 0 1px #78956c}
+.pet-choice:hover{background:#eef1e4}
+.pet-choice svg{width:100%;height:100px;overflow:visible}
+.pet-choice strong{font-size:13px}.pet-choice small{font-size:10px;color:var(--muted)}
+.pet-choice .pet-choice-status{margin-top:7px;color:var(--green);font-size:10px}
+@media(max-width:540px){.pet-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.pet-controls{gap:9px}.room-bottom{padding:12px}.room-bottom .muted{display:none}}
