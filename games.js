@@ -18,13 +18,13 @@ const GAME_CATALOG = [
     id: 'bomb-major',
     title: 'Bomb Major',
     subtitle: 'A chasing bomb. A bouncing block. One more try.',
-    description: 'Keep your characters out of trouble, send the block into the bomb to freeze it, and collect coins. Watch for magnets and a very helpful cat.',
+    description: 'Keep your crew safe with a bouncing block, helpful cats and cows, shields, banana peels and string. Collect coins for permanent marketplace upgrades between attempts and beat your local high scores.',
     category: 'Arcade',
     tags: ['Survival', 'Clicking', 'Coins'],
     path: 'bomb-major/index.html',
     image: 'previews/bomb-major.svg',
     imageAlt: 'An illustrated courtyard with a chasing bomb, sage block, smiling friends, Pip the cat, and gold coins',
     accent: '#d3ddc3',
-    detail: 'Click to dodge · collect & survive'
+    detail: 'Dodge · collect · upgrade your abilities'
   }
 ];

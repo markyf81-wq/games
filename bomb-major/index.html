@@ -4,24 +4,26 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f7f4ec"><meta name="description" content="A little courtyard. A little chaos. Keep your friends safe in this cozy survival arcade game.">
 <title>Bomb Major — Small moves. Big escapes.</title>
-<link rel="stylesheet" href="styles.css?v=courtyard1"><script src="game.js?v=courtyard1" defer></script>
+<link rel="stylesheet" href="styles.css?v=book-scores1"><script src="content.js?v=book-scores1" defer></script><script src="marketplace.js?v=book-scores1" defer></script><script src="scores.js?v=book-scores1" defer></script><script src="game.js?v=book-scores1" defer></script>
 </head>
 <body>
 <div class="app">
 <nav class="library-navigation" aria-label="Library"><a href="../index.html">← Games library</a></nav>
-<header class="topbar"><a class="brand" href="./index.html" aria-label="Bomb Major home"><span class="brand-icon" aria-hidden="true">✹</span><span>bomb<span class="brand-soft">major</span><span class="brand-dot">.</span></span></a><div class="top-controls"><span class="edition-label">A LITTLE ARCADE ESCAPE</span><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">Sound on</button></div></header>
+<header class="topbar"><a class="brand" href="./index.html" aria-label="Bomb Major home"><span class="brand-icon" aria-hidden="true">✹</span><span>bomb<span class="brand-soft">major</span><span class="brand-dot">.</span></span></a><div class="top-controls"><button id="market-button" class="market-button" type="button">Marketplace ↗</button><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">Sound on</button></div></header>
 <main>
 <div class="page-heading"><div><div class="eyebrow">A LITTLE COURAGE. A LITTLE CHAOS.</div><h1>Small moves.<br>Big escapes.</h1></div><p>Keep your friends out of trouble.<br>Make room for one more little win.</p></div>
 <div class="game-layout">
 <section class="arena-card" aria-label="Bomb Major game">
 <div class="arena-heading"><span><i class="live-dot" aria-hidden="true"></i>The little courtyard</span><span class="small-tag">CLICK · COLLECT · SURVIVE</span></div>
 <div class="scoreboard" aria-label="Game scores">
-<div class="score-stat"><span class="stat-label"><span class="coin-icon" aria-hidden="true">✦</span>Saved coins</span><strong id="coinTotal">0</strong></div>
+<div class="score-stat"><span class="stat-label"><span class="coin-icon" aria-hidden="true">✦</span>Coin purse</span><strong id="coinTotal">0</strong></div>
 <div class="score-stat"><span class="stat-label">This round</span><strong id="roundCoins">0</strong></div>
 <div class="score-stat"><span class="stat-label">Friends still in</span><strong id="aliveCount">1</strong></div>
 <div class="next-friend"><span class="friend-sprout" aria-hidden="true">✳</span><span id="nextCharacter">Next character in 10 coins</span></div>
 </div>
+<div class="effect-tray" id="active-effects" aria-label="Active abilities">Unlock helpful drops in the marketplace.</div>
 <div class="playSpace" aria-label="Courtyard game area">
+<svg class="tether-art" hidden aria-hidden="true" preserveAspectRatio="none"><line id="tether-line" stroke="#ae8654" stroke-width="3" stroke-dasharray="5 3" stroke-linecap="round"/></svg>
 <button class="clickyBlock" type="button" aria-label="Click Me: send the bouncing block toward the bomb">Click Me</button>
 <button class="character" type="button" aria-label="Move character to a random position"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
 <ellipse cx="32" cy="59" rx="17" ry="3" fill="#7b8060" opacity=".2"/>
@@ -71,12 +73,12 @@
 <ellipse cx="24" cy="37" rx="2" ry="3" fill="#fff0cf"/><ellipse cx="37" cy="37" rx="2" ry="3" fill="#fff0cf"/>
 <path d="M26 47Q30 43 34 47" fill="none" stroke="#d2d6bb" stroke-width="2" stroke-linecap="round"/>
 </svg><div class="freeze-meter" hidden aria-hidden="true"><span id="freezeCountdown"></span><div class="freeze-track"><div class="freeze-fill"></div></div></div></div>
-<div class="gameOver" hidden aria-labelledby="game-over-title"><div class="result-card"><span class="result-flower" aria-hidden="true">✳</span><div class="eyebrow">EVERY ESCAPE IS A LITTLE WIN</div><h2 id="game-over-title">What a little adventure.</h2><p id="result"></p><button class="restart" type="button">One more try <span aria-hidden="true">↗</span></button><small>A fresh round. Your saved coins stay.</small></div></div>
+<div class="gameOver" hidden aria-labelledby="game-over-title"><div class="result-card"><span class="result-flower" aria-hidden="true">✳</span><div class="eyebrow">EVERY ESCAPE IS A LITTLE WIN</div><h2 id="game-over-title">What a little adventure.</h2><p id="result"></p><button class="restart" type="button">One more try <span aria-hidden="true">↗</span></button><button id="result-market" class="result-market" type="button">Visit the marketplace ↗</button><a class="scores-jump" href="#local-score-panel">View local high scores ↓</a><small>A fresh round. Your coins and upgrades stay.</small></div></div>
 </div>
 <div class="arena-bottom"><span class="status-star" aria-hidden="true">✧</span><div id="status" role="status">Click the character or Click Me block to start.</div><span class="arena-bottom-label">ONE CLICK AT A TIME</span></div>
 </section>
 <aside class="sidebar" aria-label="How to play">
-<section class="guide-panel"><div class="eyebrow">YOUR LITTLE FIELD GUIDE</div><h2>A knack for<br>narrow escapes.</h2><p class="guide-intro">A few good clicks go a long way.</p>
+<section class="guide-panel"><div class="eyebrow">YOUR LITTLE FIELD GUIDE</div><h2>A knack for<br>narrow escapes.</h2><p class="guide-intro">A few good clicks. A little help from your finds.</p>
 <ol class="guide-steps"><li><span class="step-icon step-friend" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
 <ellipse cx="32" cy="59" rx="17" ry="3" fill="#7b8060" opacity=".2"/>
 <path d="M25 44L24 54M39 44L40 54" fill="none" stroke="#697b70" stroke-width="8" stroke-linecap="round"/>
@@ -92,6 +94,7 @@
 </svg></span><div><strong>Keep them moving.</strong><p>Click a friend to hop somewhere safe. Every jump makes the bomb a little faster.</p></div></li>
 <li><span class="step-icon step-block" aria-hidden="true">✧</span><div><strong>Send a little backup.</strong><p>Click the bouncing block to aim at the bomb. A hit freezes it for a breather.</p></div></li>
 <li><span class="step-icon step-coin" aria-hidden="true">✦</span><div><strong>Grow your little crew.</strong><p>Collect 10 coins in a round to welcome another friend. Keep at least one human safe.</p></div></li></ol>
+<div class="drop-guide"><strong>Unlock finds in the marketplace.</strong><p><b>Shield</b> · Saves the next human hit.<br><b>Banana</b> · Two tight circles; still dangerous.<br><b>String</b> · A 10-second tether; still dangerous.<br><b>Treadmill</b> · Accelerates the block, then resets.<br><b>Cow poop</b> · Bomb contact repels it for 3–10 seconds by cow tier. Deflect piles with the block too.</p></div>
 <div class="guide-footnote"><span aria-hidden="true">↗</span> Click or tap to play. No arrow keys needed.</div></section>
 <section class="cat-note"><div class="cat-portrait" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
 <ellipse cx="31" cy="59" rx="21" ry="3" fill="#7b8060" opacity=".2"/>
@@ -115,9 +118,11 @@
 </svg></span><p><strong>Found a magnet?</strong> Click it to pull the coins toward your block.</p></div>
 </aside>
 </div>
+<section id="local-score-panel" class="local-score-panel" aria-labelledby="local-score-title"><div class="score-panel-heading"><div><div class="eyebrow">YOUR OWN LITTLE HALL OF FAME</div><h2 id="local-score-title">Your best escapes<span>.</span></h2></div><span class="small-tag">TOP 10 · THIS BROWSER</span></div><p class="score-panel-copy">Longest survival wins. Coins, then jumps, break ties.</p><div class="score-table-scroll"><table class="local-score-table"><thead><tr><th scope="col">Rank</th><th scope="col">Survived</th><th scope="col">Coins</th><th scope="col">Jumps</th><th scope="col">Date</th></tr></thead><tbody id="local-score-rows"></tbody></table></div><p id="score-save-note" class="save-note" role="status"></p></section>
 <p id="coinSaveNote" class="save-note" hidden>Coin saving is unavailable in this browser. Coins will stay for this session only.</p>
-<footer><span>Made for close calls & little victories.</span><span>Coins save on this browser <i class="save-dot" aria-hidden="true">●</i></span></footer>
+<footer><span>Made for close calls & little victories.</span><span>Coins & upgrades save on this browser <i class="save-dot" aria-hidden="true">●</i></span></footer>
 </main>
 </div>
+<dialog id="market-dialog" class="market-dialog" aria-labelledby="market-title"><div class="market-heading"><div><div class="eyebrow">A LITTLE PREPARATION GOES A LONG WAY</div><h2 id="market-title">The courtyard marketplace<span>.</span></h2><p>Permanent abilities for your next adventure. Shop between rounds.</p></div><button id="market-close" class="market-close" type="button" aria-label="Close marketplace">×</button></div><div class="market-balance"><span>YOUR COIN PURSE</span><strong>✦ <span id="market-wallet">0</span></strong></div><div id="market-grid" class="market-grid"></div><p class="market-note">Five tiers per ability and drop. Tier prices: 20, 80, 320, 1,280, 5,000 coins. Later tiers give bigger improvements. Helpful drops only appear after you unlock them. Each new human gets a random look.</p><p id="market-save-note" class="save-note" role="status"></p></dialog>
 </body>
 </html>

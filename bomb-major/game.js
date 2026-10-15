@@ -279,23 +279,29 @@ const playSpace = document.querySelector('.playSpace');
         const blockSize = 96;
         const coinSize = 24;
         const magnetSize = 40;
-        const magnetChance = 0.1;
         const coinPullSpeed = 900;
         const bombSpeed = 48;
-        const speedPerJump = 4;
+        const speedPerJump = 2;
         const collisionDistance = 42;
-        const freezeDuration = 5;
         const freezeReductionPerJump = 0.1;
-        const minimumFreezeDuration = 0.5;
+        const minimumFreezeDuration = 0.1;
         const coinInterval = 1;
         const maximumCoins = 20;
-        const catChance = 0.05; // Chance of a cat replacing a timed coin drop.
         const coinStorageKey = 'bomb-major-coins';
         const shirtColours = ['#759a87', '#a18fac', '#bd8279', '#c39b60', '#829eaf'];
         let characters = [];
         let targetedCat = null;
         let coins = [];
         let magnet = null;
+        const content = window.BombContent, market = window.BombMarket;
+        const powerSize = 40, poopSize = 24, ropeLength = 100;
+        const powerDrops = new Map();
+        let cow = null, poops = [], shieldReady = false;
+        let bananaRemaining = 0, bananaSpin = null, repelRemaining = 0, tetherRemaining = 0;
+        let treadmillRemaining = 0, treadmillElapsed = 0;
+        let bookElapsed = 0, evasionTarget = null, evasionElapsed = 0;
+        let noticeRemaining = 0, noticeText = '';
+
         let bombPosition = { x: 0, y: 0 };
         let blockPosition = { x: 0, y: 0 };
         let blockVelocity = { x: 180, y: 140 };
@@ -317,14 +323,11 @@ const playSpace = document.querySelector('.playSpace');
         let gameOverTimeout;
         let blockClickedTimeout;
 
-        try {
-            const saved = Number(localStorage.getItem(coinStorageKey));
-            if (Number.isSafeInteger(saved) && saved >= 0) coinTotal = saved;
-        } catch (error) {
-            coinSaveNote.hidden = false;
-        }
+        coinTotal = market.wallet();
         function saveCoins() {
             try {
+                if (!market.updateWallet(coinTotal)) throw new Error('Saving unavailable');
+                // Keep the legacy balance available to previous versions of the game.
                 localStorage.setItem(coinStorageKey, String(coinTotal));
                 coinSaveNote.hidden = true;
             } catch (error) {
@@ -350,8 +353,9 @@ const playSpace = document.querySelector('.playSpace');
                 a.y < b.y + bSize + gap && a.y + aSize + gap > b.y;
         }
         function freeCharacterPosition(position, ignore = null, avoidCharacters = true) {
-            return Math.hypot(position.x - bombPosition.x, position.y - bombPosition.y) > 100 &&
+            return Math.hypot(position.x - bombPosition.x, position.y - bombPosition.y) > awarenessRadius() &&
                 !overlaps(position, size, blockPosition, blockSize) &&
+                (!cow || ignore === cow || !overlaps(position, size, cow.position, size, 4)) &&
                 (!avoidCharacters || characters.every(character => character === ignore ||
                     !overlaps(position, size, character.position, size, 4)));
         }
@@ -424,7 +428,9 @@ const playSpace = document.querySelector('.playSpace');
                 element.classList.add('cat');
                 element.replaceChild(catTemplate.content.firstElementChild.cloneNode(true), element.querySelector('svg'));
             } else {
-                element.querySelector('rect').setAttribute('fill', shirtColours[(id - 1) % shirtColours.length]);
+                const model = content.models[Math.floor(Math.random() * content.models.length)];
+                element.querySelector('svg').outerHTML = model.art;
+                if (model.id === 'explorer') element.querySelector('rect').setAttribute('fill', shirtColours[(id - 1) % shirtColours.length]);
             }
             const label = document.createElement('span');
             label.className = 'character-number';
@@ -447,7 +453,7 @@ const playSpace = document.querySelector('.playSpace');
             }
         }
         function currentFreezeDuration() {
-            return Math.max(minimumFreezeDuration, freezeDuration - jumps * freezeReductionPerJump);
+            return Math.max(minimumFreezeDuration, content.balance.freeze[market.tier('freeze')] - jumps * freezeReductionPerJump);
         }
         function freezeBomb() {
             if (frozenRemaining <= 0) {
@@ -466,7 +472,7 @@ const playSpace = document.querySelector('.playSpace');
                     blockVelocity[axis] *= -1;
                     sound.play('bounce');
                 }
-                if (overlaps(blockPosition, blockSize, bombPosition, size)) {
+                if (tetherRemaining <= 0 && overlaps(blockPosition, blockSize, bombPosition, size)) {
                     blockPosition[axis] = oldPosition;
                     blockVelocity[axis] *= -1;
                     freezeBomb();
@@ -505,34 +511,36 @@ const playSpace = document.querySelector('.playSpace');
             });
         }
         function spawnDrop() {
-            const roll = Math.random();
-            const isMagnet = !magnet && roll < magnetChance;
-            const hasCat = characters.some(character => character.isCat) ||
-                playSpace.querySelector('.cat-running');
-            const isCat = !hasCat && roll >= magnetChance && roll < magnetChance + catChance;
-            if (isCat) {
-                const position = findCharacterPosition();
-                if (position) {
-                    addCharacter(position, true);
-                    sound.play('cat');
+            const roll = Math.random(); let cutoff = 0, type = 'coin';
+            for (const drop of content.drops) {
+                cutoff += content.dropChance(drop.id, market.tier(drop.id));
+                if (roll < cutoff) { type = drop.id; break; }
+            }
+            if (type === 'cat') {
+                if (!characters.some(character => character.isCat) && !playSpace.querySelector('.cat-running')) {
+                    const position = findCharacterPosition();
+                    if (position) { addCharacter(position, true); sound.play('cat'); }
                 }
                 return;
             }
-            if (!isMagnet && coins.length >= maximumCoins) return;
-            const dropSize = isMagnet ? magnetSize : coinSize;
+            if (type === 'cow') { spawnCow(); return; }
+            if ((type === 'magnet' && magnet) || powerDrops.has(type) || (type === 'shield' && shieldReady) || (type === 'treadmill' && treadmillRemaining > 0)) return;
+            if (type === 'coin' && coins.length >= maximumCoins) return;
+            const dropSize = type === 'coin' ? coinSize : powerSize;
             const limit = bounds(dropSize);
             for (let attempt = 0; attempt < 100; attempt++) {
                 const position = { x: Math.random() * limit.x, y: Math.random() * limit.y };
                 if (overlaps(position, dropSize, blockPosition, blockSize) ||
                     overlaps(position, dropSize, bombPosition, size) ||
                     characters.some(character => overlaps(position, dropSize, character.position, size)) ||
+                    (cow && overlaps(position, dropSize, cow.position, size)) ||
                     coins.some(coin => overlaps(position, dropSize, coin.position, coinSize, 4)) ||
+                    poops.some(poop => overlaps(position, dropSize, poop.position, poopSize, 4)) ||
+                    [...powerDrops.values()].some(drop => overlaps(position, dropSize, drop.position, powerSize, 4)) ||
                     (magnet && overlaps(position, dropSize, magnet.position, magnetSize, 4))) continue;
-                if (isMagnet) addMagnet(position);
-                else {
-                    addCoin(position);
-                    sound.play('drop');
-                }
+                if (type === 'magnet') addMagnet(position);
+                else if (type === 'coin') { addCoin(position); sound.play('drop'); }
+                else addPower(type, position);
                 return;
             }
         }
@@ -587,14 +595,239 @@ const playSpace = document.querySelector('.playSpace');
             }
             return closest;
         }
+        function awarenessRadius() { return content.balance.awareness[market.tier('awareness')]; }
+        function blockMultiplier() { return 1 + content.balance.speed[market.tier('speed')] / 100; }
+        function currentBombSpeed() { return (bombSpeed + bombSpeedBoost) * (1 - content.balance.slowness[market.tier('slowness')] / 100); }
+        function setBlockBoost(multiplier) {
+            const magnitude = Math.hypot(blockVelocity.x, blockVelocity.y);
+            const normalSpeed = Math.hypot(180, 140) * blockMultiplier();
+            if (magnitude > 0) {
+                const ratio = normalSpeed * multiplier / magnitude;
+                blockVelocity.x *= ratio; blockVelocity.y *= ratio;
+            } else blockVelocity = { x: 180 * blockMultiplier() * multiplier, y: 140 * blockMultiplier() * multiplier };
+        }
+        function stopTreadmill() {
+            treadmillRemaining = 0; treadmillElapsed = 0; setBlockBoost(1);
+        }
+        function updateTreadmill(seconds) {
+            if (treadmillRemaining <= 0) return;
+            const activeSeconds = Math.min(seconds, treadmillRemaining);
+            treadmillElapsed += activeSeconds;
+            treadmillRemaining = Math.max(0, treadmillRemaining - activeSeconds);
+            if (treadmillRemaining <= 0) {
+                stopTreadmill(); sound.play('thaw'); announce('Treadmill finished. Block speed back to normal.');
+            } else setBlockBoost(1 + content.balance.treadmillGainPerSecond * treadmillElapsed);
+        }
+        function announce(message) { noticeText = message; noticeRemaining = 3; setText(status, message); }
+        function positionElement(object) { object.element.style.transform = `translate(${object.position.x}px, ${object.position.y}px)`; }
+        function addPower(type, position) {
+            const element = document.createElement('button');
+            element.type = 'button'; element.className = 'power-drop power-' + type;
+            const label = { shield: 'Shield: protect the next human hit', banana: 'Banana peel: make the bomb circle twice', string: 'String: tether the dangerous bomb for 10 seconds', treadmill: 'Treadmill: temporarily accelerate the block' }[type];
+            element.setAttribute('aria-label', label); element.title = label; element.innerHTML = content.icons[type];
+            const drop = { position, element }; powerDrops.set(type, drop); positionElement(drop); playSpace.append(element); sound.play('magnetDrop');
+            element.addEventListener('click', () => {
+                if (!playing || ended || powerDrops.get(type) !== drop) return;
+                sound.unlock(); element.remove(); powerDrops.delete(type);
+                if (type === 'treadmill') { treadmillRemaining = content.balance.treadmillDuration[market.tier('treadmill')]; treadmillElapsed = 0; setBlockBoost(1); announce('Treadmill! The block keeps getting faster for ' + treadmillRemaining + ' seconds.'); }
+                if (type === 'shield') { shieldReady = true; announce('Shield ready. The next human hit is protected.'); }
+                if (type === 'banana') { startBananaSpin(); announce('Banana slip! Two tight circles. Watch out—it can still hit friends.'); }
+                if (type === 'string') { tetherRemaining = 10; dragBomb(); announce('Tethered for 10 seconds. The bomb can still hit friends!'); }
+                sound.play('freeze'); draw();
+            });
+        }
+        function spawnCow() {
+            if (cow || market.tier('cow') === 0) return;
+            const position = findCharacterPosition(); if (!position) return;
+            const element = document.createElement('button'); element.type = 'button'; element.className = 'cow';
+            element.innerHTML = content.cow; element.title = 'A wandering cow. Let the block send its poop toward the bomb!';
+            element.setAttribute('aria-label', 'Wandering cow. Its poop can be deflected by the block.');
+            const angle = Math.random() * Math.PI * 2;
+            cow = { position, element, vx: Math.cos(angle) * 24, vy: Math.sin(angle) * 24, turn: 3, poop: 6 };
+            playSpace.append(element); positionElement(cow); sound.play('arrival'); announce('A cow wandered in. Send its poop at the bomb with your block!');
+            element.addEventListener('click', () => { if (playing) { sound.unlock(); sound.play('cat'); announce('Moo! The bomb never targets the cow.'); } });
+        }
+        function leavePoop() {
+            if (!cow) return;
+            const count = content.balance.cowPiles[market.tier('cow')], spacing = poopSize + 4;
+            for (let pile = 0; pile < count && poops.length < 24; pile++) {
+                const position = { x: cow.position.x + 20 + (pile - (count - 1) / 2) * spacing, y: cow.position.y + 39 };
+                clampPosition(position, poopSize);
+                if (poops.some(poop => overlaps(position, poopSize, poop.position, poopSize))) continue;
+                const element = document.createElement('div'); element.className = 'cow-poop'; element.innerHTML = content.icons.poop;
+                element.setAttribute('aria-label', 'Cow poop. Deflect with the block.');
+                const poop = { position, element, flying: false, life: 25, vx: 0, vy: 0 };
+                poops.push(poop); positionElement(poop); playSpace.append(element);
+            }
+        }
+        function startBananaSpin() {
+            const limit = bounds(), radius = Math.min(14, limit.x / 2, limit.y / 2);
+            const center = {
+                x: Math.max(radius, Math.min(limit.x - radius, bombPosition.x - radius)),
+                y: Math.max(radius, Math.min(limit.y - radius, bombPosition.y))
+            };
+            bananaRemaining = 1.2;
+            bananaSpin = { center, phase: Math.atan2(bombPosition.y - center.y, bombPosition.x - center.x), elapsed: 0, duration: 1.2, radius };
+        }
+        function moveBanana(seconds) {
+            if (!bananaSpin) return;
+            bananaSpin.elapsed = Math.min(bananaSpin.duration, bananaSpin.elapsed + seconds);
+            const angle = bananaSpin.phase + bananaSpin.elapsed / bananaSpin.duration * Math.PI * 4;
+            bombPosition = {
+                x: bananaSpin.center.x + Math.cos(angle) * bananaSpin.radius,
+                y: bananaSpin.center.y + Math.sin(angle) * bananaSpin.radius
+            };
+            clampPosition(bombPosition);
+            bananaRemaining = Math.max(0, bananaSpin.duration - bananaSpin.elapsed);
+            if (bananaRemaining <= 0) { bananaSpin = null; untangleBomb(); }
+        }
+        function safestBombPoint() {
+            const limit = bounds(); let best = { ...bombPosition }, distance = -1;
+            for (let row = 0; row <= 4; row++) for (let column = 0; column <= 4; column++) {
+                const point = { x: limit.x * column / 4, y: limit.y * row / 4 };
+                if (overlaps(point, size, blockPosition, blockSize)) continue;
+                const nearest = Math.min(...characters.map(character => Math.hypot(point.x - character.position.x, point.y - character.position.y)));
+                if (nearest > distance) { best = point; distance = nearest; }
+            }
+            return best;
+        }
+        function moveBombAway(seconds) {
+            if (!evasionTarget) evasionTarget = safestBombPoint();
+            const dx = evasionTarget.x - bombPosition.x, dy = evasionTarget.y - bombPosition.y, distance = Math.hypot(dx, dy);
+            if (!distance) return;
+            const step = Math.min(distance, Math.max(160, currentBombSpeed() * 1.4) * seconds);
+            const next = { x: bombPosition.x + dx / distance * step, y: bombPosition.y + dy / distance * step };
+            if (!overlaps(next, size, blockPosition, blockSize)) bombPosition = next;
+        }
+        function dragBomb() {
+            const anchor = { x: blockPosition.x + (blockSize - size) / 2, y: blockPosition.y + (blockSize - size) / 2 };
+            const dx = bombPosition.x - anchor.x, dy = bombPosition.y - anchor.y, distance = Math.hypot(dx, dy);
+            if (distance > ropeLength) bombPosition = { x: anchor.x + dx / distance * ropeLength, y: anchor.y + dy / distance * ropeLength };
+            clampPosition(bombPosition);
+        }
+        function untangleBomb() {
+            if (!overlaps(bombPosition, size, blockPosition, blockSize)) return;
+            const options = [
+                { x: blockPosition.x - size - 2, y: bombPosition.y }, { x: blockPosition.x + blockSize + 2, y: bombPosition.y },
+                { x: bombPosition.x, y: blockPosition.y - size - 2 }, { x: bombPosition.x, y: blockPosition.y + blockSize + 2 }
+            ];
+            options.forEach(point => clampPosition(point));
+            const safe = options.filter(point => !overlaps(point, size, blockPosition, blockSize));
+            safe.sort((a, b) => Math.hypot(a.x - bombPosition.x, a.y - bombPosition.y) - Math.hypot(b.x - bombPosition.x, b.y - bombPosition.y));
+            if (safe.length) bombPosition = safe[0];
+            freezeBomb();
+        }
+        function moveReaders() {
+            const step = content.balance.bookStep[market.tier('book')];
+            for (const character of characters) {
+                if (character.isCat) continue;
+                const dx = character.position.x - bombPosition.x, dy = character.position.y - bombPosition.y, distance = Math.hypot(dx, dy) || 1;
+                for (const [x, y] of [[dx / distance * step, dy / distance * step], [dx / distance * step, 0], [0, dy / distance * step]]) {
+                    const point = { x: character.position.x + x, y: character.position.y + y }; clampPosition(point);
+                    if (Math.hypot(point.x - bombPosition.x, point.y - bombPosition.y) <= distance ||
+                        overlaps(point, size, blockPosition, blockSize) || (cow && overlaps(point, size, cow.position, size)) ||
+                        characters.some(other => other !== character && overlaps(point, size, other.position, size, 4))) continue;
+                    character.position = point; break;
+                }
+            }
+        }
+        function poopHitsBomb(poop) {
+            if (!overlaps(poop.position, poopSize, bombPosition, size)) return false;
+            const duration = content.balance.cowRepelDuration[Math.max(1, market.tier('cow'))];
+            // Another pile refreshes the timer; it does not add durations together.
+            repelRemaining = Math.max(repelRemaining, duration);
+            evasionTarget = safestBombPoint(); evasionElapsed = .3;
+            announce('Poop hit! The bomb avoids everyone for ' + duration + ' seconds.'); sound.play('freeze');
+            return true;
+        }
+        function checkPoopBombContacts() {
+            poops = poops.filter(poop => {
+                if (!poopHitsBomb(poop)) return true;
+                poop.element.remove(); return false;
+            });
+        }
+        function updateExtras(seconds) {
+            for (const character of characters) character.invulnerable = Math.max(0, (character.invulnerable || 0) - seconds);
+            repelRemaining = Math.max(0, repelRemaining - seconds);
+            const wasTethered = tetherRemaining > 0; tetherRemaining = Math.max(0, tetherRemaining - seconds);
+            if (wasTethered && tetherRemaining <= 0) untangleBomb();
+            if (cow) {
+                const limit = bounds(); cow.turn -= seconds; cow.poop -= seconds;
+                if (cow.turn <= 0) { const angle = Math.random() * Math.PI * 2; cow.vx = Math.cos(angle) * 24; cow.vy = Math.sin(angle) * 24; cow.turn = 3; }
+                const next = { x: cow.position.x + cow.vx * seconds, y: cow.position.y + cow.vy * seconds };
+                if (next.x < 0 || next.x > limit.x) cow.vx *= -1;
+                if (next.y < 0 || next.y > limit.y) cow.vy *= -1;
+                clampPosition(next);
+                if (!overlaps(next, size, blockPosition, blockSize) && !characters.some(character => overlaps(next, size, character.position, size))) cow.position = next;
+                else { cow.vx *= -1; cow.vy *= -1; }
+                if (cow.poop <= 0) { leavePoop(); cow.poop = 6; }
+                if (Math.hypot(cow.position.x - bombPosition.x, cow.position.y - bombPosition.y) < collisionDistance) {
+                    cow.element.remove(); cow = null; sound.play('escape'); announce('The cow wandered off. Its poop is still useful!');
+                }
+            }
+            poops = poops.filter(poop => {
+                poop.life -= seconds;
+                if (poop.life <= 0 || poopHitsBomb(poop)) { poop.element.remove(); return false; }
+                if (!poop.flying && overlaps(poop.position, poopSize, blockPosition, blockSize)) {
+                    const dx = bombPosition.x + size / 2 - poop.position.x - poopSize / 2;
+                    const dy = bombPosition.y + size / 2 - poop.position.y - poopSize / 2;
+                    const distance = Math.hypot(dx, dy) || 1;
+                    poop.vx = dx / distance * 280; poop.vy = dy / distance * 280; poop.flying = true; poop.life = 6;
+                    poop.element.classList.add('flying'); sound.play('block');
+                }
+                if (poop.flying) {
+                    poop.position.x += poop.vx * seconds; poop.position.y += poop.vy * seconds;
+                    if (poopHitsBomb(poop)) { poop.element.remove(); return false; }
+                    const limit = bounds(poopSize);
+                    if (poop.position.x < 0 || poop.position.y < 0 || poop.position.x > limit.x || poop.position.y > limit.y) {
+                        poop.element.remove(); return false;
+                    }
+                }
+                return true;
+            });
+        }
+        function drawExtras() {
+            if (cow) positionElement(cow);
+            poops.forEach(positionElement); powerDrops.forEach(positionElement);
+            const rope = document.querySelector('#tether-line');
+            rope.parentElement.toggleAttribute('hidden', tetherRemaining <= 0);
+            // Use a real SVG width/height so its coordinates match the arena's CSS pixels.
+            rope.parentElement.setAttribute('viewBox', `0 0 ${playSpace.clientWidth} ${playSpace.clientHeight}`);
+            rope.setAttribute('x1', blockPosition.x + blockSize / 2); rope.setAttribute('y1', blockPosition.y + blockSize / 2);
+            rope.setAttribute('x2', bombPosition.x + size / 2); rope.setAttribute('y2', bombPosition.y + size / 2);
+            const effects = [];
+            if (shieldReady) effects.push('Shield · 1 hit');
+            if (tetherRemaining > 0) effects.push('String · ' + tetherRemaining.toFixed(1) + 's');
+            if (bananaSpin) effects.push('Banana · ' + (2 * (1 - bananaSpin.elapsed / bananaSpin.duration)).toFixed(1) + ' turns left');
+            if (repelRemaining > 0) effects.push('Poop repel · ' + repelRemaining.toFixed(1) + 's');
+            if (treadmillRemaining > 0) effects.push('Treadmill · ' + treadmillRemaining.toFixed(1) + 's · ' + (1 + content.balance.treadmillGainPerSecond * treadmillElapsed).toFixed(2) + '× speed');
+            if (market.hasBook()) effects.push('Book · tier ' + market.tier('book'));
+            setText(document.querySelector('#active-effects'), effects.length ? effects.join('  ·  ') : 'Unlock helpful drops in the marketplace.');
+        }
+        function clearExtras() {
+            stopTreadmill();
+            if (cow) cow.element.remove(); cow = null;
+            poops.forEach(poop => poop.element.remove()); poops = [];
+            powerDrops.forEach(drop => drop.element.remove()); powerDrops.clear();
+            shieldReady = false; bananaRemaining = 0; bananaSpin = null; repelRemaining = 0; tetherRemaining = 0;
+            bookElapsed = 0; evasionElapsed = 0; evasionTarget = null; noticeRemaining = 0;
+        }
         function draw() {
             for (const character of characters) {
                 character.element.style.transform = `translate(${character.position.x}px, ${character.position.y}px)`;
                 character.element.classList.toggle('bomb-target', character === targetedCat);
+                character.element.classList.toggle('shielded', !character.isCat && shieldReady);
+                character.element.classList.toggle('invulnerable', character.invulnerable > 0);
             }
+            drawExtras();
+            bomb.classList.toggle('slipping', bananaRemaining > 0);
+            bomb.querySelector('.bomb-art').style.rotate = bananaSpin ? (bananaSpin.elapsed / bananaSpin.duration * 720) + 'deg' : '';
+            bomb.classList.toggle('repelled', repelRemaining > 0);
+            bomb.classList.toggle('tethered', tetherRemaining > 0);
             bomb.style.transform = `translate(${bombPosition.x}px, ${bombPosition.y}px)`;
             clickyBlock.style.transform = `translate(${blockPosition.x}px, ${blockPosition.y}px)`;
             clickyBlock.classList.toggle('magnet-active', coins.some(coin => coin.attracted));
+            clickyBlock.classList.toggle('treadmill-active', treadmillRemaining > 0);
             const frozen = frozenRemaining > 0;
             bomb.classList.toggle('frozen', frozen);
             freezeMeter.hidden = !frozen;
@@ -611,6 +844,7 @@ const playSpace = document.querySelector('.playSpace');
         }
         function reset() {
             sound.reset();
+            clearExtras();
             cancelAnimationFrame(animationFrame);
             clearTimeout(gameOverTimeout);
             clearTimeout(blockClickedTimeout);
@@ -627,13 +861,14 @@ const playSpace = document.querySelector('.playSpace');
             const limit = bounds();
             bombPosition = { x: limit.x * 0.1, y: limit.y * 0.5 };
             blockPosition = { x: bounds(blockSize).x * 0.5, y: 0 };
-            blockVelocity = { x: 180, y: 140 };
+            blockVelocity = { x: 180 * blockMultiplier(), y: 140 * blockMultiplier() };
             frozenRemaining = 0;
             activeFreezeDuration = 0;
             clickyBlock.classList.remove('clicked');
             clickyBlock.textContent = 'Click Me';
             playing = false;
             ended = false;
+            document.querySelector('#market-button').disabled = false;
             jumps = 0;
             bombSpeedBoost = 0;
             elapsed = 0;
@@ -693,9 +928,18 @@ const playSpace = document.querySelector('.playSpace');
             element.style.transform = `translate(${exitX}px, ${character.position.y}px)`;
         }
         function killCaughtCharacters() {
+            if (repelRemaining > 0) return;
             characters = characters.filter(character => {
                 if (Math.hypot(character.position.x - bombPosition.x,
                     character.position.y - bombPosition.y) > collisionDistance) return true;
+                if (character.invulnerable > 0) return true;
+                if (!character.isCat && shieldReady) {
+                    shieldReady = false; character.invulnerable = 1.5;
+                    const safe = findCharacterPosition(character);
+                    if (safe) character.position = safe;
+                    announce('Shield saved a friend! One charge used.'); sound.play('freeze');
+                    return true;
+                }
                 if (character.isCat) {
                     releaseCat(character);
                 } else {
@@ -707,6 +951,9 @@ const playSpace = document.querySelector('.playSpace');
             if (!characters.some(character => !character.isCat)) {
                 playing = false;
                 ended = true;
+                window.BombScores.add({ seconds: elapsed, coins: roundCoins, jumps });
+                stopTreadmill();
+                document.querySelector('#market-button').disabled = false;
                 sound.music(false);
                 bomb.hidden = true;
                 setText(status, 'No characters left. Game over!');
@@ -719,9 +966,10 @@ const playSpace = document.querySelector('.playSpace');
             }
         }
         function start() {
-            if (playing || ended) return;
+            if (playing || ended || document.querySelector('#market-dialog').open) return;
             sound.play('start');
             playing = true;
+            document.querySelector('#market-button').disabled = true;
             sound.music(true);
             previousTime = 0;
             animationFrame = requestAnimationFrame(chase);
@@ -741,10 +989,19 @@ const playSpace = document.querySelector('.playSpace');
                 joinRetryElapsed = 0;
                 addPendingCharacters();
             }
-            const currentSpeed = bombSpeed + bombSpeedBoost;
+            noticeRemaining = Math.max(0, noticeRemaining - seconds);
+            evasionElapsed -= seconds;
+            if (repelRemaining > 0 && evasionElapsed <= 0) {
+                evasionTarget = safestBombPoint(); evasionElapsed = .3;
+            }
+            bookElapsed += seconds;
+            while (bookElapsed >= .2) { bookElapsed -= .2; if (market.hasBook()) moveReaders(); }
+            updateTreadmill(seconds);
+            const currentSpeed = currentBombSpeed();
             // Small movement steps keep the fast bomb and block from tunnelling.
             const pullSpeed = coins.some(coin => coin.attracted) ? coinPullSpeed : 0;
-            const steps = Math.max(1, Math.ceil(Math.max(currentSpeed, pullSpeed,
+            const steps = Math.max(1, Math.ceil(Math.max(currentSpeed * (repelRemaining > 0 ? 1.4 : 1), pullSpeed,
+                poops.some(poop => poop.flying) ? 280 : 0, (bananaRemaining > 0 || repelRemaining > 0) ? 160 : 0,
                 Math.abs(blockVelocity.x), Math.abs(blockVelocity.y)) * seconds / 4));
             const stepSeconds = seconds / steps;
             for (let i = 0; i < steps; i++) {
@@ -752,6 +1009,7 @@ const playSpace = document.querySelector('.playSpace');
                 const movingSeconds = Math.max(0, stepSeconds - frozenRemaining);
                 frozenRemaining = Math.max(0, frozenRemaining - stepSeconds);
                 moveBlock(stepSeconds);
+                updateExtras(stepSeconds);
                 if (previousFreezeRemaining > 0 && frozenRemaining <= 0) {
                     sound.play('thaw');
                 } else if (frozenRemaining > 0 && Math.ceil(frozenRemaining) <= 3 &&
@@ -760,23 +1018,26 @@ const playSpace = document.querySelector('.playSpace');
                 }
                 pullCoins(stepSeconds);
                 collectCoins();
-                if (frozenRemaining <= 0 && movingSeconds > 0) {
+                if (bananaSpin) moveBanana(stepSeconds);
+                else if (tetherRemaining > 0) dragBomb();
+                else if (repelRemaining > 0) moveBombAway(stepSeconds);
+                else if (frozenRemaining <= 0 && movingSeconds > 0) {
                     const target = chooseBombTarget();
                     if (target) {
                         const dx = target.position.x - bombPosition.x;
                         const dy = target.position.y - bombPosition.y;
                         const distance = Math.hypot(dx, dy);
-                        const step = Math.min((bombSpeed + bombSpeedBoost) * movingSeconds, distance);
+                        const step = Math.min(currentBombSpeed() * movingSeconds, distance);
                         if (distance > 0) {
-                            const next = {
-                                x: bombPosition.x + dx / distance * step,
-                                y: bombPosition.y + dy / distance * step
-                            };
+                            const next = { x: bombPosition.x + dx / distance * step, y: bombPosition.y + dy / distance * step };
                             if (overlaps(next, size, blockPosition, blockSize)) freezeBomb();
                             else bombPosition = next;
                         }
                     }
                 }
+                if (tetherRemaining > 0) dragBomb();
+                // Contact with a pile applies before catches in this same movement step.
+                checkPoopBombContacts();
                 killCaughtCharacters();
                 if (ended) {
                     draw();
@@ -784,16 +1045,17 @@ const playSpace = document.querySelector('.playSpace');
                 }
             }
             draw();
-            setText(status, `Jumps: ${jumps} · Survived: ${elapsed.toFixed(1)}s`);
+            setText(status, noticeRemaining > 0 ? noticeText : `Jumps: ${jumps} · Survived: ${elapsed.toFixed(1)}s`);
             animationFrame = requestAnimationFrame(chase);
         }
         function jumpCharacter(character) {
-            if (ended || !characters.includes(character)) return;
+            if (ended || document.querySelector('#market-dialog').open || !characters.includes(character)) return;
             sound.unlock();
             sound.play(character.isCat ? 'cat' : 'jump');
             if (character.isCat) targetedCat = character;
-            const next = findCharacterPosition(character, false);
+            const next = findCharacterPositionWithRoom(character);
             if (!next) {
+                announce('No safe spot in your Safe jump radius. Try again in a moment.');
                 draw();
                 start();
                 return;
@@ -817,7 +1079,7 @@ const playSpace = document.querySelector('.playSpace');
             clampPosition(blockPosition, blockSize);
             const limit = bounds();
             const blockLimit = bounds(blockSize);
-            if (overlaps(blockPosition, blockSize, bombPosition, size)) {
+            if (tetherRemaining <= 0 && overlaps(blockPosition, blockSize, bombPosition, size)) {
                 blockPosition.y = bombPosition.y < limit.y / 2 ? blockLimit.y : 0;
                 freezeBomb();
             }
@@ -829,11 +1091,21 @@ const playSpace = document.querySelector('.playSpace');
                 clampPosition(magnet.position, magnetSize);
                 magnet.element.style.transform = `translate(${magnet.position.x}px, ${magnet.position.y}px)`;
             }
+            if (bananaSpin) {
+                bananaSpin.radius = Math.min(14, limit.x / 2, limit.y / 2);
+                const radius = bananaSpin.radius;
+                bananaSpin.center.x = Math.max(radius, Math.min(limit.x - radius, bananaSpin.center.x));
+                bananaSpin.center.y = Math.max(radius, Math.min(limit.y - radius, bananaSpin.center.y));
+            }
+            if (cow) clampPosition(cow.position);
+            for (const drop of powerDrops.values()) clampPosition(drop.position, powerSize);
+            for (const poop of poops) clampPosition(poop.position, poopSize);
+            if (tetherRemaining > 0) dragBomb();
             nudgeCharactersApart();
             draw();
         });
         clickyBlock.addEventListener('click', () => {
-            if (ended) return;
+            if (ended || document.querySelector('#market-dialog').open) return;
             sound.unlock();
             sound.play('block');
             const dx = bombPosition.x + size / 2 - blockPosition.x - blockSize / 2;
@@ -860,5 +1132,19 @@ const playSpace = document.querySelector('.playSpace');
             reset();
             sound.play('start');
             characters[0].element.focus();
+        });
+        market.init({
+            canOpen: () => !playing,
+            balance: () => coinTotal,
+            spend: price => {
+                if (playing || !Number.isSafeInteger(price) || price < 0 || coinTotal < price) return false;
+                coinTotal -= price; saveCoins(); sound.unlock(); sound.play('coin'); return true;
+            },
+            changed: () => {
+                if (!playing && !ended) {
+                    blockVelocity = { x: 180 * blockMultiplier(), y: 140 * blockMultiplier() };
+                }
+                draw();
+            }
         });
         reset();

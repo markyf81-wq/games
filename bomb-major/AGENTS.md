@@ -1,66 +1,101 @@
 # Bomb Major — agent guide
 
-Read `../AGENTS.md` as well. This guide describes Bomb Major's actual imported implementation, which is independent of Type & Tails.
+Read `../AGENTS.md` as well. Keep this game independent of Type & Tails, including its scripts, styles and saves.
 
-## Purpose, files, and runtime
+## Purpose and files
 
-A click-to-survive arcade game in a softly illustrated garden courtyard, with a cream/sage/terracotta/gold presentation that matches Type & Tails. Players move humans and a rare cat away from a chasing bomb, direct a bouncing block to freeze the bomb, and collect coins to add humans.
+A click-to-survive arcade game in a softly illustrated garden courtyard. Humans dodge a chasing bomb; a bouncing block freezes it, collects coins and throws cow poop. Cats, cows and clickable drops help players survive. A permanent marketplace opens between attempts. Rounds still end only when no humans remain; there are no timed waves or coin-based level endings.
 
-- `index.html`: arena markup, scoreboard, sound toggle, status/results, initial human SVG, cat/magnet/explosion templates, illustrated bomb and freeze meter, game-over overlay, and library return link. Keep its selectors and IDs compatible with the script.
-- `styles.css`: arena/entity sizes, layer order, character/cat visuals, freeze/coin/magnet states, explosion animation, overlay, and library navigation.
-- `game.js`: classic deferred script with DOM references, a `sound` closure, tuning constants/state, positioning/collision functions, drops/coins/characters, frame loop, and event listeners. It was extracted from the original single HTML without altering the gameplay statements.
-- `assets/courtyard.svg`: code-native background artwork with a lawn texture, stone border, small flowers and planting. It is visual decoration, with no obstacle collisions. CSS loads it locally; no fetch or server is needed.
-- `README.md`: player-facing controls and mechanics.
-- `../previews/bomb-major.svg`: static library thumbnail reusing this game's human/cat/bomb SVGs and courtyard palette. Keep its art and the Bomb Major `games.js` catalog entry aligned with the game.
+- `index.html`: score/effect strips, arena, human/cat/magnet/explosion SVG templates, bomb, tether SVG, game-over overlay, field guide and marketplace dialog.
+- `content.js`: `window.BombContent`; SVG icons/cow, four human models, shop tier prices and effect descriptions.
+- `scores.js`: `window.BombScores`; validates/stores/renders the browser-local top ten survival records. Load before game.
+- `marketplace.js`: `window.BombMarket`; validated upgrade/book/wallet save, marketplace rendering and purchase callbacks. Load after content and before game.
+- `game.js`: original Web Audio closure, positioning/collisions, frame loop, spawns, cow/poop, timed powers, book movement, rendering, market integration and event wiring.
+- `styles.css`: entity hitbox dimensions, state styling, layout, responsive marketplace and reduced-motion rules.
+- `assets/courtyard.svg`: local decorative background, with no obstacle collisions.
+- `README.md`: player controls and feature details.
+- `../previews/bomb-major.svg`: library thumbnail; `../games.js` contains this game's catalog record.
 
-Open `index.html` directly in Google Chrome, or enter from `../index.html`. There are no packages, network calls, builds, or downloaded audio assets. Keep the script deferred so all elements and templates exist before initialization. Keep the library link pointing to `../index.html`.
+Open `index.html` directly in Google Chrome or enter from `../index.html`. No builds, packages, network calls or audio downloads are required. Keep classic deferred scripts in the order `content.js`, `marketplace.js`, `scores.js`, `game.js`; they must work with `file://`. Preserve the library return link.
 
-## Controls and game flow
+## Round flow and controls
 
-`reset()` creates one human, positions the bomb and block, clears round state, and waits for a click. Clicking a human, cat, or block starts the simulation; the One more try button (`.restart`) resets to that waiting state and focuses the first human.
+`reset()` cancels the animation frame and delayed game-over/block text changes, cleans up temporary entities/effects, resets round counters, applies purchased block speed and creates one randomly styled human. It waits for a human or block click. Restart returns to this waiting state and focuses the human. Coins, book and upgrades persist.
 
-- Human/cat click: `jumpCharacter()` finds a safe random location, nudges characters apart, increments successful jumps, adds bomb speed, shortens current/future freeze time, and collects any touched coins. A cat click also sets `targetedCat`.
-- Block click: aim its velocity toward the bomb at its existing speed. It shows Clicked! for one second. It continues bouncing off arena walls.
-- Magnet click: mark every currently existing coin as attracted. They move toward the block and can only be collected by the block while attracted. This does not affect future drops.
-- Sound toggle: mute/unmute both effects and music.
-- Human collision: remove that human and show an explosion. Cat collision: make the cat run off-screen, drop five coins, and reset extra bomb speed. The game ends when no humans remain, even if a cat is present; show results after 650ms and focus One more try.
+- Human/cat click: find a safe random location, increment jumps, increase bomb speed and shorten freeze time only if relocation succeeds. The safe search excludes the block, cow, other characters and the current Safe jump radius around the bomb. If no position is available, refuse the jump rather than weaken the radius or overlap entities. A clicked cat becomes the preferred bomb target.
+- Block click: aim its existing velocity toward the bomb. It bounces off arena walls. Block/bomb contact freezes the bomb unless it is tethered.
+- Magnet: click to attract only the coins currently in the arena toward the block. Only the block collects attracted coins; future coins are unaffected.
+- Shield: click to arm one global human-saving charge. The next human hit consumes it, safely relocates that human if possible and gives that human 1.5 seconds of collision protection. It does not give one charge to every human. Cats escape normally; the shield is reserved for humans. The HUD and human outlines show the shared charge.
+- Banana peel: click to make the bomb travel two complete 14px-radius circles over 1.2 active seconds. `startBananaSpin()` selects a bounded center/phase; `moveBanana()` controls position in the simulation, not just a cosmetic CSS wobble. It can still hit characters while circling. Inner SVG rotation follows the same two turns; reduced motion hides the decorative rotation but preserves gameplay movement.
+- String: click to tether the bomb to the block for 10 seconds. The center-to-center distance cannot exceed 100px; the moving block drags it. It can still kill humans or catch cats while tethered; do not skip collision checks merely because a string is active. A visible line uses arena pixel coordinates. On expiry, resolve overlap with the block before normal movement resumes.
+- Treadmill: click to accelerate the block continuously for 5, 7, 10, 14 or 20 seconds at tiers 1–5. Each active second adds 5% of its normal upgraded speed, reaching almost 2× at tier 5 before expiry. `setBlockBoost()` changes magnitude while preserving velocity direction; redirection and bounces continue to work. Expiry, round end and restart return it to normal Fast block-adjusted speed. Do not compound the multiplier each frame or discard permanent speed upgrades. A second treadmill cannot spawn while one is active.
+- Cow: a separate wandering entity, never part of `characters` or `chooseBombTarget()`. It moves at 24px/s, changes direction every 3 seconds, and leaves its first poop batch after 6 seconds, then every 6 seconds. Batch size at tiers 1–5 is 1, 2, 3, 5 or 8 piles. It leaves if touched by the bomb, without ending the round or resetting speed. Clicking it only shows a message; it does not teleport or start a new round.
+- Cow poop: up to 24 simultaneous 24px piles, each lasting 25 seconds. Block contact launches a pile toward the bomb at 280px/s. Flights last at most 6 seconds or until leaving the arena. Stationary and flying piles both affect the bomb on contact, consuming that pile and making it avoid characters harmlessly for 3, 4, 5, 7 or 10 seconds at cow tiers 1–5. `content.balance.cowRepelDuration` is shared by marketplace text and collision behavior. `poopHitsBomb()` refreshes with Math.max(existing, duration), never adds durations. Check contacts before deflection, after projectile movement, and after bomb/tether movement before character catches, so a same-step pile hit protects characters immediately. Misses do not grant the effect. Remaining piles survive the cow's departure, but not a round reset.
+- Sound toggle controls effects and music. Audio unlocks only from a user gesture.
 
-There are no arrow-key movement controls or explicit pause button. Interactive entities are buttons, so keyboard focus and button activation work. Page visibility resets frame delta and suspends audio; preserve that behavior rather than documenting Type & Tails' Escape pause as a Bomb Major control.
+A human collision normally removes that human and creates an SVG starburst. Cat collision makes the cat escape, drops five coins and resets extra bomb speed. The round ends when no humans remain, even if a cat/cow exists. Show results after 650ms, stop the frame/music, enable the marketplace and focus restart. Market access is available before the first click and after game over, never during an active round. Modal guards prevent starting underneath the shop.
 
-## Tuning constants and invariants
+There are no arrow keys or explicit pause control. Buttons support keyboard activation. Tab visibility suspends audio and resets frame delta. Do not document Type & Tails' Escape pause as a control here. Escape closes the native marketplace dialog.
 
-Entity sizes: character/bomb 64px, block 96px, coin 24px, magnet 40px. CSS and JavaScript sizes must agree.
+## Permanent marketplace
 
-- Base bomb speed: 48px/s; each successful jump adds 4px/s until reset or cat escape.
-- Catch distance: 42px measured between character/bomb stored positions.
-- Freeze time: starts at 5s and decreases by 0.1s per jump, with a 0.5s floor. A currently active freeze also loses the jump's duration reduction. Block/bomb contact does not refresh an already-active freeze.
-- Initial block velocity: 180px/s horizontally and 140px/s vertically.
-- Timed drops: one attempt per second. Maximum active coins: 20.
-- A roll below 0.1 attempts a magnet if no magnet exists. Rolls from 0.1 to 0.15 attempt a cat if none is present or escaping. Otherwise attempt a coin. Keep drop positioning checks and the distinction between probability rolls and guaranteed successful placement.
-- Every ten **round** coins adds a pending human. Saved lifetime coins do not count toward the current round's milestones.
-- Attracted coins move at 900px/s. The frame loop uses movement substeps of roughly at most 4px to prevent fast objects tunnelling through collisions.
-- `findCharacterPosition()` tries random positions and a systematic fallback; `findCharacterPositionWithRoom()` can expand the arena to make room. Do not replace a failed safe-placement search with overlapping spawns. Retry pending humans while playing.
-- `chooseBombTarget()` prioritizes a clicked live cat, otherwise picks the nearest character. `releaseCat()` frees coin slots as needed so its five drops fit within the 20-coin limit. Cat escape resets speed boost; it does not reset the jump count or resulting freeze difficulty.
-- Resize must clamp entities/coins/magnet to bounds, resolve block/bomb overlap, and separate characters.
+Use the existing saved coin balance as a spendable purse. Buying never affects the round's coin milestones. The five permanent abilities and seven helpful drops all have five tiers, bought in order for **20, 80, 320, 1,280 and 5,000 coins**. `content.tiers` uses a fourfold price curve capped at 5,000 for the last tier. Benefits grow nonlinearly too: the tier 4→5 improvement must exceed tier 1→2. Keep the shared `content.balance` arrays authoritative for both card text and gameplay.
 
-`chase()` uses requestAnimationFrame, caps delta at 0.05 seconds, handles drops and pending humans, substeps movement/collisions/collection, and redraws. Keep a single frame chain; reset cancels the frame and clears delayed game-over/block state. Keep explosion and fleeing-cat cleanup.
+| Ability / save ID | Unpurchased baseline | Tiers 1–5 |
+| --- | --- | --- |
+| Slow bomb / `slowness` | 0% | 2%, 4%, 7%, 12%, 20% slower |
+| Bomb freeze / `freeze` | 0.25s | 0.5s, 0.8s, 1.4s, 2.6s, 5s base duration |
+| Fast block / `speed` | 0% | 5%, 7%, 10%, 15%, 25% faster |
+| Safe jump / `awareness` | 44px | 50px, 70px, 110px, 180px, 300px radius |
+| A little book of courage / `book` | No automatic movement | 1, 1.2, 1.6, 2.4 or 4px per 0.2s tick |
 
-## Visual design and rendering
+Freeze duration still loses 0.1s per jump, with a 0.1s floor. Slow bomb scales the whole speed including jump boosts. Block redirection preserves its current speed magnitude. Safe jump may expand a crowded/narrow arena with `findCharacterPositionWithRoom()` rather than silently reducing its radius; refuse a jump if no safe position remains after the bounded expansion attempts.
 
-The page uses the same warm paper (`#f7f4ec`), sage ink, serif headings, small letter-spaced labels, rounded cards, and restrained gold/terracotta accents as Type & Tails. Bomb Major remains independent; do not import the typing game's styles or script. The arena has a score strip above and a status strip below; instructions, cat advice and magnet advice sit alongside it, then stack on narrow screens. Every existing game element ID/class used by the script must stay available.
+**Drop unlocks:** magnet, cat, cow, shield, banana, string and treadmill must be bought before they can spawn. Their save IDs match those names. Missing tiers load as zero/locked. Coins remain always available so players can earn the first purchase. Tier 1 unlocks that drop; each later tier improves it. Magnet/cat/shield/banana/string spawn-roll odds are 1%, 1.5%, 2.5%, 4.5% and 8%. The cow has a fixed 2% spawn roll after unlock; its tiers increase batch output to 1, 2, 3, 5 and 8 piles every 6 seconds and poop repel duration to 3, 4, 5, 7 and 10 seconds. The treadmill has a fixed 2% spawn roll after unlocking; its tiers increase duration to 5, 7, 10, 14 and 20 seconds. Higher tiers do not give extra shield charges, longer banana spins or longer string durations.
 
-All artwork is local SVG/CSS. Human templates use rounded shapes, warm faces and five muted shirt colors. `addCharacter()` colors the first rectangle in the human SVG, so keep that rectangle as the shirt if adding detail. The cat matches Pip's ginger/cream coloring. The bomb is an explicit illustrated SVG rather than an OS-dependent emoji; `.frozen .bomb-shell` turns it blue and hides the fuse spark while the freeze meter is visible. Block states use sage (normal), terracotta (clicked), and a gold outline (magnet). Gold star coins replace dollar-sign coins. `showExplosion()` clones the starburst SVG from `explosionTemplate`; preserve `.explosion`'s 650ms animation and `animationend` cleanup.
+The book is a five-tier permanent ability, grouped with Slow bomb, Bomb freeze, Fast block and Safe jump, never in the drop section. It uses the same price curve and five-segment progress bar. Every 0.2 active seconds, each human attempts a step of 1, 1.2, 1.6, 2.4 or 4px at tiers 1–5 (5, 6, 8, 12 or 20px/s when unobstructed). Clamp to the arena and reject movement toward the bomb or through the block, cow or another character. Cats/cows do not receive book movement. Blocked humans stay put. Keep the 0.2-second accumulator. `content.balance.bookStep` drives both UI and movement. Legacy one-time book ownership migrates to tier 1 without another charge.
 
-Keep collision dimensions fixed at 64/96/24/40px. Positioning transforms belong to the outer entity elements and are written by `draw()`; do not add CSS transforms or generic button movement that overrides them. Character hover lifts only its inner SVG. The cat's escape transition still belongs to `.cat-running`. Decorative background borders and plants are painted behind entities and do not block movement. Keep art quiet enough that coins, characters, bomb, and block remain distinct. Respect reduced-motion preferences without preventing animation cleanup.
+Human models are randomized independently on every spawn: explorer, gardener, scholar or astronaut. They are free with identical mechanics. There is no player model selector, model purchase or saved chosen model. Random selection must not change collision size. Existing humans retain their look when buying upgrades.
 
-## Saves and audio
+`marketplace.js` renders descriptions, affordability and a five-segment progress bar for each tiered ability. Keep the exact display names Slow bomb, Bomb freeze, Fast block and Safe jump; preserve their existing save IDs. Green segments indicate purchased tiers, a gold dashed segment marks the next tier, and later tiers stay pale. A Purchased N / 5 caption and progressbar ARIA values expose the same saved tier. All five permanent abilities and seven drop unlocks have five-segment bars; tier-zero drops show Locked and an Unlock tier 1 button. The book has the same progress bar as the other permanent abilities. Bars refresh immediately after buying and on opening the shop. `marketplace.js` renders descriptions and affordability and calls the game hooks for coin spending and redraw. Validate balance again at purchase time, cap all tiers at five, prevent buying beyond tier five and restore focus after replacing shop cards. Apply all upgrades/book together; there are no equipment slots. Prices/benefits live in `content.js`, formulas in `game.js`; update both and this guide if tuning them.
 
-`bomb-major-coins` stores a nonnegative safe integer as a string. `bomb-major-sound` stores `on` or `off`, with sound enabled by default. Preserve both keys for compatible saves. Coin collection saves immediately; reset only clears current-round totals. Storage errors display the save-unavailable message and retain session play. Origin changes expose separate browser storage; do not promise automatic transfer between hosts or clear saved coins during edits.
+## Tuning, movement and effect interaction
 
-The `sound` closure builds Web Audio oscillators, filtered noise, envelopes, gain/compressor routing, effect cooldowns, and an original four-bar background loop. `unlock()` creates/resumes audio only on a user gesture. `music()` follows running/game-over state; mute and visibility changes stop/suspend scheduling. Sources are tracked and disconnected on completion. Reset must stop old voices/music without duplicating intervals. No audio files are needed.
+Keep CSS/JS sizes aligned: human/cat/cow/bomb 64px, block 96px, coin/poop 24px, magnet/power drop 40px.
 
-## Editing and verification
+- Bomb baseline is 48px/s, plus 2px/s per successful teleport, then multiplied by the Slow bomb tier factor.
+- Catch distance is 42px between stored top-left positions; do not mix center-distance checks into existing catches. String uses centers explicitly.
+- Unpurchased freeze starts at 0.25 seconds; tier values are in `content.balance.freeze`. Each jump reduces duration by 0.1s, floor 0.1s. An active freeze also loses the jump's duration reduction. Contact does not refresh an existing freeze.
+- Block starts at velocity (180,140) multiplied by its upgrade factor.
+- One timed spawn attempt per second. Build cumulative weights from `content.drops`, `content.dropChance()` and the saved tier; tier-zero weights are exactly zero. Remaining probability spawns a coin. Existing same-type powers, cat/cow, or an armed shield cause that attempt to be skipped. Rolls do not guarantee safe placement. Only one magnet/cat/cow/drop of each type may exist.
+- Coins cap at 20; each ten round coins adds a pending human. Coins in the purse from previous rounds do not count. Cat escape frees coin slots as needed to fit its five drops.
+- Attracted coins move at 900px/s. `chase()` uses delta capped at 0.05s and movement substeps around 4px, accounting for bomb, avoidance speed, block, attracted coins and flying poop. Maintain a single RAF chain.
+- New humans use randomized placement plus systematic fallback; crowded arenas may expand to make room. Never spawn overlaps as a fallback. Retry pending humans while playing.
+- Treadmill acceleration updates before substep count selection, so fast block movement is included in collision subdivision. It uses the existing active-frame delta, with no extra interval or RAF chain. HUD shows remaining seconds and speed multiplier; the block has a dashed ring while boosted. Temporary speed combines with permanent Fast block and the tether.
+- Banana movement has priority, with a simultaneous string constraint applied afterward; otherwise string drag, then poop avoidance, then ordinary freeze/chase. Timers run concurrently during active simulation. Only poop repel skips character catches. String and banana do not grant invulnerability: shield consumption, deaths and cat escapes still happen. Cow contact is independent. On expiry, normal chasing returns; resolve block overlap when a spin/string ends.
+- Avoidance picks a point with a large minimum distance from characters, refreshing every .3s. Movement stays in the arena and avoids the block. It is temporary, not a speed reset.
+- Resize clamps all entity types and redraws the tether; resolve bomb/block overlap and separate characters. Reset removes cow, all poop/projectiles/drops, shield charge, invulnerability, and temporary timers; permanent upgrades survive.
 
-Keep game changes scoped to this directory and its catalog/thumbnail entry. Update this guide and README when controls, constants, persistence, or files change. Read the root Git/testing rules: no automatic tests, builds, lint, browser automation, or screenshots; source review is normal. No test suite currently exists.
+## Saves
 
-If Mark requests a focused browser check, relevant migration checks are deferred initialization, start/jump/block interactions, coin/magnet/cat behaviors, ten-coin human milestones, freeze/restart, audio toggle and tab visibility, saved coins after reload, resize, and library navigation. Run only the approved scope and report checks actually performed.
+`bomb-major-market-v1` stores `{wallet, book, upgrades: {slowness, freeze, speed, awareness, book, magnet, cat, cow, shield, banana, string, treadmill}}`. Validate wallet as a nonnegative safe integer, the legacy book field as boolean and each tier as an integer 0–5. Unknown fields are ignored. Existing purchased tiers, book ownership and wallet are retained during rebalancing; newly introduced drop tier fields (including treadmill) default to zero/locked. Keep these save IDs stable even when changing display names. When no valid new wallet exists, initialize it from the legacy `bomb-major-coins` string; never clear old progress. The new combined record is authoritative after it exists. If `upgrades.book` is missing and legacy `book` is true, give book tier 1. A valid `upgrades.book` value is authoritative, and saves mirror its ownership to the legacy boolean. Never reapply the migration over an existing tier or charge again.
+
+Purchases mutate ownership before the game deducts coins and calls `updateWallet()`, so ownership and the resulting balance are written atomically in the same localStorage value. `game.js` mirrors a successful balance write to `bomb-major-coins` for older game versions; failed primary writes do not update the mirror. Coin collection also saves immediately. Save failures retain session play/purchases and show a limitation. Reload may lose unsaved changes. Browser saves belong to their origin.
+
+`bomb-major-sound` remains `on`/`off`, enabled by default. Keep its key stable. Active rounds, drops and timers are not persisted.
+
+## Art and audio
+
+Keep the warm paper, sage ink, serif headings, small labels and rounded cards aligned with Type & Tails while keeping code isolated. All new power/cow/model art lives in `content.js`; room/background art stays local. The bomb is a consistent SVG rather than an OS emoji. Its freeze, slipping, tether and repel states have distinct styling. The effect strip shows one-hit shield, active durations and banana turns remaining. Unpurchased drops do not appear on the field.
+
+The arena uses the full content width in a page up to 1660px, with height clamp(500px,75vh,900px); on small screens height is clamp(480px,75vh,700px). Field guide/cat/magnet panels sit below the arena, followed by local scores. Keep entity hitboxes independent of this layout.
+
+Positioning transforms belong to outer entity elements and are written by `draw()`; decorative animations target inner SVGs. Do not overwrite movement transforms. Preserve explosion `animationend` cleanup and the cat escape transition. Background edging/plants are decorative, not obstacles. Respect reduced-motion preferences.
+
+The existing `sound` closure synthesizes effects and a four-bar music loop. It tracks/disconnects voices, uses effect cooldowns, and suspends scheduling while hidden/muted. Reset must stop previous sounds/music without duplicate intervals. No external media or services are needed.
+
+## Local high scores and verification
+
+Mark explicitly requested a local scoreboard after deferring the shared online leaderboard. `scores.js` stores `bomb-major-scores-v1` as an array of up to ten records `{seconds, coins, jumps, date}`. Validate finite nonnegative survival time, nonnegative safe integer counters and a valid numeric date. Keep survival times at tenths of a second. Rank by survival time descending, then round coins, then jumps, then recent date. Record once when the last human is lost, before displaying results. Restart never clears these records or records an unfinished attempt. Render only via DOM nodes/textContent. Show an empty state and session-only warning on storage failure; do not prevent restarting if saving is unavailable. Dates use browser locale; table clearly says this browser. Results link to the scores section. Shared online scores remain deferred; no database, accounts or network requests are needed.
+
+Follow root testing/Git rules: source/diff review is normal. Do not automatically run builds, lint, typechecks, browser automation, screenshots or tests. No test files were added for this feature expansion. Do not claim browser verification unless it happened. A focused check, if approved, should cover startup/restart; shop purchase/reload and legacy coin migration; upgrade limits and legacy book tier migration; local-score ordering/persistence; larger-arena layout; random human models; cow departure, stationary/flying poop contact and tier-scaled repel; shield one-hit consumption; treadmill acceleration, expiry and upgraded speed restoration; banana/string timing, 100px constraint and overlaps; simultaneous effects; cleanup; narrow screens; original cat/magnet behavior and audio.
