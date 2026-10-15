@@ -62,38 +62,38 @@
   });
 
   const ITEMS = [
-    { id: 'bow', name: 'Sunday bow', desc: 'A fancy little neck hug.', price: 300, category: 'pet', slot: 'bow', art: '🎀' },
-    { id: 'glasses', name: 'Cool cat shades', desc: 'For extremely important cat business.', price: 600, category: 'pet', slot: 'glasses', art: '🕶️' },
-    { id: 'party', name: 'Party hat', desc: 'Every little win is a party.', price: 500, category: 'pet', slot: 'hat', art: '🎉' },
-    { id: 'crown', name: 'Tiny crown', desc: 'Royal ruler of the sofa.', price: 1800, category: 'pet', slot: 'hat', art: '👑' },
-    { id: 'wizard', name: 'Wizard hat', desc: 'Purr-haps a little magic?', price: 1200, category: 'pet', slot: 'hat', art: '🧙' },
-    { id: 'beret', name: 'Artist beret', desc: 'A very cultured little cat.', price: 900, category: 'pet', slot: 'hat', art: '🎨' },
-    { id: 'plant', name: 'Leafy friend', desc: 'A little green goes a long way.', price: 400, category: 'room', slot: 'plant', art: '🪴' },
-    { id: 'art', name: 'Mountain print', desc: 'A tiny view of a bigger world.', price: 650, category: 'room', slot: 'art', art: '🖼️' },
-    { id: 'lamp', name: 'Golden glow lamp', desc: 'Warm light for cozy evenings.', price: 800, category: 'room', slot: 'lamp', art: '💡' },
-    { id: 'bunting', name: 'Happy bunting', desc: 'Good vibes, on a string.', price: 900, category: 'room', slot: 'bunting', art: '🚩' },
-    { id: 'ball', name: 'Minty yarn ball', desc: 'A very tempting tangle.', price: 350, category: 'room', slot: 'ball', art: '🧶' },
-    { id: 'stars', name: 'Wall sparkles', desc: 'For dreaming a little bigger.', price: 1600, category: 'room', slot: 'stars', art: '✨' },
-    { id: 'rug-rose', name: 'Rose-colored rug', desc: 'A rosy weave with cream diamonds.', price: 1100, category: 'room', slot: 'rug', art: '🌸' },
-    { id: 'rug-mint', name: 'Meadow rug', desc: 'A green weave with a leafy pattern.', price: 1100, category: 'room', slot: 'rug', art: '🍀' },
-    { id: 'wall-peach', name: 'Peachy walls', desc: 'A fresh coat of happy.', price: 1500, category: 'room', slot: 'wall', art: '🍑' },
-    { id: 'wall-blue', name: 'Daydream walls', desc: 'As calm as a clear sky.', price: 1500, category: 'room', slot: 'wall', art: '☁️' }
+    { id: 'bow', name: 'Sunday bow', desc: 'A fancy little neck hug.', price: 300, category: 'pet', art: '🎀' },
+    { id: 'glasses', name: 'Cool cat shades', desc: 'For extremely important cat business.', price: 600, category: 'pet', art: '🕶️' },
+    { id: 'party', name: 'Party hat', desc: 'Every little win is a party.', price: 500, category: 'pet', art: '🎉' },
+    { id: 'medal', name: 'Royal medallion', desc: 'A golden star for a very special cat.', price: 1800, category: 'pet', art: '🥇' },
+    { id: 'cape', name: 'Starry cape', desc: 'A little hero with a lot of sparkle.', price: 1200, category: 'pet', art: '🦸' },
+    { id: 'socks', name: 'Cozy socks', desc: 'Stripy little socks for both paws.', price: 900, category: 'pet', art: '🧦' },
+    { id: 'plant', name: 'Leafy friend', desc: 'A little green goes a long way.', price: 400, category: 'room', art: '🪴' },
+    { id: 'art', name: 'Mountain print', desc: 'A tiny view of a bigger world.', price: 650, category: 'room', art: '🖼️' },
+    { id: 'lamp', name: 'Golden glow lamp', desc: 'Warm light for cozy evenings.', price: 800, category: 'room', art: '💡' },
+    { id: 'bunting', name: 'Happy bunting', desc: 'Good vibes, on a string.', price: 900, category: 'room', art: '🚩' },
+    { id: 'ball', name: 'Minty yarn ball', desc: 'A very tempting tangle.', price: 350, category: 'room', art: '🧶' },
+    { id: 'stars', name: 'Wall sparkles', desc: 'For dreaming a little bigger.', price: 1600, category: 'room', art: '✨' },
+    { id: 'rug-rose', name: 'Rose-colored rug', desc: 'A rosy weave with cream diamonds.', price: 1100, category: 'room', art: '🌸' },
+    { id: 'rug-mint', name: 'Meadow mat', desc: 'A leafy side mat beside the little table.', price: 1100, category: 'room', art: '🍀' },
+    { id: 'curtains', name: 'Sunset curtains', desc: 'Warm rose drapes with golden ties.', price: 1500, category: 'room', art: '🪟' },
+    { id: 'cloud-mobile', name: 'Cloud mobile', desc: 'Little daydreams above the bookshelf.', price: 1500, category: 'room', art: '☁️' }
   ];
   const HATS = {
     party: '<path d="M-29 -51L0 -111L29 -51Z" fill="#e4b775"/><path d="M-20 -69L19 -72M-9 -91L9 -91" stroke="#c78778" stroke-width="9"/><circle cy="-114" r="8" fill="#d8937a"/><ellipse cy="-51" rx="34" ry="7" fill="#edc791"/>',
-    crown: '<path d="M-31 -58L-38 -91L-17 -78L0 -101L17 -78L38 -91L31 -58Z" fill="#e4be69" stroke="#b7934e" stroke-width="2"/><path d="M-30 -61H30" stroke="#f8dd91" stroke-width="5"/><circle cy="-72" r="5" fill="#c68478"/>',
-    wizard: '<path d="M-28 -54L-8 -116Q10 -111 17 -99L11 -88L30 -54Z" fill="#7f88af"/><ellipse cy="-52" rx="43" ry="10" fill="#949cc1"/><path d="M1 -88L4 -82L11 -81L5 -76L6 -69L0 -72L-6 -69L-5 -76L-11 -81L-4 -82Z" fill="#f6d79a"/>',
-    beret: '<ellipse cx="0" cy="-63" rx="40" ry="17" fill="#b66d63" transform="rotate(-10 0 -63)"/><path d="M-24 -54H27" stroke="#8e544b" stroke-width="7" stroke-linecap="round"/><path d="M1 -76L-2 -84" stroke="#8e544b" stroke-width="5" stroke-linecap="round"/>'
   };
   const RUG_STYLES = {
     default: { fill: '#c7b59c', border: '#eee1ca', inner: '#eee1ca' },
     'rug-rose': { fill: '#ca8095', border: '#874858', inner: '#ffe7d9' },
     'rug-mint': { fill: '#75a989', border: '#3b7057', inner: '#ecedbd' }
   };
+  const LEGACY_ITEM_IDS = { crown: 'medal', wizard: 'cape', beret: 'socks', 'wall-peach': 'curtains', 'wall-blue': 'cloud-mobile' };
+  const LEGACY_EXCLUSIVE_ITEMS = new Set(['party','crown','wizard','beret','rug-rose','rug-mint','wall-peach','wall-blue']);
+  const normalizeItemId = id => LEGACY_ITEM_IDS[id] || id;
   const SAVE_KEY = 'type-and-tails-v1';
   // Used once to preserve difficulties already earned under the old point-based system.
   const LEGACY_POINT_TIERS = [0,1400,4000,7500,12000,18000,26000,36000];
-  const defaults = () => ({ xp: 0, coins: 0, owned: [], equipped: {}, selected: 0, rounds: 0, lessonRounds: LEVELS.map(() => 0), bestWpmByLevel: LEVELS.map(() => 0), unlockedLevel: 0, bestWpm: 0, music: true, sound: true });
+  const defaults = () => ({ xp: 0, coins: 0, owned: [], equipped: [], selected: 0, rounds: 0, lessonRounds: LEVELS.map(() => 0), bestWpmByLevel: LEVELS.map(() => 0), unlockedLevel: 0, bestWpm: 0, music: true, sound: true });
   let state = defaults();
   try {
     const data = JSON.parse(localStorage.getItem(SAVE_KEY));
@@ -103,8 +103,16 @@
       if (Number.isInteger(data.unlockedLevel) && data.unlockedLevel >= 0 && data.unlockedLevel < LEVELS.length) state.unlockedLevel = data.unlockedLevel;
       else if (data.unlockedLevel === undefined) state.unlockedLevel = LEGACY_POINT_TIERS.reduce((highest, tier, index) => state.xp >= tier ? index : highest, 0);
       if (Array.isArray(data.lessonRounds)) state.lessonRounds = LEVELS.map((_, index) => Number.isSafeInteger(data.lessonRounds[index]) && data.lessonRounds[index] >= 0 ? data.lessonRounds[index] : 0);
-      state.owned = Array.isArray(data.owned) ? data.owned.filter(id => ITEMS.some(item => item.id === id)) : [];
-      if (data.equipped && typeof data.equipped === 'object') for (const [slot, id] of Object.entries(data.equipped)) if (ITEMS.some(item => item.id === id && item.slot === slot) && state.owned.includes(id)) state.equipped[slot] = id;
+      const previousOwned = Array.isArray(data.owned) ? data.owned : [];
+      state.owned = [...new Set(previousOwned.map(normalizeItemId).filter(id => ITEMS.some(item => item.id === id)))];
+      if (Array.isArray(data.equipped)) {
+        state.equipped = [...new Set(data.equipped.map(normalizeItemId).filter(id => state.owned.includes(id)))];
+      } else {
+        // Former slot-based saves can now display every formerly conflicting purchase.
+        const shown = data.equipped && typeof data.equipped === 'object' ? Object.values(data.equipped) : [];
+        const freed = previousOwned.filter(id => LEGACY_EXCLUSIVE_ITEMS.has(id));
+        state.equipped = [...new Set([...shown,...freed].map(normalizeItemId).filter(id => state.owned.includes(id)))];
+      }
       for (const key of ['music', 'sound']) if (typeof data[key] === 'boolean') state[key] = data[key];
       if (Number.isInteger(data.selected) && data.selected >= 0 && data.selected < LEVELS.length && data.selected <= unlocked()) state.selected = data.selected;
     }
@@ -155,22 +163,29 @@
     rug.querySelector('.rug-inner-border').setAttribute('opacity',itemId ? 1 : .65);
     for (const pattern of rug.querySelectorAll('[data-rug-style]')) pattern.style.display = pattern.dataset.rugStyle === itemId ? '' : 'none';
   }
+  function cloneRug() {
+    const rug = $('rug').cloneNode(true);
+    // Room copies and shop previews must not duplicate the original rug's IDs.
+    for (const element of [rug,...rug.querySelectorAll('[id]')]) element.removeAttribute('id');
+    return rug;
+  }
   function rugPreview(itemId) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
     svg.setAttribute('viewBox','240 478 462 145');
-    const rug = $('rug').cloneNode(true);
-    // Preview clones must not duplicate the room's IDs.
-    for (const element of [rug,...rug.querySelectorAll('[id]')]) element.removeAttribute('id');
+    const rug = cloneRug();
     paintRug(rug,itemId); svg.append(rug);
     return svg;
   }
   function applyDecorations() {
-    const equipped = state.equipped;
-    for (const slot of ['plant', 'art', 'lamp', 'bunting', 'ball', 'stars']) $('decor-' + slot).style.display = equipped[slot] ? '' : 'none';
-    $('pet-bow').style.display = equipped.bow ? '' : 'none'; $('pet-glasses').style.display = equipped.glasses ? '' : 'none';
-    $('pet-hat').style.display = equipped.hat ? '' : 'none'; $('pet-hat').innerHTML = HATS[equipped.hat] || '';
-    $('wall-fill').setAttribute('fill', equipped.wall === 'wall-peach' ? '#edddce' : equipped.wall === 'wall-blue' ? '#d6e3e6' : '#dce7d8');
-    paintRug($('rug'),equipped.rug);
+    const visible = id => state.equipped.includes(id);
+    for (const id of ['plant','art','lamp','bunting','ball','stars','curtains','cloud-mobile']) $('decor-' + id).style.display = visible(id) ? '' : 'none';
+    for (const id of ['bow','glasses','medal','cape','socks']) $('pet-' + id).style.display = visible(id) ? '' : 'none';
+    $('pet-hat').style.display = visible('party') ? '' : 'none'; $('pet-hat').innerHTML = HATS.party;
+    paintRug($('rug'),visible('rug-rose') ? 'rug-rose' : undefined);
+    const sideRug = $('side-rug');
+    if (!sideRug.firstElementChild) sideRug.append(cloneRug());
+    paintRug(sideRug,'rug-mint');
+    sideRug.style.display = visible('rug-mint') ? '' : 'none';
   }
 
   // 64 bars / 512 steps: about 3m 35s in the room, or 2m 54s during a level.
@@ -563,28 +578,28 @@
     $('shop-wallet').textContent = fmt(state.coins);
     const grid = $('shop-grid'); grid.replaceChildren(); grid.setAttribute('aria-labelledby','tab-' + shopCategory);
     for (const item of ITEMS.filter(item => item.category === shopCategory)) {
-      const owned = state.owned.includes(item.id), equipped = state.equipped[item.slot] === item.id;
+      const owned = state.owned.includes(item.id), equipped = state.equipped.includes(item.id);
       const card = document.createElement('article'); card.className = 'shop-item' + (equipped ? ' equipped' : '');
       const art = document.createElement('div'); art.className = 'item-art'; art.setAttribute('aria-hidden','true');
-      if (item.slot === 'hat') art.innerHTML = '<svg viewBox="-60 -130 120 110">' + HATS[item.id] + '</svg>';
-      else if (item.slot === 'rug') art.append(rugPreview(item.id));
+      if (item.id === 'party') art.innerHTML = '<svg viewBox="-60 -130 120 110">' + HATS.party + '</svg>';
+      else if (item.id === 'rug-rose' || item.id === 'rug-mint') art.append(rugPreview(item.id));
       else art.textContent = item.art;
       const details = document.createElement('div'); details.className = 'item-details';
       const title = document.createElement('h3'); title.textContent = item.name;
       const description = document.createElement('p'); description.textContent = item.desc;
       const button = document.createElement('button'); button.className = 'item-button' + (equipped ? ' equipped' : '');
-      button.textContent = equipped ? '✓ Equipped · put away' : owned ? 'Equip item' : '✦ ' + fmt(item.price) + ' · Buy';
+      button.textContent = equipped ? '✓ Showing · put away' : owned ? 'Show item' : '✦ ' + fmt(item.price) + ' · Buy';
       button.disabled = !owned && state.coins < item.price;
-      button.setAttribute('aria-label',(equipped ? 'Put away ' : owned ? 'Equip ' : 'Buy ') + item.name + (owned ? '' : ' for ' + item.price + ' coins'));
+      button.setAttribute('aria-label',(equipped ? 'Put away ' : owned ? 'Show ' : 'Buy ') + item.name + (owned ? '' : ' for ' + item.price + ' coins'));
       if (button.disabled) button.title = 'Earn ' + fmt(item.price - state.coins) + ' more coins';
       button.addEventListener('click',() => {
         if (round) return;
         if (!state.owned.includes(item.id)) {
           if (state.coins < item.price) return;
-          state.coins -= item.price; state.owned.push(item.id); state.equipped[item.slot] = item.id;
+          state.coins -= item.price; state.owned.push(item.id); state.equipped.push(item.id);
           audio.effect('buy'); toast(item.name + ' is yours!');
-        } else if (state.equipped[item.slot] === item.id) { delete state.equipped[item.slot]; audio.effect('equip'); }
-        else { state.equipped[item.slot] = item.id; audio.effect('equip'); }
+        } else if (state.equipped.includes(item.id)) { state.equipped = state.equipped.filter(id => id !== item.id); audio.effect('equip'); }
+        else { state.equipped.push(item.id); audio.effect('equip'); }
         applyDecorations(); save(); updateProgress(); renderShop();
         // Restore focus after the refreshed inventory replaces the clicked card.
         const refreshed = [...grid.querySelectorAll('button')].find(entry => entry.getAttribute('aria-label').includes(item.name));
@@ -612,5 +627,5 @@
     const rect = dialog.getBoundingClientRect();
     if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
   });
-  updateAudioButtons(); updateProgress(); applyDecorations();
+  updateAudioButtons(); updateProgress(); applyDecorations(); save();
 })();

@@ -17,7 +17,11 @@ Master            Expert at 35 WPM
 Legend            Master at 40 WPM
 
 WPM uses correct characters divided by five, over active word time; time spent on missed words counts, pauses and transitions do not. Existing levels unlocked before this update remain available.
-The shop opens between rounds. Purchases equip automatically. Owned items can be equipped or put away for free. One hat, rug, or wall color is equipped at a time; other decorations can be combined. Purchased rugs replace the plain rug underneath Pip: rose has cream diamonds and meadow has a leafy pattern. The shop preview matches the room design; existing purchases use these designs automatically.
+The shop opens between rounds. Every purchasable item works together with all the others. Purchases show automatically; use Show item or Put away to toggle each item independently for free.
+
+Pip can wear the party hat, shades, bow, medallion, cape, and socks together. The rose rug sits under Pip and the meadow mat sits beside the table, so both can be displayed. Sunset curtains decorate the window while a cloud mobile hangs above the shelf. Other room decorations each have their own place.
+
+Previous purchases transfer automatically: tiny crown becomes a royal medallion, wizard hat becomes a starry cape, artist beret becomes socks, peachy walls become sunset curtains, and daydream walls become a cloud mobile. Prices and purchase value stay the same. Previously competing items are shown together on migration; coins, typing progress, and earned levels are preserved.
 
 PRACTICE PROGRESSION
 The eight practice pools contain 53, 118, 117, 123, 125, 108, 165, and 114 eligible words respectively.
