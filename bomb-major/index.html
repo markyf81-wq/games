@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f7f4ec"><meta name="description" content="A little courtyard. A little chaos. Keep your characters safe in this cozy chase-and-dodge arcade game.">
 <title>Chicken Major — Small moves. Big escapes.</title>
-<link rel="stylesheet" href="styles.css?v=chicken1"><script src="content.js?v=chicken1" defer></script><script src="marketplace.js?v=chicken1" defer></script><script src="scores.js?v=chicken1" defer></script><script src="game.js?v=chicken1" defer></script>
+<link rel="stylesheet" href="styles.css?v=courtyard2"><script src="content.js?v=courtyard2" defer></script><script src="marketplace.js?v=courtyard2" defer></script><script src="scores.js?v=courtyard2" defer></script><script src="game.js?v=courtyard2" defer></script>
 </head>
 <body>
 <div class="app">
@@ -81,7 +81,7 @@
 <circle cx="48" cy="20" r="2.5" fill="#465443"/><circle cx="48.7" cy="19.2" r=".8" fill="#fff9e8"/>
 <path d="M40 16Q42 13 45 14" fill="none" stroke="#fff9e8" stroke-width="2" stroke-linecap="round"/>
 </svg><div class="freeze-meter" hidden aria-hidden="true"><span id="freezeCountdown"></span><div class="freeze-track"><div class="freeze-fill"></div></div></div></div>
-<div class="gameOver" hidden aria-labelledby="game-over-title"><div class="result-card"><span class="result-flower" aria-hidden="true">✳</span><div class="eyebrow">EVERY ESCAPE IS A LITTLE WIN</div><h2 id="game-over-title">What a little adventure.</h2><p id="result"></p><button class="restart" type="button">One more try <span aria-hidden="true">↗</span></button><button id="result-market" class="result-market" type="button">Visit the marketplace ↗</button><a class="scores-jump" href="#local-score-panel">View local high scores ↓</a><small>A fresh round. Your coins and upgrades stay.</small></div></div>
+<div class="gameOver" hidden aria-labelledby="game-over-title"><div class="result-card"><span class="result-flower" aria-hidden="true">✳</span><div class="eyebrow">EVERY ESCAPE IS A LITTLE WIN</div><h2 id="game-over-title">What a little adventure.</h2><p id="result"></p><form id="score-name-form" class="score-name-form" hidden><label for="score-player-name">You made the top ten! Your name</label><div class="score-name-controls"><input id="score-player-name" name="playerName" type="text" maxlength="20" required autocomplete="nickname" placeholder="Player name" aria-describedby="score-entry-note"><button type="submit">Save score</button></div></form><p id="score-entry-note" class="score-entry-note" role="status"></p><button class="restart" type="button">One more try <span aria-hidden="true">↗</span></button><button id="result-market" class="result-market" type="button">Visit the marketplace ↗</button><a class="scores-jump" href="#local-score-panel">View local high scores ↓</a><small>A fresh round. Your coins and upgrades stay.</small></div></div>
 </div>
 <div class="arena-bottom"><span class="status-star" aria-hidden="true">✧</span><div id="status" role="status">Click the character or Click Me block to start.</div><span class="arena-bottom-label">ONE CLICK AT A TIME</span></div>
 </section>
@@ -126,7 +126,7 @@
 </svg></span><p><strong>Found a magnet?</strong> Click it to pull the coins toward your block.</p></div>
 </aside>
 </div>
-<section id="local-score-panel" class="local-score-panel" aria-labelledby="local-score-title"><div class="score-panel-heading"><div><div class="eyebrow">YOUR OWN LITTLE HALL OF FAME</div><h2 id="local-score-title">Your best escapes<span>.</span></h2></div><span class="small-tag">TOP 10 · THIS BROWSER</span></div><p class="score-panel-copy">Longest round wins. Coins, then jumps, break ties.</p><div class="score-table-scroll"><table class="local-score-table"><thead><tr><th scope="col">Rank</th><th scope="col">Time</th><th scope="col">Coins</th><th scope="col">Jumps</th><th scope="col">Date</th></tr></thead><tbody id="local-score-rows"></tbody></table></div><p id="score-save-note" class="save-note" role="status"></p></section>
+<section id="local-score-panel" class="local-score-panel" aria-labelledby="local-score-title"><div class="score-panel-heading"><div><div class="eyebrow">YOUR OWN LITTLE HALL OF FAME</div><h2 id="local-score-title">Your best escapes<span>.</span></h2></div><span class="small-tag">TOP 10 · THIS BROWSER</span></div><p class="score-panel-copy">Longest round wins. Coins, then jumps, break ties. Enter your name after a top-ten round.</p><div class="score-table-scroll"><table class="local-score-table"><thead><tr><th scope="col">Rank</th><th scope="col">Player</th><th scope="col">Time</th><th scope="col">Coins</th><th scope="col">Jumps</th><th scope="col">Date</th></tr></thead><tbody id="local-score-rows"></tbody></table></div><p id="score-save-note" class="save-note" role="status"></p></section>
 <p id="coinSaveNote" class="save-note" hidden>Coin saving is unavailable in this browser. Coins will stay for this session only.</p>
 <footer><span>Made for close calls & little victories.</span><span>Coins & upgrades save on this browser <i class="save-dot" aria-hidden="true">●</i></span></footer>
 </main>

@@ -33,7 +33,9 @@ window.BombContent = (() => {
         awareness: [44, 50, 70, 110, 180, 300],
         bookStep: [0, 1, 1.2, 1.6, 2.4, 4],
         dropOdds: [0, 1, 1.5, 2.5, 4.5, 8],
-        cowPiles: [0, 1, 2, 3, 5, 8],
+        cowPiles: [0, 1, 1, 2, 2, 3],
+        cowPoopInterval: 12,
+        maximumPoops: 8,
         cowRepelDuration: [0, 3, 4, 5, 7, 10],
         poopSpeedReduction: 1,
         bombPressurePerSecond: .5,
@@ -62,7 +64,7 @@ window.BombContent = (() => {
         { id: 'treadmill', name: 'Treadmill', desc: 'Unlock a drop that keeps accelerating the block by 20% of normal speed each second, then resets.' }
     ].map(drop => ({ ...drop, icon: drop.id, unlock: true,
         effect: tier => tier === 0 ? 'Locked · will not spawn' : drop.id === 'cow'
-            ? balance.cowPiles[tier] + (tier === 1 ? ' pile' : ' piles') + ' every 6s · ' + balance.cowRepelDuration[tier] + 's repel · 2% spawn roll'
+            ? balance.cowPiles[tier] + (balance.cowPiles[tier] === 1 ? ' pile' : ' piles') + ' every ' + balance.cowPoopInterval + 's · ' + balance.cowRepelDuration[tier] + 's repel · 2% spawn roll'
             : drop.id === 'treadmill' ? balance.treadmillDuration[tier] + 's acceleration · 2% spawn roll'
             : balance.dropOdds[tier] + '% spawn roll' }));
     return { svg, icons, cow, models, tiers, balance, upgrades, drops, dropChance };

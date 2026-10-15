@@ -2,7 +2,7 @@
 
 A cozy click-to-dodge arcade game. Open `index.html` in Google Chrome, or select it from the Games library. No installation, build, server or internet connection is needed.
 
-Click a human to teleport somewhere safe. Every successful teleport adds 2px/s to the chicken’s speed before the Slow chicken reduction and shortens freezes. Click the bouncing **Click Me** block to redirect it at the chicken; a hit freezes the chicken temporarily. Characters and the block collect coins, and every ten coins collected in the current round adds another human. Humans randomly spawn as explorers, gardeners, scholars or astronauts, all with the same abilities.
+Click a human to teleport somewhere safe. Every successful teleport adds 2px/s to the chicken’s speed before the Slow chicken reduction and shortens freezes. Click the bouncing **Click Me** block to redirect it at the chicken; a hit freezes the chicken temporarily with a synthesized “bock bock” sound. Characters and the block collect coins, and every ten coins collected in the current round adds another human. Humans randomly spawn as explorers, gardeners, scholars or astronauts, all with the same abilities.
 
 When caught, characters run off-screen; nobody dies or explodes. The round ends when all humans have left the courtyard. **One more try** starts a fresh attempt. There are no timed levels. The marketplace is available before starting and after game over. **Sound on/off** controls music and effects; audio starts after an interaction.
 
@@ -38,24 +38,24 @@ Five-segment bars show your progress: green is purchased, gold outlines the next
 | --- | --- | --- |
 | Magnet | Click it | Pulls existing coins toward the block. |
 | Cat | Click it to lure the chicken | If caught, it escapes, drops five coins and resets the chicken's extra speed. |
-| Cow | Let it wander | Leaves poop batches every 6 seconds. The chicken never targets it, but touching the chicken makes it leave. |
+| Cow | Let it wander | Leaves poop batches every 12 seconds. The chicken never targets it, but touching the chicken makes it leave. |
 | Cow poop | Let the chicken touch a pile, or throw it with the block | Thrown piles home in on the chicken. Every hit consumes the pile, removes **1px/s of accumulated speed boost**, and can repel it for **3, 4, 5, 7 or 10 seconds** by cow tier, when repel is ready. |
 | Shield | Click to activate | Saves the next human hit, once. One shared charge for the characters. |
 | Banana peel | Click it | Sends the chicken around **two tight circles** over 1.2 seconds. It can still hit humans. |
 | String | Click it | Tethers the chicken within **100px** of the moving block for **10 seconds**. It can still make humans run off. |
 | Treadmill | Click it | The block gets faster continuously, then returns to its normal upgraded speed. |
 
-Magnet, cat, shield, banana and string tiers increase spawn-roll odds to **1%, 1.5%, 2.5%, 4.5% and 8%**. Cow tiers increase each batch to **1, 2, 3, 5 and 8 piles**; its spawn-roll chance stays at 2% after unlocking. Cow tiers also increase poop repel duration to **3, 4, 5, 7 and 10 seconds**. Stationary and thrown piles both work. Hits do not extend an active repel; after it ends the chicken resists new repels for 3 seconds. Thrown poop keeps seeking until it hits or the round ends. Each hit removes half a teleport’s extra speed; it cannot lower the chicken below its current rising, Slow chicken-adjusted minimum speed. The cat still clears all teleport-earned speed, but never the time-based baseline. Treadmill tiers last **5, 7, 10, 14 and 20 seconds**, with a 2% spawn-roll chance after unlocking. While active, each second adds 20% of the block’s normal speed, reaching almost 2× over five seconds or 5× over twenty seconds. It combines with Fast block, and expiry restores that upgraded speed without changing direction. The effect strip shows time and speed; another treadmill cannot spawn while one is active. Round end/restart also clears the boost.
+Magnet, cat, shield, banana and string tiers increase spawn-roll odds to **1%, 1.5%, 2.5%, 4.5% and 8%**. Cow tiers increase each batch to **1, 1, 2, 2 and 3 piles every 12 seconds**; its spawn-roll chance stays at 2% after unlocking. Cow tiers also increase poop repel duration to **3, 4, 5, 7 and 10 seconds**. Stationary and thrown piles both work. Hits do not extend an active repel; after it ends the chicken resists new repels for 3 seconds. Thrown poop keeps seeking until it hits or the round ends. Each hit removes half a teleport’s extra speed; it cannot lower the chicken below its current rising, Slow chicken-adjusted minimum speed. The cat still clears all teleport-earned speed, but never the time-based baseline. Treadmill tiers last **5, 7, 10, 14 and 20 seconds**, with a 2% spawn-roll chance after unlocking. While active, each second adds 20% of the block’s normal speed, reaching almost 2× over five seconds or 5× over twenty seconds. It combines with Fast block, and expiry restores that upgraded speed without changing direction. The effect strip shows time and speed; another treadmill cannot spawn while one is active. Round end/restart also clears the boost.
 
-Only one drop of each type, cat or cow can be present at once. Blocked spawn attempts may be skipped. Stationary poop piles last 25 seconds; launched poop stays until it hits or the round is cleared, with up to 24 piles/projectiles present.
+Only one drop of each type, cat or cow can be present at once. Blocked spawn attempts may be skipped. Stationary poop piles last 25 seconds; launched poop stays until it hits or the round is cleared, with up to 8 piles/projectiles present.
 
 The strip above the courtyard shows active effects and remaining time/banana turns. Effect timers run together. String and banana do not give invulnerability; the shield can still be consumed while they are active. Only poop repel prevents catches for its cow-tier duration. New rounds clear drops and temporary effects. The cat and cow do not keep a round alive after the last human is gone.
 
 ## Saves and files
 
-The courtyard uses the full page width and a taller play area, with the help panels underneath.
+The courtyard is more compact: a page width up to 1120px and a 360–520px play area (380px tall on phones), with help panels underneath. Safe placement can still expand a crowded arena when necessary.
 
-**Local high scores** save your ten best completed rounds on this browser. Longest round wins; round coins, then jumps, break ties. Results include a link to the table. No account or database is required. Restarting keeps your records.
+**Local high scores** save your ten best completed rounds on this browser. Longest round wins; round coins, then jumps, break ties. A top-ten round asks for your player name (up to 20 characters): choose **Save score** before restarting to keep the entry. Your last saved name is prefilled. Older nameless scores remain as Player. Results include a link to the table. No account or database is required. Restarting keeps your records.
 
 Existing saved coins, book ownership and purchased tiers are kept. New drop tiers begin locked. The combined wallet, book and upgrade tiers save under `bomb-major-market-v1`; `bomb-major-coins` remains as the legacy balance mirror. Sound preference stays under `bomb-major-sound`; local scores use `bomb-major-scores-v1`. Saves belong to this browser and page origin. Storage failures allow session play but may prevent changes surviving a reload.
 

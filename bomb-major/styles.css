@@ -260,10 +260,10 @@ footer { display: flex; justify-content: space-between; gap: 15px; border-top: 1
 .power-treadmill { background: #e2ead7; border-color: #9caf86; }
 .clickyBlock.treadmill-active::after { content: ''; position: absolute; inset: -6px; border: 2px dashed #cfa35c; border-radius: 23px; pointer-events: none; }
 
-/* Give the courtyard the full content width; put the field guide underneath. */
-.app { max-width: 1660px; padding: 0 32px; }
+/* Keep a compact courtyard, with the field guide underneath. */
+.app { max-width: 1120px; padding: 0 32px; }
 .game-layout { grid-template-columns: minmax(0, 1fr); gap: 20px; }
-.playSpace { height: clamp(500px, 75vh, 900px); }
+.playSpace { height: clamp(360px, 55vh, 520px); }
 .sidebar { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
 .guide-panel { grid-column: 1; grid-row: span 2; }
 .guide-panel h2 br { display: none; }
@@ -290,7 +290,7 @@ footer { display: flex; justify-content: space-between; gap: 15px; border-top: 1
 }
 @media (max-width: 600px) {
     .app { padding: 0 14px; }
-    .playSpace { height: clamp(480px, 75vh, 700px); }
+    .playSpace { height: 380px; }
     .sidebar { display: flex; }
     .guide-steps { grid-template-columns: minmax(0, 1fr); gap: 18px; }
     .drop-guide p { columns: auto; }
@@ -305,3 +305,14 @@ footer { display: flex; justify-content: space-between; gap: 15px; border-top: 1
 @keyframes running-steps { from { translate: 0 -2px; rotate: -5deg; } to { translate: 0 2px; rotate: 5deg; } }
 @media (prefers-reduced-motion: reduce) { .character-running svg { animation: none; } }
 @media (max-width: 600px) { .topbar { flex-wrap: wrap; gap: 12px; padding: 15px 0; } .top-controls { margin-left: auto; } }
+
+.gameOver { overflow-y: auto; align-items: safe center; }
+.score-name-form { margin: 14px 0; text-align: left; }
+.score-name-form label { display: block; margin-bottom: 7px; color: #617959; font-size: 11px; }
+.score-name-controls { display: flex; gap: 7px; }
+.score-name-controls input { min-width: 0; width: 100%; padding: 9px; border: 1px solid #bfccb0; border-radius: 7px; background: #fffdf3; color: var(--ink); font: inherit; font-size: 16px; }
+.score-name-controls input:focus-visible { outline: 3px solid #c58e51; outline-offset: 2px; }
+.score-name-controls button { flex-shrink: 0; border: 1px solid #bdcba9; border-radius: 7px; padding: 8px 10px; background: #e8eedc; color: #526d48; font-size: 11px; }
+.gameOver .score-entry-note { margin: 8px 0 14px; font-size: 11px; color: #617959; }
+.score-entry-note:empty { display: none; }
+.local-score-table td:nth-child(2) { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }

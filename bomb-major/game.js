@@ -34,7 +34,7 @@ const playSpace = document.querySelector('.playSpace');
             let musicStep = 0;
             let nextMusicTime = 0;
             const lastPlayed = new Map();
-            const cooldowns = { coin: 0.065, bounce: 0.12, drop: 0.15, tick: 0.2, cat: 0.2 };
+            const cooldowns = { coin: 0.065, bounce: 0.12, drop: 0.15, tick: 0.2, cat: 0.2, cluck: 0.5 };
             try { enabled = localStorage.getItem(preferenceKey) !== 'off'; } catch (error) {}
 
             function updateButton() {
@@ -219,6 +219,14 @@ const playSpace = document.querySelector('.playSpace');
                         case 'magnet':
                             tone('sine', 90, 700, 0.45, 0.12);
                             tone('triangle', 180, 1000, 0.35, 0.055);
+                            break;
+                        case 'cluck':
+                            // Two short, throaty pitch falls: bock bock.
+                            for (const delay of [0, 0.21]) {
+                                tone('triangle', 680, 180, 0.14, 0.19, delay);
+                                tone('square', 1040, 380, 0.085, 0.045, delay + 0.018);
+                                noise(0.028, 1600, 600, 0.08, delay);
+                            }
                             break;
                         case 'freeze':
                             melody([1568, 1175, 784], 0.055, 0.17, 0.075);
@@ -456,7 +464,7 @@ const playSpace = document.querySelector('.playSpace');
             if (frozenRemaining <= 0) {
                 activeFreezeDuration = currentFreezeDuration();
                 frozenRemaining = activeFreezeDuration;
-                sound.play('freeze');
+                sound.play('cluck');
             }
         }
         function moveBlock(seconds) {
@@ -514,7 +522,7 @@ const playSpace = document.querySelector('.playSpace');
                 if (roll < cutoff) { type = drop.id; break; }
             }
             if (type === 'cat') {
-                if (!characters.some(character => character.isCat) && !playSpace.querySelector('.cat-running')) {
+                if (!characters.some(character => character.isCat) && !playSpace.querySelector('.cat.character-running')) {
                     const position = findCharacterPosition();
                     if (position) { addCharacter(position, true); sound.play('cat'); }
                 }
@@ -642,14 +650,14 @@ const playSpace = document.querySelector('.playSpace');
             element.innerHTML = content.cow; element.title = 'A wandering cow. Let the block send its poop toward the chicken!';
             element.setAttribute('aria-label', 'Wandering cow. Its poop can be deflected by the block.');
             const angle = Math.random() * Math.PI * 2;
-            cow = { position, element, vx: Math.cos(angle) * 24, vy: Math.sin(angle) * 24, turn: 3, poop: 6 };
+            cow = { position, element, vx: Math.cos(angle) * 24, vy: Math.sin(angle) * 24, turn: 3, poop: content.balance.cowPoopInterval };
             playSpace.append(element); positionElement(cow); sound.play('arrival'); announce('A cow wandered in. Send its poop at the chicken with your block!');
             element.addEventListener('click', () => { if (playing) { sound.unlock(); sound.play('cat'); announce('Moo! The chicken never targets the cow.'); } });
         }
         function leavePoop() {
             if (!cow) return;
             const count = content.balance.cowPiles[market.tier('cow')], spacing = poopSize + 4;
-            for (let pile = 0; pile < count && poops.length < 24; pile++) {
+            for (let pile = 0; pile < count && poops.length < content.balance.maximumPoops; pile++) {
                 const position = { x: cow.position.x + 20 + (pile - (count - 1) / 2) * spacing, y: cow.position.y + 39 };
                 clampPosition(position, poopSize);
                 if (poops.some(poop => overlaps(position, poopSize, poop.position, poopSize))) continue;
@@ -774,7 +782,7 @@ const playSpace = document.querySelector('.playSpace');
                 clampPosition(next);
                 if (!overlaps(next, size, blockPosition, blockSize) && !characters.some(character => overlaps(next, size, character.position, size))) cow.position = next;
                 else { cow.vx *= -1; cow.vy *= -1; }
-                if (cow.poop <= 0) { leavePoop(); cow.poop = 6; }
+                if (cow.poop <= 0) { leavePoop(); cow.poop = content.balance.cowPoopInterval; }
                 if (Math.hypot(cow.position.x - bombPosition.x, cow.position.y - bombPosition.y) < collisionDistance) {
                     runOffScreen(cow); cow = null; sound.play('escape'); announce('The cow wandered off. Its poop is still useful!');
                 }
@@ -859,6 +867,7 @@ const playSpace = document.querySelector('.playSpace');
                 `Next character in ${10 - roundCoins % 10} coins`);
         }
         function reset() {
+            window.BombScores.clearPending();
             sound.reset();
             clearExtras();
             cancelAnimationFrame(animationFrame);
@@ -983,7 +992,7 @@ const playSpace = document.querySelector('.playSpace');
                 gameOverTimeout = setTimeout(() => {
                     gameOver.hidden = false;
                     sound.play('gameOver');
-                    restart.focus();
+                    if (!window.BombScores.focusEntry()) restart.focus();
                 }, 1050);
             }
         }
