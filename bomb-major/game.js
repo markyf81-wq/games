@@ -633,8 +633,8 @@ const playSpace = document.querySelector('.playSpace');
                 sound.unlock(); element.remove(); powerDrops.delete(type);
                 if (type === 'treadmill') { treadmillRemaining = content.balance.treadmillDuration[market.tier('treadmill')]; treadmillElapsed = 0; setBlockBoost(1); announce('Treadmill! The block keeps getting faster for ' + treadmillRemaining + ' seconds.'); }
                 if (type === 'shield') { shieldReady = true; announce('Shield ready. The next human hit is protected.'); }
-                if (type === 'banana') { startBananaSpin(); announce('Banana slip! Two tight circles. Watch out—it can still hit friends.'); }
-                if (type === 'string') { tetherRemaining = 10; dragBomb(); announce('Tethered for 10 seconds. The bomb can still hit friends!'); }
+                if (type === 'banana') { startBananaSpin(); announce('Banana slip! Two tight circles. Watch out—it can still hit characters.'); }
+                if (type === 'string') { tetherRemaining = 10; dragBomb(); announce('Tethered for 10 seconds. The bomb can still hit characters!'); }
                 sound.play('freeze'); draw();
             });
         }
@@ -956,7 +956,7 @@ const playSpace = document.querySelector('.playSpace');
                     shieldReady = false; character.invulnerable = 1.5;
                     const safe = findCharacterPosition(character);
                     if (safe) character.position = safe;
-                    announce('Shield saved a friend! One charge used.'); sound.play('freeze');
+                    announce('Shield saved a character! One charge used.'); sound.play('freeze');
                     return true;
                 }
                 if (character.isCat) {

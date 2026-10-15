@@ -40,7 +40,7 @@ Five-segment bars show your progress: green is purchased, gold outlines the next
 | Cat | Click it to lure the bomb | If caught, it escapes, drops five coins and resets the bomb's extra speed. |
 | Cow | Let it wander | Leaves poop batches every 6 seconds. The bomb never targets it, but touching the bomb makes it leave. |
 | Cow poop | Let the bomb touch a pile, or throw it with the block | Thrown piles home in on the bomb. Every hit consumes the pile, removes **1px/s of accumulated speed boost**, and can repel it for **3, 4, 5, 7 or 10 seconds** by cow tier, when repel is ready. |
-| Shield | Click to activate | Saves the next human hit, once. One shared charge for the crew. |
+| Shield | Click to activate | Saves the next human hit, once. One shared charge for the characters. |
 | Banana peel | Click it | Sends the bomb around **two tight circles** over 1.2 seconds. It can still hit humans. |
 | String | Click it | Tethers the bomb within **100px** of the moving block for **10 seconds**. It can still kill humans. |
 | Treadmill | Click it | The block gets faster continuously, then returns to its normal upgraded speed. |

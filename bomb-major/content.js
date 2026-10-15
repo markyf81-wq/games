@@ -48,8 +48,8 @@ window.BombContent = (() => {
     const upgrades = [
         { id: 'slowness', name: 'Slow bomb', icon: 'slowness', effect: tier => balance.slowness[tier] + '% slower bomb', desc: 'Reduces all chase speed, including its rising baseline and teleport gains.' },
         { id: 'freeze', name: 'Bomb freeze', icon: 'freeze', effect: tier => balance.freeze[tier] + 's base freeze time', desc: 'Sets the starting freeze time. Jumps still shorten it.' },
-        { id: 'speed', name: 'Fast block', icon: 'speed', effect: tier => '+' + balance.speed[tier] + '% block speed', desc: 'A modest speed boost for collecting coins and helping friends.' },
-        { id: 'awareness', name: 'Safe jump', icon: 'awareness', effect: tier => balance.awareness[tier] + 'px safe teleport radius', desc: 'Keeps clicked friends farther away from the bomb.' },
+        { id: 'speed', name: 'Fast block', icon: 'speed', effect: tier => '+' + balance.speed[tier] + '% block speed', desc: 'A modest speed boost for collecting coins and helping characters.' },
+        { id: 'awareness', name: 'Safe jump', icon: 'awareness', effect: tier => balance.awareness[tier] + 'px safe teleport radius', desc: 'Keeps clicked characters farther away from the bomb.' },
         { id: 'book', name: 'A little book of courage', icon: 'book', effect: tier => tier === 0 ? 'Not owned · no automatic movement' : balance.bookStep[tier] + 'px every 0.2s · ' + (balance.bookStep[tier] * 5) + 'px/s', desc: 'Humans take small steps away from the bomb every 0.2 seconds. Later tiers make them braver.' }
     ];
     const drops = [

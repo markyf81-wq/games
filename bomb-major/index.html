@@ -2,23 +2,23 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f7f4ec"><meta name="description" content="A little courtyard. A little chaos. Keep your friends safe in this cozy survival arcade game.">
+<meta name="theme-color" content="#f7f4ec"><meta name="description" content="A little courtyard. A little chaos. Keep your characters safe in this cozy survival arcade game.">
 <title>Bomb Major — Small moves. Big escapes.</title>
-<link rel="stylesheet" href="styles.css?v=pressure1"><script src="content.js?v=pressure1" defer></script><script src="marketplace.js?v=pressure1" defer></script><script src="scores.js?v=pressure1" defer></script><script src="game.js?v=pressure1" defer></script>
+<link rel="stylesheet" href="styles.css?v=characters1"><script src="content.js?v=characters1" defer></script><script src="marketplace.js?v=characters1" defer></script><script src="scores.js?v=characters1" defer></script><script src="game.js?v=characters1" defer></script>
 </head>
 <body>
 <div class="app">
 <nav class="library-navigation" aria-label="Library"><a href="../index.html">← Games library</a></nav>
 <header class="topbar"><a class="brand" href="./index.html" aria-label="Bomb Major home"><span class="brand-icon" aria-hidden="true">✹</span><span>bomb<span class="brand-soft">major</span><span class="brand-dot">.</span></span></a><div class="top-controls"><button id="market-button" class="market-button" type="button">Marketplace ↗</button><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">Sound on</button></div></header>
 <main>
-<div class="page-heading"><div><div class="eyebrow">A LITTLE COURAGE. A LITTLE CHAOS.</div><h1>Small moves.<br>Big escapes.</h1></div><p>Keep your friends out of trouble.<br>Make room for one more little win.</p></div>
+<div class="page-heading"><div><div class="eyebrow">A LITTLE COURAGE. A LITTLE CHAOS.</div><h1>Small moves.<br>Big escapes.</h1></div><p>Keep your characters out of trouble.<br>Make room for one more little win.</p></div>
 <div class="game-layout">
 <section class="arena-card" aria-label="Bomb Major game">
 <div class="arena-heading"><span><i class="live-dot" aria-hidden="true"></i>The little courtyard</span><span class="small-tag">CLICK · COLLECT · SURVIVE</span></div>
 <div class="scoreboard" aria-label="Game scores">
 <div class="score-stat"><span class="stat-label"><span class="coin-icon" aria-hidden="true">✦</span>Coin purse</span><strong id="coinTotal">0</strong></div>
 <div class="score-stat"><span class="stat-label">This round</span><strong id="roundCoins">0</strong></div>
-<div class="score-stat"><span class="stat-label">Friends still in</span><strong id="aliveCount">1</strong></div>
+<div class="score-stat"><span class="stat-label">Characters still in</span><strong id="aliveCount">1</strong></div>
 <div class="next-friend"><span class="friend-sprout" aria-hidden="true">✳</span><span id="nextCharacter">Next character in 10 coins</span></div>
 </div>
 <div class="effect-tray" id="active-effects" aria-label="Active abilities">Unlock helpful drops in the marketplace.</div>
@@ -91,9 +91,9 @@
 <ellipse cx="23" cy="22" rx="3" ry="2" fill="#de9e87"/><ellipse cx="41" cy="22" rx="3" ry="2" fill="#de9e87"/>
 <circle cx="27" cy="18" r="1.6" fill="#4c493a"/><circle cx="37" cy="18" r="1.6" fill="#4c493a"/>
 <path d="M28 24Q32 28 36 24" fill="none" stroke="#946850" stroke-width="1.8" stroke-linecap="round"/>
-</svg></span><div><strong>Keep them moving.</strong><p>Click a friend to hop somewhere safe. Every jump makes the bomb a little faster. Its minimum speed also rises with time.</p></div></li>
+</svg></span><div><strong>Keep them moving.</strong><p>Click a character to hop somewhere safe. Every jump makes the bomb a little faster. Its minimum speed also rises with time.</p></div></li>
 <li><span class="step-icon step-block" aria-hidden="true">✧</span><div><strong>Send a little backup.</strong><p>Click the bouncing block to aim at the bomb. A hit freezes it for a breather.</p></div></li>
-<li><span class="step-icon step-coin" aria-hidden="true">✦</span><div><strong>Grow your little crew.</strong><p>Collect 10 coins in a round to welcome another friend. Keep at least one human safe.</p></div></li></ol>
+<li><span class="step-icon step-coin" aria-hidden="true">✦</span><div><strong>Add more characters.</strong><p>Collect 10 coins in a round to spawn another character. Keep at least one human safe.</p></div></li></ol>
 <div class="drop-guide"><strong>Unlock finds in the marketplace.</strong><p><b>Shield</b> · Saves the next human hit.<br><b>Banana</b> · Two tight circles; still dangerous.<br><b>String</b> · A 10-second tether; still dangerous.<br><b>Treadmill</b> · Accelerates the block, then resets.<br><b>Cow poop</b> · Bomb contact repels it for 3–10 seconds by cow tier. Homing hits trim teleport speed. Repel cannot refresh; it needs 3s recovery.</p></div>
 <div class="guide-footnote"><span aria-hidden="true">↗</span> Click or tap to play. No arrow keys needed.</div></section>
 <section class="cat-note"><div class="cat-portrait" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">

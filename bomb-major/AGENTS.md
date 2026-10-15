@@ -1,6 +1,6 @@
 # Bomb Major — agent guide
 
-Read `../AGENTS.md` as well. Keep this game independent of Type & Tails, including its scripts, styles and saves.
+Read `../AGENTS.md` as well. Keep this game independent of Type & Tails, including its scripts, styles and saves. Use “characters” in player-facing text rather than “friends” or “crew”; this includes notices, instructions, shop descriptions and library metadata.
 
 ## Purpose and files
 
