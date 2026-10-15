@@ -368,7 +368,7 @@
       if (this.nextNote < this.context.currentTime) this.nextNote = this.context.currentTime + .05;
       while (this.nextNote < this.context.currentTime + .45) {
         const step = MUSIC_SCORE[this.note % MUSIC_SCORE.length];
-        const inLevel = Boolean(round && !round.paused);
+        const inLevel = Boolean(round && !round.paused && !round.waiting);
         if (step.note !== null) {
           const frequency = 440 * 2 ** ((step.note - 69) / 12);
           this.tone(frequency, this.nextNote, inLevel ? .46 : step.soft ? 1.1 : .9, step.soft ? .15 : .22, inLevel ? 'triangle' : 'sine', true);
@@ -469,6 +469,7 @@
   function setPlaying(playing) {
     $('room-card').classList.toggle('is-playing', playing);
     $('typing-area').hidden = !playing; $('welcome-card').hidden = playing;
+    if (!playing) { $('ready-start').hidden = true; $('typing-input').readOnly = false; }
     $('timer-panel').hidden = !playing; $('round-stats').hidden = !playing;
     $('pause-button').hidden = !playing; $('room-mode').hidden = playing;
     $('start-button').disabled = playing; $('level-select').disabled = playing;
@@ -480,17 +481,44 @@
   }
   function startRound() {
     if (round || state.selected > unlocked()) return;
-    audio.init(); audio.effect('start');
+    audio.init();
     const now = performance.now();
     const level = LEVELS[state.selected];
-    round = { level: state.selected, words: selectRoundWords(level), index: 0, correct: 0, score: 0, streak: 0, bestStreak: 0, chars: 0, typed: 0, mistakes: 0, startLevel: unlocked(), started: now, pausedMs: 0, paused: false, transitioning: false, typedSeconds: 0 };
+    round = { level: state.selected, words: selectRoundWords(level), index: 0, correct: 0, score: 0, streak: 0, bestStreak: 0, chars: 0, typed: 0, mistakes: 0, startLevel: unlocked(), started: now, pausedMs: 0, paused: false, waiting: true, transitioning: false, typedSeconds: 0 };
     setPlaying(true); $('round-score').textContent = '0'; $('round-correct').textContent = '0 / 20';
     say("I'll handle the cheering. You handle the typing!",4000);
-    showWord(); cancelAnimationFrame(frame); frame = requestAnimationFrame(tick);
-    // Keep synchronous focus for mobile keyboards, then restore it after dialog close/layout.
+    cancelAnimationFrame(frame);
+    inputHistory = ''; $('typing-input').value = ''; $('typing-input').disabled = false;
+    $('typing-input').readOnly = true; $('typing-input').classList.remove('has-error');
+    $('typing-input').placeholder = 'Get your fingers onto the home row…';
+    $('ready-start').hidden = false;
+    $('round-progress').textContent = '20 WORDS · READY WHEN YOU ARE';
+    $('combo-display').textContent = '✦ Take your time';
+    $('practice-cue').textContent = level.name + ' practice';
+    $('target-word').style.fontSize = ''; $('target-word').classList.remove('long');
+    $('target-word').classList.add('is-ready');
+    $('target-word').textContent = 'Ready, paws poised?';
+    $('target-word').setAttribute('aria-label', 'Ready, paws poised?');
+    $('input-hint').textContent = 'Press space to start. The timer will wait for you.';
+    $('timer-caption').textContent = 'READY TO PRACTICE';
+    $('time-left').textContent = level.seconds.toFixed(1) + 's';
+    $('timer-fill').style.width = '100%'; $('timer-fill').classList.remove('urgent');
+    // Focus the ready input now, then restore focus after dialog close/layout.
+    focusTypingInput(true);
     requestAnimationFrame(() => focusTypingInput(true));
     if (window.innerWidth < 780) $('room-scene').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'center' });
   }
+  function beginRound() {
+    if (!round || !round.waiting || round.paused) return;
+    round.waiting = false; round.started = performance.now();
+    $('ready-start').hidden = true; $('typing-input').readOnly = false;
+    $('typing-input').placeholder = 'Type the word here…';
+    $('target-word').classList.remove('is-ready');
+    $('timer-caption').textContent = 'TIME FOR THIS WORD';
+    audio.init(); audio.effect('start'); audio.sync();
+    showWord(); frame = requestAnimationFrame(tick);
+  }
+  $('ready-start').addEventListener('click', beginRound);
   function showWord() {
     if (!round) return;
     if (round.index >= 20) { finishRound(); return; }
@@ -533,7 +561,7 @@
   window.addEventListener('resize', fitWord);
   function tick(now) {
     if (!round) return;
-    if (!round.paused && !round.transitioning) {
+    if (!round.paused && !round.waiting && !round.transitioning) {
       const remaining = Math.max(0, wordDeadline - now), fraction = remaining / (LEVELS[round.level].seconds * 1000);
       $('timer-fill').style.width = (fraction * 100) + '%';
       $('timer-fill').classList.toggle('urgent', fraction < .25);
@@ -543,7 +571,7 @@
     if (round) frame = requestAnimationFrame(tick);
   }
   function settleWord(correct) {
-    if (!round || round.paused || round.transitioning) return;
+    if (!round || round.paused || round.waiting || round.transitioning) return;
     round.transitioning = true; $('typing-input').disabled = true;
     const target = round.words[round.index], level = LEVELS[round.level];
     const elapsed = Math.max(.1,(performance.now() - wordStarted) / 1000);
@@ -569,18 +597,33 @@
   }
   const expireWord = () => settleWord(false);
   function handleTyping(event) {
-    if (!round || round.paused || round.transitioning || composing || event.isComposing) return;
+    if (!round || round.paused || round.waiting || round.transitioning || composing || event.isComposing) return;
     if (performance.now() >= wordDeadline) { expireWord(); return; }
-    const target = round.words[round.index], value = $('typing-input').value.toLowerCase();
+    const input = $('typing-input'), target = round.words[round.index], value = input.value.toLowerCase();
     // A pasted/dropped word should not award speed points. Typing remains the game.
-    if (event.inputType === 'insertFromPaste' || event.inputType === 'insertFromDrop') { $('typing-input').value = inputHistory; toast('Give your fingers the practice — type this one yourself!'); return; }
-    if (value.length > inputHistory.length) {
-      const added = value.length - inputHistory.length; round.typed += added;
-      for (let index = inputHistory.length; index < value.length; index++) if (value[index] !== target[index]) round.mistakes++;
+    if (event.inputType === 'insertFromPaste' || event.inputType === 'insertFromDrop') { input.value = inputHistory; toast('Give your fingers the practice — type this one yourself!'); return; }
+    // Identify the edited range so existing accepted letters do not count twice.
+    let prefix = 0, suffix = 0;
+    while (prefix < inputHistory.length && prefix < value.length && inputHistory[prefix] === value[prefix]) prefix++;
+    while (suffix < inputHistory.length - prefix && suffix < value.length - prefix &&
+      inputHistory[inputHistory.length - 1 - suffix] === value[value.length - 1 - suffix]) suffix++;
+    const inserted = value.slice(prefix, value.length - suffix);
+    let accepted = value.slice(0, prefix), mistakes = 0;
+    for (const letter of inserted) {
+      round.typed++;
+      if (letter === target[accepted.length]) accepted += letter;
+      else { round.mistakes++; mistakes++; }
     }
-    inputHistory = value; renderWord();
-    if (value === target) settleWord(true);
-    else $('input-hint').textContent = target.startsWith(value) ? 'No enter key needed. Just type!' : 'A little typo — backspace and try again.';
+    // A deletion or replacement in the middle must still leave a correct prefix.
+    for (const letter of value.slice(value.length - suffix)) {
+      if (letter !== target[accepted.length]) break;
+      accepted += letter;
+    }
+    input.value = accepted; inputHistory = accepted;
+    input.setSelectionRange(accepted.length, accepted.length);
+    renderWord();
+    if (accepted === target) settleWord(true);
+    else $('input-hint').textContent = mistakes ? 'That key was skipped. Keep going — no backspace needed!' : 'No enter key needed. Just type!';
   }
   $('typing-input').addEventListener('input',handleTyping);
   $('typing-input').addEventListener('compositionstart',() => { composing = true; });
@@ -590,7 +633,7 @@
 
   function pauseRound() {
     if (!round || round.paused) return;
-    if (!round.transitioning && performance.now() >= wordDeadline) expireWord();
+    if (!round.waiting && !round.transitioning && performance.now() >= wordDeadline) expireWord();
     clearTimeout(advanceTimer); round.paused = true; pauseStarted = performance.now();
     remainingOnPause = Math.max(0,wordDeadline - pauseStarted);
     $('typing-input').disabled = true; $('room-card').classList.add('paused');
@@ -601,7 +644,8 @@
     const now = performance.now(), duration = now - pauseStarted;
     round.pausedMs += duration; round.paused = false;
     $('pause-dialog').close(); $('room-card').classList.remove('paused');
-    if (round.transitioning) showWord();
+    if (round.waiting) { $('typing-input').disabled = false; focusTypingInput(); }
+    else if (round.transitioning) showWord();
     else { wordStarted += duration; wordDeadline = now + remainingOnPause; $('typing-input').disabled = false; focusTypingInput(); }
     audio.sync();
   }
@@ -643,6 +687,9 @@
   $('again-button').addEventListener('click',() => { $('summary-dialog').close(); startRound(); });
   $('pause-dialog').addEventListener('cancel',event => { event.preventDefault(); resumeRound(); });
   document.addEventListener('keydown',event => {
+    if (event.code === 'Space' && round && round.waiting && !round.paused && !event.repeat && !document.querySelector('dialog[open]')) {
+      event.preventDefault(); beginRound(); return;
+    }
     if (event.key === 'Escape' && round && !round.paused && !$('pause-dialog').open) { event.preventDefault(); pauseRound(); }
   });
   document.addEventListener('visibilitychange',() => { if (document.hidden && round && !round.paused) pauseRound(); audio.sync(); });

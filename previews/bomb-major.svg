@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 660" role="img" aria-label="Illustrated Bomb Major courtyard with characters, Pip the cat, a sage freeze block, and a chasing bomb">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 660" role="img" aria-label="Illustrated Chicken Major courtyard with characters, Pip the cat, a sage freeze block, and a chasing chicken">
 <defs><pattern id="speckle" width="42" height="42" patternUnits="userSpaceOnUse"><circle cx="10" cy="12" r="1.5" fill="#809477" opacity=".24"/><path d="M30 31L34 27M32 32L37 32" stroke="#a6b293" stroke-width="1.5" stroke-linecap="round"/></pattern></defs>
 <rect width="900" height="660" fill="#e6ead8"/><rect x="24" y="24" width="852" height="612" rx="24" fill="#c8d5b7" stroke="#a4b596" stroke-width="3"/><rect x="40" y="40" width="820" height="580" rx="14" fill="url(#speckle)"/>
 <path d="M46 84H854M46 569H854" stroke="#e8e9d3" stroke-width="3" stroke-dasharray="12 8"/>
@@ -6,14 +6,16 @@
 <g font-family="Georgia,serif"><text x="64" y="121" font-size="13" letter-spacing="3" fill="#5f785d">THE LITTLE COURTYARD</text><text x="64" y="163" font-size="32" fill="#405d49">A little courage. A little chaos.</text></g>
 <g transform="translate(470 226)"><rect y="7" width="133" height="133" rx="24" fill="#56705a" opacity=".22"/><rect width="133" height="133" rx="24" fill="#6e9688" stroke="#4b7464" stroke-width="3"/><rect x="9" y="9" width="115" height="115" rx="17" fill="none" stroke="#a9c4af" stroke-width="2"/><text x="66" y="59" text-anchor="middle" font-size="35" fill="#f6e9bd">✧</text><text x="66" y="94" text-anchor="middle" font-family="system-ui,sans-serif" font-size="20" font-weight="600" fill="#fffae9">Click Me</text></g>
 <g transform="translate(170 259) scale(1.9)"><svg class="bomb-art" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-<ellipse cx="31" cy="58" rx="21" ry="4" fill="#5e6a50" opacity=".2"/>
-<path d="M37 14Q39 2 47 8L51 9" fill="none" stroke="#a58453" stroke-width="3" stroke-linecap="round"/>
-<path class="bomb-spark" d="M52 3V13M47 8H57M48 4L56 12M48 12L56 4" stroke="#d39743" stroke-width="2" stroke-linecap="round"/>
-<path d="M32 13L41 16L38 24L28 21Z" fill="#957654"/>
-<circle class="bomb-shell" cx="30" cy="37" r="22" fill="#626b60" stroke="#424f44" stroke-width="2"/>
-<path d="M15 32Q17 22 27 21" fill="none" stroke="#a2ad96" stroke-width="4" stroke-linecap="round"/>
-<ellipse cx="24" cy="37" rx="2" ry="3" fill="#fff0cf"/><ellipse cx="37" cy="37" rx="2" ry="3" fill="#fff0cf"/>
-<path d="M26 47Q30 43 34 47" fill="none" stroke="#d2d6bb" stroke-width="2" stroke-linecap="round"/>
+<ellipse cx="32" cy="60" rx="23" ry="3" fill="#70815e" opacity=".2"/>
+<path d="M25 49V57L18 59M25 57L30 59M40 49V57L35 59M40 57L47 59" fill="none" stroke="#bb884c" stroke-width="3" stroke-linecap="round"/>
+<path d="M18 33Q6 34 5 21Q13 23 16 16Q22 22 24 32" fill="#d9c79e" stroke="#b69c70" stroke-width="2" stroke-linejoin="round"/>
+<path class="bomb-shell" d="M19 28Q23 19 34 21Q36 8 46 10Q58 12 55 28Q59 42 49 49Q32 58 19 48Q11 42 19 28Z" fill="#f6ecd4" stroke="#b69c70" stroke-width="2"/>
+<path d="M37 12Q32 6 37 3Q41 1 43 7Q45 -1 49 3Q52 5 49 11" fill="#bd7764" stroke="#a76957" stroke-width="1.5"/>
+<path d="M54 22L63 27L54 30Z" fill="#e4b65f" stroke="#b78c45" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M51 29Q58 37 51 39Q45 37 49 29" fill="#bd7764"/>
+<path d="M23 33Q37 25 43 36Q41 46 28 46Q34 40 23 33Z" fill="#e4d5b1" stroke="#bda77e" stroke-width="1.5" stroke-linejoin="round"/>
+<circle cx="48" cy="20" r="2.5" fill="#465443"/><circle cx="48.7" cy="19.2" r=".8" fill="#fff9e8"/>
+<path d="M40 16Q42 13 45 14" fill="none" stroke="#fff9e8" stroke-width="2" stroke-linecap="round"/>
 </svg></g>
 <g transform="translate(674 326) scale(2.1)"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
 <ellipse cx="32" cy="59" rx="17" ry="3" fill="#7b8060" opacity=".2"/>

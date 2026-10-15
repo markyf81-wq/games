@@ -46,19 +46,19 @@ window.BombContent = (() => {
     icons.cat = document.querySelector('#catTemplate').content.firstElementChild.outerHTML;
     icons.magnet = document.querySelector('#magnetTemplate').content.querySelector('svg').outerHTML;
     const upgrades = [
-        { id: 'slowness', name: 'Slow bomb', icon: 'slowness', effect: tier => balance.slowness[tier] + '% slower bomb', desc: 'Reduces all chase speed, including its rising baseline and teleport gains.' },
-        { id: 'freeze', name: 'Bomb freeze', icon: 'freeze', effect: tier => balance.freeze[tier] + 's base freeze time', desc: 'Sets the starting freeze time. Jumps still shorten it.' },
+        { id: 'slowness', name: 'Slow chicken', icon: 'slowness', effect: tier => balance.slowness[tier] + '% slower chicken', desc: 'Reduces all chase speed, including its rising baseline and teleport gains.' },
+        { id: 'freeze', name: 'Chicken freeze', icon: 'freeze', effect: tier => balance.freeze[tier] + 's base freeze time', desc: 'Sets the starting freeze time. Jumps still shorten it.' },
         { id: 'speed', name: 'Fast block', icon: 'speed', effect: tier => '+' + balance.speed[tier] + '% block speed', desc: 'A modest speed boost for collecting coins and helping characters.' },
-        { id: 'awareness', name: 'Safe jump', icon: 'awareness', effect: tier => balance.awareness[tier] + 'px safe teleport radius', desc: 'Keeps clicked characters farther away from the bomb.' },
-        { id: 'book', name: 'A little book of courage', icon: 'book', effect: tier => tier === 0 ? 'Not owned · no automatic movement' : balance.bookStep[tier] + 'px every 0.2s · ' + (balance.bookStep[tier] * 5) + 'px/s', desc: 'Humans take small steps away from the bomb every 0.2 seconds. Later tiers make them braver.' }
+        { id: 'awareness', name: 'Safe jump', icon: 'awareness', effect: tier => balance.awareness[tier] + 'px safe teleport radius', desc: 'Keeps clicked characters farther away from the chicken.' },
+        { id: 'book', name: 'A little book of courage', icon: 'book', effect: tier => tier === 0 ? 'Not owned · no automatic movement' : balance.bookStep[tier] + 'px every 0.2s · ' + (balance.bookStep[tier] * 5) + 'px/s', desc: 'Humans take small steps away from the chicken every 0.2 seconds. Later tiers make them braver.' }
     ];
     const drops = [
         { id: 'magnet', name: 'Magnet', desc: 'Unlock a magnet drop to pull current coins toward the block.' },
         { id: 'cat', name: 'Cat', desc: 'Unlock the cat. More tiers increase its odds of appearing.' },
         { id: 'cow', name: 'Cow', desc: 'Unlock a wandering cow. Poop homes in and trims teleport speed. Repel cannot refresh and needs 3s recovery. Tiers add piles and longer repel.' },
         { id: 'shield', name: 'Shield', desc: 'Unlock a drop that protects the next human hit, once.' },
-        { id: 'banana', name: 'Banana peel', desc: 'Unlock a drop that sends the bomb around two tight circles.' },
-        { id: 'string', name: 'String', desc: 'Unlock a 10-second, 100px tether. The bomb can still kill humans.' },
+        { id: 'banana', name: 'Banana peel', desc: 'Unlock a drop that sends the chicken around two tight circles.' },
+        { id: 'string', name: 'String', desc: 'Unlock a 10-second, 100px tether. The chicken can still make characters run off.' },
         { id: 'treadmill', name: 'Treadmill', desc: 'Unlock a drop that keeps accelerating the block by 20% of normal speed each second, then resets.' }
     ].map(drop => ({ ...drop, icon: drop.id, unlock: true,
         effect: tier => tier === 0 ? 'Locked · will not spawn' : drop.id === 'cow'

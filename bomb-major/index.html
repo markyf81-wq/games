@@ -2,19 +2,30 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f7f4ec"><meta name="description" content="A little courtyard. A little chaos. Keep your characters safe in this cozy survival arcade game.">
-<title>Bomb Major — Small moves. Big escapes.</title>
-<link rel="stylesheet" href="styles.css?v=characters1"><script src="content.js?v=characters1" defer></script><script src="marketplace.js?v=characters1" defer></script><script src="scores.js?v=characters1" defer></script><script src="game.js?v=characters1" defer></script>
+<meta name="theme-color" content="#f7f4ec"><meta name="description" content="A little courtyard. A little chaos. Keep your characters safe in this cozy chase-and-dodge arcade game.">
+<title>Chicken Major — Small moves. Big escapes.</title>
+<link rel="stylesheet" href="styles.css?v=chicken1"><script src="content.js?v=chicken1" defer></script><script src="marketplace.js?v=chicken1" defer></script><script src="scores.js?v=chicken1" defer></script><script src="game.js?v=chicken1" defer></script>
 </head>
 <body>
 <div class="app">
 <nav class="library-navigation" aria-label="Library"><a href="../index.html">← Games library</a></nav>
-<header class="topbar"><a class="brand" href="./index.html" aria-label="Bomb Major home"><span class="brand-icon" aria-hidden="true">✹</span><span>bomb<span class="brand-soft">major</span><span class="brand-dot">.</span></span></a><div class="top-controls"><button id="market-button" class="market-button" type="button">Marketplace ↗</button><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">Sound on</button></div></header>
+<header class="topbar"><a class="brand" href="./index.html" aria-label="Chicken Major home"><span class="brand-icon" aria-hidden="true"><svg class="bomb-art" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="32" cy="60" rx="23" ry="3" fill="#70815e" opacity=".2"/>
+<path d="M25 49V57L18 59M25 57L30 59M40 49V57L35 59M40 57L47 59" fill="none" stroke="#bb884c" stroke-width="3" stroke-linecap="round"/>
+<path d="M18 33Q6 34 5 21Q13 23 16 16Q22 22 24 32" fill="#d9c79e" stroke="#b69c70" stroke-width="2" stroke-linejoin="round"/>
+<path class="bomb-shell" d="M19 28Q23 19 34 21Q36 8 46 10Q58 12 55 28Q59 42 49 49Q32 58 19 48Q11 42 19 28Z" fill="#f6ecd4" stroke="#b69c70" stroke-width="2"/>
+<path d="M37 12Q32 6 37 3Q41 1 43 7Q45 -1 49 3Q52 5 49 11" fill="#bd7764" stroke="#a76957" stroke-width="1.5"/>
+<path d="M54 22L63 27L54 30Z" fill="#e4b65f" stroke="#b78c45" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M51 29Q58 37 51 39Q45 37 49 29" fill="#bd7764"/>
+<path d="M23 33Q37 25 43 36Q41 46 28 46Q34 40 23 33Z" fill="#e4d5b1" stroke="#bda77e" stroke-width="1.5" stroke-linejoin="round"/>
+<circle cx="48" cy="20" r="2.5" fill="#465443"/><circle cx="48.7" cy="19.2" r=".8" fill="#fff9e8"/>
+<path d="M40 16Q42 13 45 14" fill="none" stroke="#fff9e8" stroke-width="2" stroke-linecap="round"/>
+</svg></span><span>chicken<span class="brand-soft">major</span><span class="brand-dot">.</span></span></a><div class="top-controls"><button id="market-button" class="market-button" type="button">Marketplace ↗</button><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">Sound on</button></div></header>
 <main>
 <div class="page-heading"><div><div class="eyebrow">A LITTLE COURAGE. A LITTLE CHAOS.</div><h1>Small moves.<br>Big escapes.</h1></div><p>Keep your characters out of trouble.<br>Make room for one more little win.</p></div>
 <div class="game-layout">
-<section class="arena-card" aria-label="Bomb Major game">
-<div class="arena-heading"><span><i class="live-dot" aria-hidden="true"></i>The little courtyard</span><span class="small-tag">CLICK · COLLECT · SURVIVE</span></div>
+<section class="arena-card" aria-label="Chicken Major game">
+<div class="arena-heading"><span><i class="live-dot" aria-hidden="true"></i>The little courtyard</span><span class="small-tag">CLICK · COLLECT · DODGE</span></div>
 <div class="scoreboard" aria-label="Game scores">
 <div class="score-stat"><span class="stat-label"><span class="coin-icon" aria-hidden="true">✦</span>Coin purse</span><strong id="coinTotal">0</strong></div>
 <div class="score-stat"><span class="stat-label">This round</span><strong id="roundCoins">0</strong></div>
@@ -24,7 +35,7 @@
 <div class="effect-tray" id="active-effects" aria-label="Active abilities">Unlock helpful drops in the marketplace.</div>
 <div class="playSpace" aria-label="Courtyard game area">
 <svg class="tether-art" hidden aria-hidden="true" preserveAspectRatio="none"><line id="tether-line" stroke="#ae8654" stroke-width="3" stroke-dasharray="5 3" stroke-linecap="round"/></svg>
-<button class="clickyBlock" type="button" aria-label="Click Me: send the bouncing block toward the bomb">Click Me</button>
+<button class="clickyBlock" type="button" aria-label="Click Me: send the bouncing block toward the chicken">Click Me</button>
 <button class="character" type="button" aria-label="Move character to a random position"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
 <ellipse cx="32" cy="59" rx="17" ry="3" fill="#7b8060" opacity=".2"/>
 <path d="M25 44L24 54M39 44L40 54" fill="none" stroke="#697b70" stroke-width="8" stroke-linecap="round"/>
@@ -58,20 +69,17 @@
 <path d="M11 7V14M29 7V14" stroke="#839e94" stroke-width="8"/>
 <path d="M8 7H14M26 7H32" stroke="#f5e7c8" stroke-width="2"/>
 </svg></button></template>
-<template id="explosionTemplate"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" aria-hidden="true">
-<path d="M60 9L70 33L91 20L89 44L114 49L94 65L108 86L82 85L78 110L59 92L40 109L36 84L11 89L26 65L7 47L33 44L29 20L50 33Z" fill="#edbc73" stroke="#c78557" stroke-width="2" stroke-linejoin="round"/>
-<path d="M60 31L68 49L87 47L77 63L86 79L67 76L57 91L51 73L32 72L43 58L37 41L54 45Z" fill="#fff0be"/>
-<circle cx="59" cy="60" r="11" fill="#fff9e5"/>
-</svg></template>
-<div class="bomb" role="img" aria-label="Chasing bomb"><svg class="bomb-art" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-<ellipse cx="31" cy="58" rx="21" ry="4" fill="#5e6a50" opacity=".2"/>
-<path d="M37 14Q39 2 47 8L51 9" fill="none" stroke="#a58453" stroke-width="3" stroke-linecap="round"/>
-<path class="bomb-spark" d="M52 3V13M47 8H57M48 4L56 12M48 12L56 4" stroke="#d39743" stroke-width="2" stroke-linecap="round"/>
-<path d="M32 13L41 16L38 24L28 21Z" fill="#957654"/>
-<circle class="bomb-shell" cx="30" cy="37" r="22" fill="#626b60" stroke="#424f44" stroke-width="2"/>
-<path d="M15 32Q17 22 27 21" fill="none" stroke="#a2ad96" stroke-width="4" stroke-linecap="round"/>
-<ellipse cx="24" cy="37" rx="2" ry="3" fill="#fff0cf"/><ellipse cx="37" cy="37" rx="2" ry="3" fill="#fff0cf"/>
-<path d="M26 47Q30 43 34 47" fill="none" stroke="#d2d6bb" stroke-width="2" stroke-linecap="round"/>
+<div class="bomb" role="img" aria-label="Chasing chicken"><svg class="bomb-art" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="32" cy="60" rx="23" ry="3" fill="#70815e" opacity=".2"/>
+<path d="M25 49V57L18 59M25 57L30 59M40 49V57L35 59M40 57L47 59" fill="none" stroke="#bb884c" stroke-width="3" stroke-linecap="round"/>
+<path d="M18 33Q6 34 5 21Q13 23 16 16Q22 22 24 32" fill="#d9c79e" stroke="#b69c70" stroke-width="2" stroke-linejoin="round"/>
+<path class="bomb-shell" d="M19 28Q23 19 34 21Q36 8 46 10Q58 12 55 28Q59 42 49 49Q32 58 19 48Q11 42 19 28Z" fill="#f6ecd4" stroke="#b69c70" stroke-width="2"/>
+<path d="M37 12Q32 6 37 3Q41 1 43 7Q45 -1 49 3Q52 5 49 11" fill="#bd7764" stroke="#a76957" stroke-width="1.5"/>
+<path d="M54 22L63 27L54 30Z" fill="#e4b65f" stroke="#b78c45" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M51 29Q58 37 51 39Q45 37 49 29" fill="#bd7764"/>
+<path d="M23 33Q37 25 43 36Q41 46 28 46Q34 40 23 33Z" fill="#e4d5b1" stroke="#bda77e" stroke-width="1.5" stroke-linejoin="round"/>
+<circle cx="48" cy="20" r="2.5" fill="#465443"/><circle cx="48.7" cy="19.2" r=".8" fill="#fff9e8"/>
+<path d="M40 16Q42 13 45 14" fill="none" stroke="#fff9e8" stroke-width="2" stroke-linecap="round"/>
 </svg><div class="freeze-meter" hidden aria-hidden="true"><span id="freezeCountdown"></span><div class="freeze-track"><div class="freeze-fill"></div></div></div></div>
 <div class="gameOver" hidden aria-labelledby="game-over-title"><div class="result-card"><span class="result-flower" aria-hidden="true">✳</span><div class="eyebrow">EVERY ESCAPE IS A LITTLE WIN</div><h2 id="game-over-title">What a little adventure.</h2><p id="result"></p><button class="restart" type="button">One more try <span aria-hidden="true">↗</span></button><button id="result-market" class="result-market" type="button">Visit the marketplace ↗</button><a class="scores-jump" href="#local-score-panel">View local high scores ↓</a><small>A fresh round. Your coins and upgrades stay.</small></div></div>
 </div>
@@ -91,10 +99,10 @@
 <ellipse cx="23" cy="22" rx="3" ry="2" fill="#de9e87"/><ellipse cx="41" cy="22" rx="3" ry="2" fill="#de9e87"/>
 <circle cx="27" cy="18" r="1.6" fill="#4c493a"/><circle cx="37" cy="18" r="1.6" fill="#4c493a"/>
 <path d="M28 24Q32 28 36 24" fill="none" stroke="#946850" stroke-width="1.8" stroke-linecap="round"/>
-</svg></span><div><strong>Keep them moving.</strong><p>Click a character to hop somewhere safe. Every jump makes the bomb a little faster. Its minimum speed also rises with time.</p></div></li>
-<li><span class="step-icon step-block" aria-hidden="true">✧</span><div><strong>Send a little backup.</strong><p>Click the bouncing block to aim at the bomb. A hit freezes it for a breather.</p></div></li>
+</svg></span><div><strong>Keep them moving.</strong><p>Click a character to hop somewhere safe. Every jump makes the chicken a little faster. Its minimum speed also rises with time.</p></div></li>
+<li><span class="step-icon step-block" aria-hidden="true">✧</span><div><strong>Send a little backup.</strong><p>Click the bouncing block to aim at the chicken. A hit freezes it for a breather.</p></div></li>
 <li><span class="step-icon step-coin" aria-hidden="true">✦</span><div><strong>Add more characters.</strong><p>Collect 10 coins in a round to spawn another character. Keep at least one human safe.</p></div></li></ol>
-<div class="drop-guide"><strong>Unlock finds in the marketplace.</strong><p><b>Shield</b> · Saves the next human hit.<br><b>Banana</b> · Two tight circles; still dangerous.<br><b>String</b> · A 10-second tether; still dangerous.<br><b>Treadmill</b> · Accelerates the block, then resets.<br><b>Cow poop</b> · Bomb contact repels it for 3–10 seconds by cow tier. Homing hits trim teleport speed. Repel cannot refresh; it needs 3s recovery.</p></div>
+<div class="drop-guide"><strong>Unlock finds in the marketplace.</strong><p><b>Shield</b> · Keeps the next character in the courtyard.<br><b>Banana</b> · Two tight circles; characters can still be chased away.<br><b>String</b> · A 10-second tether; characters can still be chased away.<br><b>Treadmill</b> · Accelerates the block, then resets.<br><b>Cow poop</b> · Chicken contact repels it for 3–10 seconds by cow tier. Homing hits trim teleport speed. Repel cannot refresh; it needs 3s recovery.</p></div>
 <div class="guide-footnote"><span aria-hidden="true">↗</span> Click or tap to play. No arrow keys needed.</div></section>
 <section class="cat-note"><div class="cat-portrait" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
 <ellipse cx="31" cy="59" rx="21" ry="3" fill="#7b8060" opacity=".2"/>
@@ -110,7 +118,7 @@
 <path d="M31 33V35Q27 39 25 35M31 35Q35 39 37 35" fill="none" stroke="#805741" stroke-width="1.4" stroke-linecap="round"/>
 <path d="M19 32L8 29M19 35L8 37M43 32L54 29M43 35L54 37" stroke="#a97550" stroke-width="1.2" stroke-linecap="round"/>
 <ellipse cx="20" cy="57" rx="8" ry="4" fill="#df9f6c"/><ellipse cx="40" cy="57" rx="8" ry="4" fill="#df9f6c"/>
-</svg></div><div><div class="eyebrow">A FAMILIAR LITTLE FACE</div><h3>A very helpful cat.</h3><p>Click the cat to lure the bomb. If caught, it escapes, drops five coins, and slows the chase.</p></div></section>
+</svg></div><div><div class="eyebrow">A FAMILIAR LITTLE FACE</div><h3>A very helpful cat.</h3><p>Click the cat to lure the chicken. If caught, it escapes, drops five coins, and slows the chase.</p></div></section>
 <div class="magnet-note"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
 <path d="M11 9V24A9 9 0 0 0 29 24V9" fill="none" stroke="#be7b67" stroke-width="8"/>
 <path d="M11 7V14M29 7V14" stroke="#839e94" stroke-width="8"/>
@@ -118,7 +126,7 @@
 </svg></span><p><strong>Found a magnet?</strong> Click it to pull the coins toward your block.</p></div>
 </aside>
 </div>
-<section id="local-score-panel" class="local-score-panel" aria-labelledby="local-score-title"><div class="score-panel-heading"><div><div class="eyebrow">YOUR OWN LITTLE HALL OF FAME</div><h2 id="local-score-title">Your best escapes<span>.</span></h2></div><span class="small-tag">TOP 10 · THIS BROWSER</span></div><p class="score-panel-copy">Longest survival wins. Coins, then jumps, break ties.</p><div class="score-table-scroll"><table class="local-score-table"><thead><tr><th scope="col">Rank</th><th scope="col">Survived</th><th scope="col">Coins</th><th scope="col">Jumps</th><th scope="col">Date</th></tr></thead><tbody id="local-score-rows"></tbody></table></div><p id="score-save-note" class="save-note" role="status"></p></section>
+<section id="local-score-panel" class="local-score-panel" aria-labelledby="local-score-title"><div class="score-panel-heading"><div><div class="eyebrow">YOUR OWN LITTLE HALL OF FAME</div><h2 id="local-score-title">Your best escapes<span>.</span></h2></div><span class="small-tag">TOP 10 · THIS BROWSER</span></div><p class="score-panel-copy">Longest round wins. Coins, then jumps, break ties.</p><div class="score-table-scroll"><table class="local-score-table"><thead><tr><th scope="col">Rank</th><th scope="col">Time</th><th scope="col">Coins</th><th scope="col">Jumps</th><th scope="col">Date</th></tr></thead><tbody id="local-score-rows"></tbody></table></div><p id="score-save-note" class="save-note" role="status"></p></section>
 <p id="coinSaveNote" class="save-note" hidden>Coin saving is unavailable in this browser. Coins will stay for this session only.</p>
 <footer><span>Made for close calls & little victories.</span><span>Coins & upgrades save on this browser <i class="save-dot" aria-hidden="true">●</i></span></footer>
 </main>

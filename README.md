@@ -7,11 +7,11 @@ A shared library for small browser games. Open `index.html` in Google Chrome and
 | Game | Entry point | Agent guide |
 | --- | --- | --- |
 | Type & Tails | [Play](type-tails/index.html) | [AGENTS.md](type-tails/AGENTS.md) |
-| Bomb Major | [Play](bomb-major/index.html) | [AGENTS.md](bomb-major/AGENTS.md) |
+| Chicken Major | [Play](bomb-major/index.html) | [AGENTS.md](bomb-major/AGENTS.md) |
 
-Type & Tails is a cozy typing game with 20-word rounds, eight difficulties unlocked by completed-round WPM, expanded touch-typing word pools with a fresh randomized selection each round, a pet and room shop, music, sound effects, and browser-local saved progress.
+Type & Tails is a cozy typing game with 20-word rounds, eight difficulties unlocked by completed-round WPM, expanded touch-typing word pools with a fresh randomized selection each round, a Space-to-start ready prompt, automatic typo filtering, a pet and room shop, music, sound effects, and browser-local saved progress.
 
-Bomb Major is a survival arcade game with a chasing bomb, a bouncing freeze block, coin collection, extra characters, cat and magnet drops, and generated audio. Its original single HTML file is now split into HTML, CSS, and JavaScript inside `bomb-major/`.
+Chicken Major is a chase-and-dodge arcade game where characters run off-screen when caught by a chasing chicken, with a bouncing freeze block, coin collection, extra characters, cat and magnet drops, and generated audio. Its original single HTML file is now split into HTML, CSS, and JavaScript inside `bomb-major/`.
 
 ## Structure
 
@@ -24,7 +24,7 @@ Games/
   AGENTS.md            Shared guidance for AI agents
   previews/            Library thumbnails
   type-tails/          Type & Tails code and its own agent guide
-  bomb-major/          Bomb Major code and its own agent guide
+  bomb-major/          Chicken Major code and its own agent guide
 ```
 
 ## Add another game

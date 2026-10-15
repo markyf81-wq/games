@@ -334,3 +334,6 @@ footer{gap:12px}
 .pet-choice strong{font-size:13px}.pet-choice small{font-size:10px;color:var(--muted)}
 .pet-choice .pet-choice-status{margin-top:7px;color:var(--green);font-size:10px}
 @media(max-width:540px){.pet-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.pet-controls{gap:9px}.room-bottom{padding:12px}.room-bottom .muted{display:none}}
+
+.target-word.is-ready{font-size:clamp(20px,3vw,30px);letter-spacing:-.5px;line-height:1.25;padding:12px 0}
+.ready-start{width:100%;margin-top:10px;justify-content:center;gap:16px}

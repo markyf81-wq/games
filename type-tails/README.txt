@@ -2,7 +2,7 @@ TYPE & TAILS
 
 Open index.html in Google Chrome to play. No install, build, server, or internet connection is required. Keep index.html, styles.css, and game.js together.
 
-Choose a difficulty before a round. Each round draws 20 different words from an expanded practice pool and shuffles their order. Restarting or replaying a difficulty draws a fresh selection. Words stay within the keys introduced at that difficulty. Correct words submit automatically. Backspace fixes mistakes. The countdown at the bottom resets for each word. Esc pauses, and moving to another browser tab pauses automatically.
+Choose a difficulty before a round. Each round draws 20 different words from an expanded practice pool and shuffles their order. Restarting or replaying a difficulty draws a fresh selection. Words stay within the keys introduced at that difficulty. Press Space (or tap the start prompt) when ready: the first word and countdown wait for you. Correct words submit automatically. Incorrect letters are ignored, so carry on without backspacing; skipped mistakes still count toward accuracy. The countdown at the bottom resets for each word. Esc pauses, and moving to another browser tab pauses automatically.
 
 Correct words earn a base reward, up to 80 speed points, and up to 25 streak points. Each point also earns one coin. Points become shop coins. Complete a full 20-word round at the required speed on the previous difficulty to unlock the next one permanently. Spending coins never changes your speed records or earned levels. Early finishes do not record a qualifying speed.
 

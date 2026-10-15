@@ -226,10 +226,6 @@ const playSpace = document.querySelector('.playSpace');
                             break;
                         case 'tick': tone('sine', 1200, 1000, 0.035, 0.055); break;
                         case 'thaw': tone('triangle', 220, 600, 0.18, 0.08); break;
-                        case 'explosion':
-                            noise(0.45, 2400, 90, 0.28);
-                            tone('triangle', 90, 30, 0.35, 0.2);
-                            break;
                         case 'gameOver': melody([392, 330, 262, 131], 0.15, 0.28, 0.12); break;
                     }
                 } catch (error) {
@@ -322,6 +318,7 @@ const playSpace = document.querySelector('.playSpace');
         let animationFrame;
         let gameOverTimeout;
         let blockClickedTimeout;
+        const runawayTimers = new Set();
 
         coinTotal = market.wallet();
         function saveCoins() {
@@ -625,7 +622,7 @@ const playSpace = document.querySelector('.playSpace');
         function addPower(type, position) {
             const element = document.createElement('button');
             element.type = 'button'; element.className = 'power-drop power-' + type;
-            const label = { shield: 'Shield: protect the next human hit', banana: 'Banana peel: make the bomb circle twice', string: 'String: tether the dangerous bomb for 10 seconds', treadmill: 'Treadmill: temporarily accelerate the block' }[type];
+            const label = { shield: 'Shield: protect the next human hit', banana: 'Banana peel: make the chicken circle twice', string: 'String: tether the chasing chicken for 10 seconds', treadmill: 'Treadmill: temporarily accelerate the block' }[type];
             element.setAttribute('aria-label', label); element.title = label; element.innerHTML = content.icons[type];
             const drop = { position, element }; powerDrops.set(type, drop); positionElement(drop); playSpace.append(element); sound.play('magnetDrop');
             element.addEventListener('click', () => {
@@ -634,7 +631,7 @@ const playSpace = document.querySelector('.playSpace');
                 if (type === 'treadmill') { treadmillRemaining = content.balance.treadmillDuration[market.tier('treadmill')]; treadmillElapsed = 0; setBlockBoost(1); announce('Treadmill! The block keeps getting faster for ' + treadmillRemaining + ' seconds.'); }
                 if (type === 'shield') { shieldReady = true; announce('Shield ready. The next human hit is protected.'); }
                 if (type === 'banana') { startBananaSpin(); announce('Banana slip! Two tight circles. Watch out—it can still hit characters.'); }
-                if (type === 'string') { tetherRemaining = 10; dragBomb(); announce('Tethered for 10 seconds. The bomb can still hit characters!'); }
+                if (type === 'string') { tetherRemaining = 10; dragBomb(); announce('Tethered for 10 seconds. The chicken can still hit characters!'); }
                 sound.play('freeze'); draw();
             });
         }
@@ -642,12 +639,12 @@ const playSpace = document.querySelector('.playSpace');
             if (cow || market.tier('cow') === 0) return;
             const position = findCharacterPosition(); if (!position) return;
             const element = document.createElement('button'); element.type = 'button'; element.className = 'cow';
-            element.innerHTML = content.cow; element.title = 'A wandering cow. Let the block send its poop toward the bomb!';
+            element.innerHTML = content.cow; element.title = 'A wandering cow. Let the block send its poop toward the chicken!';
             element.setAttribute('aria-label', 'Wandering cow. Its poop can be deflected by the block.');
             const angle = Math.random() * Math.PI * 2;
             cow = { position, element, vx: Math.cos(angle) * 24, vy: Math.sin(angle) * 24, turn: 3, poop: 6 };
-            playSpace.append(element); positionElement(cow); sound.play('arrival'); announce('A cow wandered in. Send its poop at the bomb with your block!');
-            element.addEventListener('click', () => { if (playing) { sound.unlock(); sound.play('cat'); announce('Moo! The bomb never targets the cow.'); } });
+            playSpace.append(element); positionElement(cow); sound.play('arrival'); announce('A cow wandered in. Send its poop at the chicken with your block!');
+            element.addEventListener('click', () => { if (playing) { sound.unlock(); sound.play('cat'); announce('Moo! The chicken never targets the cow.'); } });
         }
         function leavePoop() {
             if (!cow) return;
@@ -779,7 +776,7 @@ const playSpace = document.querySelector('.playSpace');
                 else { cow.vx *= -1; cow.vy *= -1; }
                 if (cow.poop <= 0) { leavePoop(); cow.poop = 6; }
                 if (Math.hypot(cow.position.x - bombPosition.x, cow.position.y - bombPosition.y) < collisionDistance) {
-                    cow.element.remove(); cow = null; sound.play('escape'); announce('The cow wandered off. Its poop is still useful!');
+                    runOffScreen(cow); cow = null; sound.play('escape'); announce('The cow wandered off. Its poop is still useful!');
                 }
             }
             poops = poops.filter(poop => {
@@ -790,7 +787,7 @@ const playSpace = document.querySelector('.playSpace');
                     poop.element.classList.add('flying'); sound.play('block');
                 }
                 if (poop.flying) {
-                    // Retarget every physics step so a moving or tethered bomb cannot dodge the shot.
+                    // Retarget every physics step so a moving or tethered chicken cannot dodge the shot.
                     const dx = bombPosition.x + size / 2 - poop.position.x - poopSize / 2;
                     const dy = bombPosition.y + size / 2 - poop.position.y - poopSize / 2;
                     const distance = Math.hypot(dx, dy);
@@ -870,8 +867,9 @@ const playSpace = document.querySelector('.playSpace');
             for (const character of characters) character.element.remove();
             for (const coin of coins) coin.element.remove();
             if (magnet) magnet.element.remove();
-            for (const effect of playSpace.querySelectorAll('.explosion')) effect.remove();
-            for (const cat of playSpace.querySelectorAll('.cat-running')) cat.remove();
+            for (const timer of runawayTimers) clearTimeout(timer);
+            runawayTimers.clear();
+            for (const runner of playSpace.querySelectorAll('.character-running')) runner.remove();
             characters = [];
             targetedCat = null;
             coins = [];
@@ -903,16 +901,29 @@ const playSpace = document.querySelector('.playSpace');
             setText(status, 'Click a character or Click Me block to start.');
             draw();
         }
-        function showExplosion(position) {
-            sound.play('explosion');
-            const effect = document.createElement('div');
-            effect.className = 'explosion';
-            effect.appendChild(document.querySelector('#explosionTemplate').content.firstElementChild.cloneNode(true));
-            effect.setAttribute('aria-hidden', 'true');
-            effect.style.left = `${position.x + size / 2 - 60}px`;
-            effect.style.top = `${position.y + size / 2 - 60}px`;
-            effect.addEventListener('animationend', () => effect.remove(), { once: true });
-            playSpace.appendChild(effect);
+        function runOffScreen(character) {
+            const element = character.element;
+            element.disabled = true;
+            element.setAttribute('aria-hidden', 'true');
+            element.classList.remove('bomb-target');
+            element.style.transform = `translate(${character.position.x}px, ${character.position.y}px)`;
+            element.classList.add('character-running');
+            const cleanup = () => {
+                clearTimeout(timer);
+                runawayTimers.delete(timer);
+                element.remove();
+            };
+            const timer = setTimeout(cleanup, 1000);
+            runawayTimers.add(timer);
+            const onRunEnd = event => {
+                if (event.target !== element || event.propertyName !== 'transform') return;
+                element.removeEventListener('transitionend', onRunEnd); cleanup();
+            };
+            element.addEventListener('transitionend', onRunEnd);
+            // Commit the starting position before running beyond the courtyard edge.
+            element.getBoundingClientRect();
+            const exitX = character.position.x < playSpace.clientWidth / 2 ? -size - 20 : playSpace.clientWidth + 20;
+            element.style.transform = `translate(${exitX}px, ${character.position.y}px)`;
         }
         function releaseCat(character) {
             sound.play('escape');
@@ -936,17 +947,9 @@ const playSpace = document.querySelector('.playSpace');
                 clampPosition(position, coinSize);
                 addCoin(position);
             }
-            const element = character.element;
-            element.disabled = true;
-            element.style.transform = `translate(${character.position.x}px, ${character.position.y}px)`;
-            element.classList.add('cat-running');
-            element.addEventListener('transitionend', () => element.remove(), { once: true });
-            // Commit the starting position before setting the off-screen destination.
-            element.getBoundingClientRect();
-            const exitX = character.position.x < playSpace.clientWidth / 2 ? -size - 20 : playSpace.clientWidth + 20;
-            element.style.transform = `translate(${exitX}px, ${character.position.y}px)`;
+            runOffScreen(character);
         }
-        function killCaughtCharacters() {
+        function handleCaughtCharacters() {
             if (repelRemaining > 0) return;
             characters = characters.filter(character => {
                 if (Math.hypot(character.position.x - bombPosition.x,
@@ -956,14 +959,14 @@ const playSpace = document.querySelector('.playSpace');
                     shieldReady = false; character.invulnerable = 1.5;
                     const safe = findCharacterPosition(character);
                     if (safe) character.position = safe;
-                    announce('Shield saved a character! One charge used.'); sound.play('freeze');
+                    announce('Shield kept a character in the courtyard! One charge used.'); sound.play('freeze');
                     return true;
                 }
                 if (character.isCat) {
                     releaseCat(character);
                 } else {
-                    showExplosion(character.position);
-                    character.element.remove();
+                    sound.play('escape');
+                    runOffScreen(character);
                 }
                 return false;
             });
@@ -975,13 +978,13 @@ const playSpace = document.querySelector('.playSpace');
                 document.querySelector('#market-button').disabled = false;
                 sound.music(false);
                 bomb.hidden = true;
-                setText(status, 'No characters left. Game over!');
-                result.textContent = `Survived ${elapsed.toFixed(1)}s · ${roundCoins} coins this round · ${coinTotal} saved coins`;
+                setText(status, 'All characters ran off. Round complete!');
+                result.textContent = `Lasted ${elapsed.toFixed(1)}s · ${roundCoins} coins this round · ${coinTotal} saved coins`;
                 gameOverTimeout = setTimeout(() => {
                     gameOver.hidden = false;
                     sound.play('gameOver');
                     restart.focus();
-                }, 650);
+                }, 1050);
             }
         }
         function start() {
@@ -1017,7 +1020,7 @@ const playSpace = document.querySelector('.playSpace');
             while (bookElapsed >= .2) { bookElapsed -= .2; if (market.hasBook()) moveReaders(); }
             updateTreadmill(seconds);
             const currentSpeed = currentBombSpeed();
-            // Small movement steps keep the fast bomb and block from tunnelling.
+            // Small movement steps keep the fast chicken and block from tunnelling.
             const pullSpeed = coins.some(coin => coin.attracted) ? coinPullSpeed : 0;
             const steps = Math.max(1, Math.ceil(Math.max(currentSpeed * (repelRemaining > 0 ? 1.4 : 1), pullSpeed,
                 poops.some(poop => poop.flying) ? poopFlightSpeed() : 0, (bananaRemaining > 0 || repelRemaining > 0) ? 160 : 0,
@@ -1057,14 +1060,14 @@ const playSpace = document.querySelector('.playSpace');
                 if (tetherRemaining > 0) dragBomb();
                 // Contact with a pile applies before catches in this same movement step.
                 checkPoopBombContacts();
-                killCaughtCharacters();
+                handleCaughtCharacters();
                 if (ended) {
                     draw();
                     return;
                 }
             }
             draw();
-            setText(status, noticeRemaining > 0 ? noticeText : `Jumps: ${jumps} · Survived: ${elapsed.toFixed(1)}s`);
+            setText(status, noticeRemaining > 0 ? noticeText : `Jumps: ${jumps} · Time: ${elapsed.toFixed(1)}s`);
             animationFrame = requestAnimationFrame(chase);
         }
         function jumpCharacter(character) {

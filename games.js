@@ -16,14 +16,14 @@ const GAME_CATALOG = [
   },
   {
     id: 'bomb-major',
-    title: 'Bomb Major',
-    subtitle: 'A chasing bomb. A bouncing block. One more try.',
+    title: 'Chicken Major',
+    subtitle: 'A chasing chicken. A bouncing block. One more try.',
     description: 'Keep your characters safe with a bouncing block, helpful cats and cows, shields, banana peels and string. Collect coins for permanent marketplace upgrades between attempts and beat your local high scores.',
     category: 'Arcade',
-    tags: ['Survival', 'Clicking', 'Coins'],
+    tags: ['Chasing', 'Clicking', 'Coins'],
     path: 'bomb-major/index.html',
     image: 'previews/bomb-major.svg',
-    imageAlt: 'An illustrated courtyard with a chasing bomb, sage block, characters, Pip the cat, and gold coins',
+    imageAlt: 'An illustrated courtyard with a chasing chicken, sage block, characters, Pip the cat, and gold coins',
     accent: '#d3ddc3',
     detail: 'Dodge · collect · upgrade your abilities'
   }

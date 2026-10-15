@@ -66,15 +66,14 @@ a:focus-visible, button:focus-visible { outline: 3px solid #c58e51; outline-offs
 .character:disabled { cursor: default; }
 .character.cat { background: #f5dfb48c; border-color: #f0ce96; }
 .character.bomb-target { outline: 3px solid #bf7956; outline-offset: 2px; }
-.character.cat-running { z-index: 3; background: transparent; border-color: transparent; box-shadow: none; pointer-events: none; transition: transform 900ms ease-in; }
-.cat-running .character-number { display: none; }
+.character.character-running, .cow.character-running { z-index: 3; background: transparent; border-color: transparent; box-shadow: none; pointer-events: none; transition: transform 900ms ease-in; }
+.character-running .character-number { display: none; }
 .character-number { position: absolute; top: -3px; right: -3px; display: grid; place-items: center; min-width: 19px; height: 19px; padding: 2px 4px; border: 1px solid #faf3dc; border-radius: 50%; background: #617e68; color: #fff9e9; font: 600 10px/1 var(--sans); }
 .cat .character-number { background: #b18357; }
 .bomb { pointer-events: none; z-index: 2; border-radius: 50%; }
 .bomb-art { display: block; }
 .bomb.frozen { background: #d7eee9c9; box-shadow: 0 0 0 2px #a7c5c1, 0 0 18px #e9faf4; }
 .frozen .bomb-shell { fill: #7ba8a8; stroke: #4f858b; }
-.frozen .bomb-spark { opacity: 0; }
 .freeze-meter { position: absolute; bottom: -11px; left: 0; width: 64px; padding: 4px 5px; border: 1px solid #a9c6be; border-radius: 6px; background: #456f70; color: #f6fff5; text-align: center; font: 600 10px/1 var(--sans); }
 .freeze-track { height: 4px; margin-top: 4px; overflow: hidden; border-radius: 3px; background: #7ba09a; }
 .freeze-fill { height: 100%; background: #d5edce; transform-origin: left; }
@@ -87,8 +86,6 @@ a:focus-visible, button:focus-visible { outline: 3px solid #c58e51; outline-offs
 .clickyBlock:hover { background: #5e877a; }
 .clickyBlock.clicked { background: #b77e67; border-color: #946749; box-shadow: inset 0 0 0 5px #cd9d81, inset 0 0 0 6px #e2b999, 0 5px 0 #9b7858, 0 8px 14px #49613c26; }
 .clickyBlock.magnet-active { outline: 2px solid #f5d88b; outline-offset: 3px; }
-.explosion { position: absolute; z-index: 3; width: 120px; height: 120px; display: grid; place-items: center; pointer-events: none; animation: explode 650ms ease-out forwards; }
-@keyframes explode { from { transform: scale(.3) rotate(-15deg); opacity: 1; } to { transform: scale(1.8) rotate(20deg); opacity: 0; } }
 .gameOver { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; padding: 24px; background: #e9eddbce; backdrop-filter: blur(5px); }
 .result-card { width: 390px; max-width: 100%; padding: 28px; border: 1px solid #e7debf; border-radius: 17px; background: #faf7eccc; text-align: center; box-shadow: 0 12px 40px #51633c15; }
 .result-flower { display: block; font: 46px/1 var(--serif); color: #bc9c62; margin-bottom: 17px; }
@@ -212,7 +209,6 @@ footer { display: flex; justify-content: space-between; gap: 15px; border-top: 1
 .bomb.repelled .bomb-shell { fill: #99936c; stroke: #797545; }
 .bomb.repelled { box-shadow: 0 0 0 2px #e3ddab88; }
 .bomb.tethered .bomb-shell { fill: #8e9d87; stroke: #6e8264; }
-.bomb.tethered .bomb-spark, .bomb.slipping .bomb-spark { opacity: 0; }
 .result-market { width: 100%; padding: 10px 8px; margin-top: 9px; border: 1px solid #d9dfc9; border-radius: 8px; background: #eef1e2; font-size: 11px; color: #687f57; }
 .drop-guide { margin-top: 21px; padding: 13px; border-radius: 10px; background: #edf0e2; }
 .drop-guide > strong { font-size: 10px; font-weight: 600; }
@@ -304,3 +300,8 @@ footer { display: flex; justify-content: space-between; gap: 15px; border-top: 1
     .score-panel-heading .small-tag { font-size: 6px; }
     .local-score-table th, .local-score-table td { padding: 9px 10px; }
 }
+
+.character-running svg { animation: running-steps 140ms ease-in-out infinite alternate; }
+@keyframes running-steps { from { translate: 0 -2px; rotate: -5deg; } to { translate: 0 2px; rotate: 5deg; } }
+@media (prefers-reduced-motion: reduce) { .character-running svg { animation: none; } }
+@media (max-width: 600px) { .topbar { flex-wrap: wrap; gap: 12px; padding: 15px 0; } .top-controls { margin-left: auto; } }

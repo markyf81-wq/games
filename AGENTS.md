@@ -10,7 +10,7 @@ This repository holds independent browser games behind one shared selection page
 - `library.js`: catalog rendering, title/tag search, and category filtering.
 - `previews/`: local game card artwork.
 - `type-tails/`: the Type & Tails typing game. Read `type-tails/AGENTS.md` before changing it.
-- `bomb-major/`: the Bomb Major survival game. Read `bomb-major/AGENTS.md` before changing it.
+- `bomb-major/`: the Chicken Major chase-and-dodge game. Read `bomb-major/AGENTS.md` before changing it.
 
 Both games now live in this repository. Do not list an unavailable game as playable or introduce a separate repository for a game without a request.
 
