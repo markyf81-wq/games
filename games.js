@@ -23,8 +23,8 @@ const GAME_CATALOG = [
     tags: ['Survival', 'Clicking', 'Coins'],
     path: 'bomb-major/index.html',
     image: 'previews/bomb-major.svg',
-    imageAlt: 'The Bomb Major arena with a bomb, blue block, human, cat, and coins',
-    accent: '#99bc91',
+    imageAlt: 'An illustrated courtyard with a chasing bomb, sage block, smiling friends, Pip the cat, and gold coins',
+    accent: '#d3ddc3',
     detail: 'Click to dodge · collect & survive'
   }
 ];

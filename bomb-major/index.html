@@ -1,71 +1,123 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bomb Major</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="game.js" defer></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7f4ec"><meta name="description" content="A little courtyard. A little chaos. Keep your friends safe in this cozy survival arcade game.">
+<title>Bomb Major — Small moves. Big escapes.</title>
+<link rel="stylesheet" href="styles.css?v=courtyard1"><script src="game.js?v=courtyard1" defer></script>
 </head>
 <body>
-    <nav class="library-navigation" aria-label="Library"><a href="../index.html">← Games library</a></nav>
-    <h1>Bomb Major</h1>
-    <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">Sound on</button>
-    <div class="scoreboard">
-        <span>Saved coins: <span id="coinTotal">0</span></span>
-        <span>This round: <span id="roundCoins">0</span></span>
-        <span>Alive: <span id="aliveCount">1</span></span>
-        <span id="nextCharacter">Next character in 10 coins</span>
-    </div>
-    <p id="coinSaveNote" hidden>Coin saving is unavailable in this browser. Coins will stay for this session only.</p>
-    <div id="status" role="status">Click the character or Click Me block to start.</div>
-    <div class="playSpace" aria-label="Game area">
-        <button class="clickyBlock" type="button">Click Me</button>
-        <button class="character" type="button" aria-label="Move character to a random position">
-            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-                <path d="M25 43 L24 57 M39 43 L40 57" fill="none" stroke="#26354a" stroke-width="9" stroke-linecap="round"/>
-                <path d="M23 29 L14 40 M41 29 L50 40" fill="none" stroke="#ffcd94" stroke-width="7" stroke-linecap="round"/>
-                <rect x="21" y="25" width="22" height="22" rx="7" fill="#2476e5"/>
-                <circle cx="32" cy="15" r="12" fill="#ffcd94" stroke="#26354a" stroke-width="2"/>
-                <circle cx="28" cy="14" r="1.5" fill="#26354a"/>
-                <circle cx="36" cy="14" r="1.5" fill="#26354a"/>
-                <path d="M28 19 Q32 23 36 19" fill="none" stroke="#26354a" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-        </button>
-        <template id="catTemplate">
-            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-                <path d="M42 46 Q60 48 55 30" fill="none" stroke="#cf8429" stroke-width="7" stroke-linecap="round"/>
-                <ellipse cx="30" cy="43" rx="15" ry="16" fill="#e8a343"/>
-                <path d="M15 22 L12 5 L26 15 M35 15 L49 5 L46 24" fill="#e8a343" stroke="#85511b" stroke-width="2" stroke-linejoin="round"/>
-                <ellipse cx="30" cy="25" rx="18" ry="15" fill="#f6be67"/>
-                <ellipse cx="23" cy="24" rx="2" ry="3" fill="#26354a"/>
-                <ellipse cx="37" cy="24" rx="2" ry="3" fill="#26354a"/>
-                <path d="M27 29 L33 29 L30 32 Z" fill="#bd6171"/>
-                <path d="M30 32 Q26 37 23 33 M30 32 Q34 37 37 33 M10 28 L21 30 M10 34 L21 32 M39 30 L50 28 M39 32 L50 34" fill="none" stroke="#85511b" stroke-width="1.5" stroke-linecap="round"/>
-                <path d="M21 54 L21 58 M37 54 L37 58" stroke="#85511b" stroke-width="7" stroke-linecap="round"/>
-            </svg>
-        </template>
-        <template id="magnetTemplate">
-            <button class="magnet" type="button" aria-label="Activate magnet to pull all coins to ClickyBlock">
-                <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
-                    <path d="M10 8 V24 A10 10 0 0 0 30 24 V8" fill="none" stroke="#e53935" stroke-width="8"/>
-                    <path d="M10 5 V13 M30 5 V13" stroke="#173b57" stroke-width="8"/>
-                </svg>
-            </button>
-        </template>
-        <div class="bomb" aria-label="Chasing bomb">
-            <span aria-hidden="true">💣</span>
-            <div class="freeze-meter" hidden aria-hidden="true">
-                <span id="freezeCountdown"></span>
-                <div class="freeze-track"><div class="freeze-fill"></div></div>
-            </div>
-        </div>
-        <div class="gameOver" hidden>
-            <h2>Game over!</h2>
-            <p id="result"></p>
-            <button class="restart" type="button">Play again</button>
-        </div>
-    </div>
-
+<div class="app">
+<nav class="library-navigation" aria-label="Library"><a href="../index.html">← Games library</a></nav>
+<header class="topbar"><a class="brand" href="./index.html" aria-label="Bomb Major home"><span class="brand-icon" aria-hidden="true">✹</span><span>bomb<span class="brand-soft">major</span><span class="brand-dot">.</span></span></a><div class="top-controls"><span class="edition-label">A LITTLE ARCADE ESCAPE</span><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">Sound on</button></div></header>
+<main>
+<div class="page-heading"><div><div class="eyebrow">A LITTLE COURAGE. A LITTLE CHAOS.</div><h1>Small moves.<br>Big escapes.</h1></div><p>Keep your friends out of trouble.<br>Make room for one more little win.</p></div>
+<div class="game-layout">
+<section class="arena-card" aria-label="Bomb Major game">
+<div class="arena-heading"><span><i class="live-dot" aria-hidden="true"></i>The little courtyard</span><span class="small-tag">CLICK · COLLECT · SURVIVE</span></div>
+<div class="scoreboard" aria-label="Game scores">
+<div class="score-stat"><span class="stat-label"><span class="coin-icon" aria-hidden="true">✦</span>Saved coins</span><strong id="coinTotal">0</strong></div>
+<div class="score-stat"><span class="stat-label">This round</span><strong id="roundCoins">0</strong></div>
+<div class="score-stat"><span class="stat-label">Friends still in</span><strong id="aliveCount">1</strong></div>
+<div class="next-friend"><span class="friend-sprout" aria-hidden="true">✳</span><span id="nextCharacter">Next character in 10 coins</span></div>
+</div>
+<div class="playSpace" aria-label="Courtyard game area">
+<button class="clickyBlock" type="button" aria-label="Click Me: send the bouncing block toward the bomb">Click Me</button>
+<button class="character" type="button" aria-label="Move character to a random position"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="32" cy="59" rx="17" ry="3" fill="#7b8060" opacity=".2"/>
+<path d="M25 44L24 54M39 44L40 54" fill="none" stroke="#697b70" stroke-width="8" stroke-linecap="round"/>
+<path d="M19 57H27M37 57H45" stroke="#8e6c53" stroke-width="6" stroke-linecap="round"/>
+<path d="M22 31L14 41M42 31L50 41" fill="none" stroke="#e7b78f" stroke-width="7" stroke-linecap="round"/>
+<rect x="20" y="27" width="24" height="21" rx="8" fill="#759a87"/>
+<path d="M28 29Q32 34 36 29M32 36V44" stroke="#fff1d4" stroke-width="2" fill="none" stroke-linecap="round"/>
+<ellipse cx="32" cy="17" rx="14" ry="15" fill="#edc49e"/>
+<path d="M18 16Q14 2 28 2Q40 -3 46 10L46 19L41 13Q34 17 26 9Q25 16 18 16Z" fill="#7a5b48"/>
+<ellipse cx="23" cy="22" rx="3" ry="2" fill="#de9e87"/><ellipse cx="41" cy="22" rx="3" ry="2" fill="#de9e87"/>
+<circle cx="27" cy="18" r="1.6" fill="#4c493a"/><circle cx="37" cy="18" r="1.6" fill="#4c493a"/>
+<path d="M28 24Q32 28 36 24" fill="none" stroke="#946850" stroke-width="1.8" stroke-linecap="round"/>
+</svg></button>
+<template id="catTemplate"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="31" cy="59" rx="21" ry="3" fill="#7b8060" opacity=".2"/>
+<path d="M43 47Q60 52 57 32Q56 27 53 29" fill="none" stroke="#c37d4e" stroke-width="7" stroke-linecap="round"/>
+<ellipse cx="30" cy="43" rx="16" ry="17" fill="#d8915d"/><ellipse cx="30" cy="47" rx="9" ry="11" fill="#f1c994"/>
+<path d="M14 24L13 5L25 14M36 14L49 5L48 25" fill="#d8915d" stroke="#d8915d" stroke-width="2" stroke-linejoin="round"/>
+<path d="M17 12L18 22L24 17M44 12L38 17L44 22" fill="#e9b3a0"/>
+<ellipse cx="31" cy="25" rx="20" ry="17" fill="#dfa06c"/>
+<path d="M26 10L27 15M32 9V15M38 11L37 15" stroke="#b7784b" stroke-width="2.5" stroke-linecap="round"/>
+<ellipse cx="19" cy="29" rx="4" ry="2.5" fill="#edb59a"/><ellipse cx="43" cy="29" rx="4" ry="2.5" fill="#edb59a"/>
+<ellipse cx="24" cy="25" rx="2" ry="3" fill="#4a3a30"/><ellipse cx="38" cy="25" rx="2" ry="3" fill="#4a3a30"/>
+<path d="M28 30Q31 28 34 30L31 33Z" fill="#aa695e"/>
+<path d="M31 33V35Q27 39 25 35M31 35Q35 39 37 35" fill="none" stroke="#805741" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M19 32L8 29M19 35L8 37M43 32L54 29M43 35L54 37" stroke="#a97550" stroke-width="1.2" stroke-linecap="round"/>
+<ellipse cx="20" cy="57" rx="8" ry="4" fill="#df9f6c"/><ellipse cx="40" cy="57" rx="8" ry="4" fill="#df9f6c"/>
+</svg></template>
+<template id="magnetTemplate"><button class="magnet" type="button" aria-label="Activate magnet to pull all coins to ClickyBlock"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+<path d="M11 9V24A9 9 0 0 0 29 24V9" fill="none" stroke="#be7b67" stroke-width="8"/>
+<path d="M11 7V14M29 7V14" stroke="#839e94" stroke-width="8"/>
+<path d="M8 7H14M26 7H32" stroke="#f5e7c8" stroke-width="2"/>
+</svg></button></template>
+<template id="explosionTemplate"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" aria-hidden="true">
+<path d="M60 9L70 33L91 20L89 44L114 49L94 65L108 86L82 85L78 110L59 92L40 109L36 84L11 89L26 65L7 47L33 44L29 20L50 33Z" fill="#edbc73" stroke="#c78557" stroke-width="2" stroke-linejoin="round"/>
+<path d="M60 31L68 49L87 47L77 63L86 79L67 76L57 91L51 73L32 72L43 58L37 41L54 45Z" fill="#fff0be"/>
+<circle cx="59" cy="60" r="11" fill="#fff9e5"/>
+</svg></template>
+<div class="bomb" role="img" aria-label="Chasing bomb"><svg class="bomb-art" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="31" cy="58" rx="21" ry="4" fill="#5e6a50" opacity=".2"/>
+<path d="M37 14Q39 2 47 8L51 9" fill="none" stroke="#a58453" stroke-width="3" stroke-linecap="round"/>
+<path class="bomb-spark" d="M52 3V13M47 8H57M48 4L56 12M48 12L56 4" stroke="#d39743" stroke-width="2" stroke-linecap="round"/>
+<path d="M32 13L41 16L38 24L28 21Z" fill="#957654"/>
+<circle class="bomb-shell" cx="30" cy="37" r="22" fill="#626b60" stroke="#424f44" stroke-width="2"/>
+<path d="M15 32Q17 22 27 21" fill="none" stroke="#a2ad96" stroke-width="4" stroke-linecap="round"/>
+<ellipse cx="24" cy="37" rx="2" ry="3" fill="#fff0cf"/><ellipse cx="37" cy="37" rx="2" ry="3" fill="#fff0cf"/>
+<path d="M26 47Q30 43 34 47" fill="none" stroke="#d2d6bb" stroke-width="2" stroke-linecap="round"/>
+</svg><div class="freeze-meter" hidden aria-hidden="true"><span id="freezeCountdown"></span><div class="freeze-track"><div class="freeze-fill"></div></div></div></div>
+<div class="gameOver" hidden aria-labelledby="game-over-title"><div class="result-card"><span class="result-flower" aria-hidden="true">✳</span><div class="eyebrow">EVERY ESCAPE IS A LITTLE WIN</div><h2 id="game-over-title">What a little adventure.</h2><p id="result"></p><button class="restart" type="button">One more try <span aria-hidden="true">↗</span></button><small>A fresh round. Your saved coins stay.</small></div></div>
+</div>
+<div class="arena-bottom"><span class="status-star" aria-hidden="true">✧</span><div id="status" role="status">Click the character or Click Me block to start.</div><span class="arena-bottom-label">ONE CLICK AT A TIME</span></div>
+</section>
+<aside class="sidebar" aria-label="How to play">
+<section class="guide-panel"><div class="eyebrow">YOUR LITTLE FIELD GUIDE</div><h2>A knack for<br>narrow escapes.</h2><p class="guide-intro">A few good clicks go a long way.</p>
+<ol class="guide-steps"><li><span class="step-icon step-friend" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="32" cy="59" rx="17" ry="3" fill="#7b8060" opacity=".2"/>
+<path d="M25 44L24 54M39 44L40 54" fill="none" stroke="#697b70" stroke-width="8" stroke-linecap="round"/>
+<path d="M19 57H27M37 57H45" stroke="#8e6c53" stroke-width="6" stroke-linecap="round"/>
+<path d="M22 31L14 41M42 31L50 41" fill="none" stroke="#e7b78f" stroke-width="7" stroke-linecap="round"/>
+<rect x="20" y="27" width="24" height="21" rx="8" fill="#759a87"/>
+<path d="M28 29Q32 34 36 29M32 36V44" stroke="#fff1d4" stroke-width="2" fill="none" stroke-linecap="round"/>
+<ellipse cx="32" cy="17" rx="14" ry="15" fill="#edc49e"/>
+<path d="M18 16Q14 2 28 2Q40 -3 46 10L46 19L41 13Q34 17 26 9Q25 16 18 16Z" fill="#7a5b48"/>
+<ellipse cx="23" cy="22" rx="3" ry="2" fill="#de9e87"/><ellipse cx="41" cy="22" rx="3" ry="2" fill="#de9e87"/>
+<circle cx="27" cy="18" r="1.6" fill="#4c493a"/><circle cx="37" cy="18" r="1.6" fill="#4c493a"/>
+<path d="M28 24Q32 28 36 24" fill="none" stroke="#946850" stroke-width="1.8" stroke-linecap="round"/>
+</svg></span><div><strong>Keep them moving.</strong><p>Click a friend to hop somewhere safe. Every jump makes the bomb a little faster.</p></div></li>
+<li><span class="step-icon step-block" aria-hidden="true">✧</span><div><strong>Send a little backup.</strong><p>Click the bouncing block to aim at the bomb. A hit freezes it for a breather.</p></div></li>
+<li><span class="step-icon step-coin" aria-hidden="true">✦</span><div><strong>Grow your little crew.</strong><p>Collect 10 coins in a round to welcome another friend. Keep at least one human safe.</p></div></li></ol>
+<div class="guide-footnote"><span aria-hidden="true">↗</span> Click or tap to play. No arrow keys needed.</div></section>
+<section class="cat-note"><div class="cat-portrait" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="31" cy="59" rx="21" ry="3" fill="#7b8060" opacity=".2"/>
+<path d="M43 47Q60 52 57 32Q56 27 53 29" fill="none" stroke="#c37d4e" stroke-width="7" stroke-linecap="round"/>
+<ellipse cx="30" cy="43" rx="16" ry="17" fill="#d8915d"/><ellipse cx="30" cy="47" rx="9" ry="11" fill="#f1c994"/>
+<path d="M14 24L13 5L25 14M36 14L49 5L48 25" fill="#d8915d" stroke="#d8915d" stroke-width="2" stroke-linejoin="round"/>
+<path d="M17 12L18 22L24 17M44 12L38 17L44 22" fill="#e9b3a0"/>
+<ellipse cx="31" cy="25" rx="20" ry="17" fill="#dfa06c"/>
+<path d="M26 10L27 15M32 9V15M38 11L37 15" stroke="#b7784b" stroke-width="2.5" stroke-linecap="round"/>
+<ellipse cx="19" cy="29" rx="4" ry="2.5" fill="#edb59a"/><ellipse cx="43" cy="29" rx="4" ry="2.5" fill="#edb59a"/>
+<ellipse cx="24" cy="25" rx="2" ry="3" fill="#4a3a30"/><ellipse cx="38" cy="25" rx="2" ry="3" fill="#4a3a30"/>
+<path d="M28 30Q31 28 34 30L31 33Z" fill="#aa695e"/>
+<path d="M31 33V35Q27 39 25 35M31 35Q35 39 37 35" fill="none" stroke="#805741" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M19 32L8 29M19 35L8 37M43 32L54 29M43 35L54 37" stroke="#a97550" stroke-width="1.2" stroke-linecap="round"/>
+<ellipse cx="20" cy="57" rx="8" ry="4" fill="#df9f6c"/><ellipse cx="40" cy="57" rx="8" ry="4" fill="#df9f6c"/>
+</svg></div><div><div class="eyebrow">A FAMILIAR LITTLE FACE</div><h3>A very helpful cat.</h3><p>Click the cat to lure the bomb. If caught, it escapes, drops five coins, and slows the chase.</p></div></section>
+<div class="magnet-note"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+<path d="M11 9V24A9 9 0 0 0 29 24V9" fill="none" stroke="#be7b67" stroke-width="8"/>
+<path d="M11 7V14M29 7V14" stroke="#839e94" stroke-width="8"/>
+<path d="M8 7H14M26 7H32" stroke="#f5e7c8" stroke-width="2"/>
+</svg></span><p><strong>Found a magnet?</strong> Click it to pull the coins toward your block.</p></div>
+</aside>
+</div>
+<p id="coinSaveNote" class="save-note" hidden>Coin saving is unavailable in this browser. Coins will stay for this session only.</p>
+<footer><span>Made for close calls & little victories.</span><span>Coins save on this browser <i class="save-dot" aria-hidden="true">●</i></span></footer>
+</main>
+</div>
 </body>
 </html>
