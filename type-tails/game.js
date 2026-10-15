@@ -173,9 +173,9 @@
     paintRug($('rug'),equipped.rug);
   }
 
-  // 64 bars / 512 steps: about 3m 35s before the full arrangement repeats.
+  // 64 bars / 512 steps: about 3m 35s in the room, or 2m 54s during a level.
   // Four sections have distinct melodies, chord voicings, and a sparser second pass.
-  const MUSIC_STEP_SECONDS = .42;
+  const MUSIC_TEMPO = { room: .42, level: .34 };
   const MUSIC_PHRASES = [
     [64,null,67,69,67,null,64,null], [62,64,65,null,69,67,null,null],
     [60,null,64,67,64,62,60,null], [62,null,65,69,67,null,62,null],
@@ -201,6 +201,7 @@
       const phrase = MUSIC_PHRASES[section.phrases[(bar + pass * 2) % section.phrases.length]];
       const harmony = MUSIC_HARMONIES[section.chords[bar]];
       return phrase.map((note, beat) => ({
+        beat, harmony,
         note: pass === 1 && bar % 2 === 1 && beat === 3 ? null : note,
         chord: beat === 0 ? harmony : null,
         bass: beat === 4 && sectionIndex !== 2 ? harmony[0] - 12 : null,
@@ -211,7 +212,7 @@
 
   // All music and effects are synthesized here; no audio downloads are required.
   const audio = {
-    context: null, master: null, musicGain: null, effectsGain: null, loop: null, note: 0, nextNote: 0, unavailable: false,
+    context: null, master: null, musicGain: null, effectsGain: null, percussionNoise: null, loop: null, note: 0, nextNote: 0, unavailable: false,
     init() {
       if (this.context) {
         if (this.context.state === 'suspended') this.context.resume().catch(() => {});
@@ -223,6 +224,9 @@
         this.context = new AudioContext(); this.master = this.context.createGain(); this.master.gain.value = .65; this.master.connect(this.context.destination);
         this.musicGain = this.context.createGain(); this.musicGain.connect(this.master);
         this.effectsGain = this.context.createGain(); this.effectsGain.connect(this.master);
+        this.percussionNoise = this.context.createBuffer(1,Math.ceil(this.context.sampleRate * .18),this.context.sampleRate);
+        const noise = this.percussionNoise.getChannelData(0);
+        for (let index = 0; index < noise.length; index++) noise[index] = Math.random() * 2 - 1;
         this.nextNote = this.context.currentTime + .1; this.sync();
         this.context.resume().catch(() => {});
       } catch (_) { this.unavailable = true; toast('Audio could not start. You can still play!'); }
@@ -245,22 +249,54 @@
       oscillator.start(start); oscillator.stop(start + duration + .03);
       oscillator.onended = () => { oscillator.disconnect(); envelope.disconnect(); };
     },
+    percussion(name, start, soft) {
+      if (!this.context || !this.percussionNoise) return;
+      const envelope = this.context.createGain();
+      let source, filter;
+      const duration = name === 'kick' ? .16 : name === 'snare' ? .11 : .035;
+      const volume = (name === 'kick' ? .12 : name === 'snare' ? .055 : .026) * (soft ? .65 : 1);
+      if (name === 'kick') {
+        source = this.context.createOscillator(); source.type = 'sine';
+        source.frequency.setValueAtTime(115,start);
+        source.frequency.exponentialRampToValueAtTime(48,start + duration);
+        source.connect(envelope);
+      } else {
+        source = this.context.createBufferSource(); source.buffer = this.percussionNoise;
+        filter = this.context.createBiquadFilter();
+        filter.type = name === 'snare' ? 'bandpass' : 'highpass';
+        filter.frequency.value = name === 'snare' ? 1800 : 7000;
+        filter.Q.value = .7;
+        source.connect(filter); filter.connect(envelope);
+      }
+      envelope.gain.setValueAtTime(0,start);
+      envelope.gain.linearRampToValueAtTime(volume,start + .004);
+      envelope.gain.exponentialRampToValueAtTime(.0001,start + duration);
+      envelope.connect(this.musicGain); source.start(start); source.stop(start + duration + .02);
+      source.onended = () => { source.disconnect(); envelope.disconnect(); if (filter) filter.disconnect(); };
+    },
     schedule() {
       if (!this.context || !state.music || document.hidden) return;
       if (this.nextNote < this.context.currentTime) this.nextNote = this.context.currentTime + .05;
       while (this.nextNote < this.context.currentTime + .45) {
         const step = MUSIC_SCORE[this.note % MUSIC_SCORE.length];
+        const inLevel = Boolean(round && !round.paused);
         if (step.note !== null) {
           const frequency = 440 * 2 ** ((step.note - 69) / 12);
-          this.tone(frequency, this.nextNote, step.soft ? 1.1 : .9, step.soft ? .15 : .22, 'sine', true);
-          this.tone(frequency * 2, this.nextNote, .35, .015, 'sine', true);
+          this.tone(frequency, this.nextNote, inLevel ? .46 : step.soft ? 1.1 : .9, step.soft ? .15 : .22, inLevel ? 'triangle' : 'sine', true);
+          this.tone(frequency * 2, this.nextNote, inLevel ? .2 : .35, inLevel ? .025 : .015, 'sine', true);
         }
         if (step.chord) for (const [index, note] of step.chord.entries()) {
           // Lightly arpeggiated accompaniment leaves space around the melody.
-          this.tone(440 * 2 ** ((note - 69) / 12), this.nextNote + index * .06, 3.1, step.soft ? .055 : .075, 'triangle', true);
+          this.tone(440 * 2 ** ((note - 69) / 12), this.nextNote + index * (inLevel ? .04 : .06), inLevel ? 1.8 : 3.1, step.soft ? .055 : .075, 'triangle', true);
         }
-        if (step.bass !== null) this.tone(440 * 2 ** ((step.bass - 69) / 12), this.nextNote, 1.35, .07, 'sine', true);
-        this.nextNote += MUSIC_STEP_SECONDS; this.note++;
+        if (inLevel) {
+          // A light beat and short bass pulses add energy without overpowering typing cues.
+          if (step.beat % 2 === 0) {
+            this.tone(440 * 2 ** ((step.harmony[0] - 12 - 69) / 12),this.nextNote,.28,.085,'triangle',true);
+            this.percussion(step.beat % 4 === 0 ? 'kick' : 'snare',this.nextNote,step.soft);
+          } else this.percussion('hat',this.nextNote,step.soft);
+        } else if (step.bass !== null) this.tone(440 * 2 ** ((step.bass - 69) / 12), this.nextNote, 1.35, .07, 'sine', true);
+        this.nextNote += inLevel ? MUSIC_TEMPO.level : MUSIC_TEMPO.room; this.note++;
       }
     },
     effect(name) {
@@ -351,6 +387,7 @@
     $('start-button').innerHTML = playing ? 'Round in progress <span>✦</span>' : "Let's practice <span>↗</span>";
     $('room-label').textContent = playing ? LEVELS[round.level].name + ' · find your flow' : "Pip's happy place";
     $('start-footnote').textContent = playing ? 'Press Esc or Pause for a little breather.' : 'A few minutes for a happier, faster you.';
+    audio.sync();
   }
   function startRound() {
     if (round || state.selected > unlocked()) return;
@@ -477,6 +514,7 @@
     $('pause-dialog').close(); $('room-card').classList.remove('paused');
     if (round.transitioning) showWord();
     else { wordStarted += duration; wordDeadline = now + remainingOnPause; $('typing-input').disabled = false; focusTypingInput(); }
+    audio.sync();
   }
   function finishRound(early = false) {
     if (!round) return;
