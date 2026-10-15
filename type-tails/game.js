@@ -73,7 +73,7 @@
     { id: 'lamp', name: 'Golden glow lamp', desc: 'Warm light for cozy evenings.', price: 800, category: 'room', art: '💡' },
     { id: 'bunting', name: 'Happy bunting', desc: 'Good vibes, on a string.', price: 900, category: 'room', art: '🚩' },
     { id: 'ball', name: 'Minty yarn ball', desc: 'A very tempting tangle.', price: 350, category: 'room', art: '🧶' },
-    { id: 'stars', name: 'Wall sparkles', desc: 'For dreaming a little bigger.', price: 1600, category: 'room', art: '✨' },
+    { id: 'stars', name: 'Wall sparkles', desc: 'Three golden twinkles beside the floor lamp.', price: 1600, category: 'room', art: '✨' },
     { id: 'rug-rose', name: 'Rose-colored rug', desc: 'A rosy weave with cream diamonds.', price: 1100, category: 'room', art: '🌸' },
     { id: 'rug-mint', name: 'Meadow mat', desc: 'A leafy side mat beside the little table.', price: 1100, category: 'room', art: '🍀' },
     { id: 'curtains', name: 'Sunset curtains', desc: 'Warm rose drapes with golden ties.', price: 1500, category: 'room', art: '🪟' },
@@ -656,6 +656,13 @@
       const card = document.createElement('article'); card.className = 'shop-item' + (equipped ? ' equipped' : '');
       const art = document.createElement('div'); art.className = 'item-art'; art.setAttribute('aria-hidden','true');
       if (item.id === 'party') art.innerHTML = '<svg viewBox="-60 -130 120 110">' + HATS.party + '</svg>';
+      else if (item.id === 'stars') {
+        const preview = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        preview.setAttribute('viewBox','845 317 62 128');
+        const stars = $('decor-stars').cloneNode(true);
+        stars.removeAttribute('id'); stars.style.display = '';
+        preview.append(stars); art.append(preview);
+      }
       else if (item.id === 'rug-rose' || item.id === 'rug-mint') art.append(rugPreview(item.id));
       else art.textContent = item.art;
       const details = document.createElement('div'); details.className = 'item-details';

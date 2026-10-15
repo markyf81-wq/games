@@ -21,7 +21,7 @@ Choose pet below the room lets you switch freely between Pip the cat, Biscuit th
 
 The shop opens between rounds. Every purchasable item works together with all the others. Purchases show automatically; use Show item or Put away to toggle each item independently for free.
 
-Every animal can wear the party hat, shades, bow, medallion, cape, and socks together. The rose rug sits under your pet and the meadow mat sits beside the table, so both can be displayed. Sunset curtains decorate the window while a cloud mobile hangs above the shelf. Other room decorations each have their own place.
+Every animal can wear the party hat, shades, bow, medallion, cape, and socks together. The rose rug sits under your pet and the meadow mat sits beside the table, so both can be displayed. Sunset curtains decorate the window while a cloud mobile hangs above the shelf. Wall sparkles are three golden twinkles on the far-right wall beside the floor lamp. Other room decorations each have their own place.
 
 Previous purchases transfer automatically: tiny crown becomes a royal medallion, wizard hat becomes a starry cape, artist beret becomes socks, peachy walls become sunset curtains, and daydream walls become a cloud mobile. Prices and purchase value stay the same. Previously competing items are shown together on migration; coins, typing progress, and earned levels are preserved.
 
