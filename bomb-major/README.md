@@ -13,7 +13,7 @@ Coins always spawn. All other drops, including the cat and cow, must first be un
 | Ability | Tier 1 | Tier 2 | Tier 3 | Tier 4 | Tier 5 |
 | --- | --- | --- | --- | --- | --- |
 | Slow bomb | 2% slower | 4% | 7% | 12% | 20% |
-| Bomb freeze | 0.5s | 0.8s | 1.4s | 2.6s | 5s |
+| Bomb freeze | 1s | 1.5s | 2.25s | 3.5s | 5s |
 | Fast block | 5% faster | 7% | 10% | 15% | 25% |
 | Safe jump | 50px | 70px | 110px | 180px | 300px |
 | A little book of courage | 1px/tick | 1.2px/tick | 1.6px/tick | 2.4px/tick | 4px/tick |
@@ -31,15 +31,15 @@ Five-segment bars show your progress: green is purchased, gold outlines the next
 | Magnet | Click it | Pulls existing coins toward the block. |
 | Cat | Click it to lure the bomb | If caught, it escapes, drops five coins and resets the bomb's extra speed. |
 | Cow | Let it wander | Leaves poop batches every 6 seconds. The bomb never targets it, but touching the bomb makes it leave. |
-| Cow poop | Let the bomb touch a pile, or throw it with the block | Consumes the pile and repels the bomb for **3, 4, 5, 7 or 10 seconds**, based on cow tier. |
+| Cow poop | Let the bomb touch a pile, or throw it with the block | Thrown piles home in on the bomb. Every hit consumes the pile, removes **1px/s of accumulated speed boost**, and repels it for **3, 4, 5, 7 or 10 seconds** by cow tier. |
 | Shield | Click to activate | Saves the next human hit, once. One shared charge for the crew. |
 | Banana peel | Click it | Sends the bomb around **two tight circles** over 1.2 seconds. It can still hit humans. |
 | String | Click it | Tethers the bomb within **100px** of the moving block for **10 seconds**. It can still kill humans. |
 | Treadmill | Click it | The block gets faster continuously, then returns to its normal upgraded speed. |
 
-Magnet, cat, shield, banana and string tiers increase spawn-roll odds to **1%, 1.5%, 2.5%, 4.5% and 8%**. Cow tiers increase each batch to **1, 2, 3, 5 and 8 piles**; its spawn-roll chance stays at 2% after unlocking. Cow tiers also increase poop repel duration to **3, 4, 5, 7 and 10 seconds**. Stationary and thrown piles both work, and further hits refresh the duration rather than adding time together. Treadmill tiers last **5, 7, 10, 14 and 20 seconds**, with a 2% spawn-roll chance after unlocking. While active, each second adds 5% of the block’s normal speed. It combines with Fast block, and expiry restores that upgraded speed without changing direction. The effect strip shows time and speed; another treadmill cannot spawn while one is active. Round end/restart also clears the boost.
+Magnet, cat, shield, banana and string tiers increase spawn-roll odds to **1%, 1.5%, 2.5%, 4.5% and 8%**. Cow tiers increase each batch to **1, 2, 3, 5 and 8 piles**; its spawn-roll chance stays at 2% after unlocking. Cow tiers also increase poop repel duration to **3, 4, 5, 7 and 10 seconds**. Stationary and thrown piles both work, and further hits refresh the duration rather than adding time together. Thrown poop keeps seeking until it hits or the round ends. Each hit removes half a teleport’s extra speed; it cannot lower the bomb below its normal Slow bomb-adjusted starting speed. The cat still clears the entire extra-speed boost. Treadmill tiers last **5, 7, 10, 14 and 20 seconds**, with a 2% spawn-roll chance after unlocking. While active, each second adds 20% of the block’s normal speed, reaching almost 2× over five seconds or 5× over twenty seconds. It combines with Fast block, and expiry restores that upgraded speed without changing direction. The effect strip shows time and speed; another treadmill cannot spawn while one is active. Round end/restart also clears the boost.
 
-Only one drop of each type, cat or cow can be present at once. Blocked spawn attempts may be skipped. Poop piles last 25 seconds, with up to 24 present.
+Only one drop of each type, cat or cow can be present at once. Blocked spawn attempts may be skipped. Stationary poop piles last 25 seconds; launched poop stays until it hits or the round is cleared, with up to 24 piles/projectiles present.
 
 The strip above the courtyard shows active effects and remaining time/banana turns. Effect timers run together. String and banana do not give invulnerability; the shield can still be consumed while they are active. Only poop repel prevents catches for its cow-tier duration. New rounds clear drops and temporary effects. The cat and cow do not keep a round alive after the last human is gone.
 

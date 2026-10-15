@@ -656,7 +656,7 @@ const playSpace = document.querySelector('.playSpace');
                 if (poops.some(poop => overlaps(position, poopSize, poop.position, poopSize))) continue;
                 const element = document.createElement('div'); element.className = 'cow-poop'; element.innerHTML = content.icons.poop;
                 element.setAttribute('aria-label', 'Cow poop. Deflect with the block.');
-                const poop = { position, element, flying: false, life: 25, vx: 0, vy: 0 };
+                const poop = { position, element, flying: false, life: 25 };
                 poops.push(poop); positionElement(poop); playSpace.append(element);
             }
         }
@@ -731,13 +731,20 @@ const playSpace = document.querySelector('.playSpace');
                 }
             }
         }
+        function poopFlightSpeed() {
+            const targetSpeed = tetherRemaining > 0 ? Math.max(currentBombSpeed(), Math.hypot(blockVelocity.x, blockVelocity.y)) : currentBombSpeed();
+            return Math.max(280, targetSpeed * 1.25);
+        }
         function poopHitsBomb(poop) {
             if (!overlaps(poop.position, poopSize, bombPosition, size)) return false;
             const duration = content.balance.cowRepelDuration[Math.max(1, market.tier('cow'))];
+            const previousBoost = bombSpeedBoost;
+            bombSpeedBoost = Math.max(0, bombSpeedBoost - content.balance.poopSpeedReduction);
+            const shaved = previousBoost - bombSpeedBoost;
             // Another pile refreshes the timer; it does not add durations together.
             repelRemaining = Math.max(repelRemaining, duration);
             evasionTarget = safestBombPoint(); evasionElapsed = .3;
-            announce('Poop hit! The bomb avoids everyone for ' + duration + ' seconds.'); sound.play('freeze');
+            announce('Poop hit! ' + duration + 's repel' + (shaved > 0 ? ' · speed boost −' + shaved + 'px/s' : '') + '.'); sound.play('freeze');
             return true;
         }
         function checkPoopBombContacts() {
@@ -766,22 +773,23 @@ const playSpace = document.querySelector('.playSpace');
                 }
             }
             poops = poops.filter(poop => {
-                poop.life -= seconds;
+                if (!poop.flying) poop.life -= seconds;
                 if (poop.life <= 0 || poopHitsBomb(poop)) { poop.element.remove(); return false; }
                 if (!poop.flying && overlaps(poop.position, poopSize, blockPosition, blockSize)) {
-                    const dx = bombPosition.x + size / 2 - poop.position.x - poopSize / 2;
-                    const dy = bombPosition.y + size / 2 - poop.position.y - poopSize / 2;
-                    const distance = Math.hypot(dx, dy) || 1;
-                    poop.vx = dx / distance * 280; poop.vy = dy / distance * 280; poop.flying = true; poop.life = 6;
+                    poop.flying = true;
                     poop.element.classList.add('flying'); sound.play('block');
                 }
                 if (poop.flying) {
-                    poop.position.x += poop.vx * seconds; poop.position.y += poop.vy * seconds;
-                    if (poopHitsBomb(poop)) { poop.element.remove(); return false; }
-                    const limit = bounds(poopSize);
-                    if (poop.position.x < 0 || poop.position.y < 0 || poop.position.x > limit.x || poop.position.y > limit.y) {
-                        poop.element.remove(); return false;
+                    // Retarget every physics step so a moving or tethered bomb cannot dodge the shot.
+                    const dx = bombPosition.x + size / 2 - poop.position.x - poopSize / 2;
+                    const dy = bombPosition.y + size / 2 - poop.position.y - poopSize / 2;
+                    const distance = Math.hypot(dx, dy);
+                    if (distance > 0) {
+                        const step = Math.min(poopFlightSpeed() * seconds, distance);
+                        poop.position.x += dx / distance * step; poop.position.y += dy / distance * step;
                     }
+                    if (poopHitsBomb(poop)) { poop.element.remove(); return false; }
+                    clampPosition(poop.position, poopSize);
                 }
                 return true;
             });
@@ -1001,7 +1009,7 @@ const playSpace = document.querySelector('.playSpace');
             // Small movement steps keep the fast bomb and block from tunnelling.
             const pullSpeed = coins.some(coin => coin.attracted) ? coinPullSpeed : 0;
             const steps = Math.max(1, Math.ceil(Math.max(currentSpeed * (repelRemaining > 0 ? 1.4 : 1), pullSpeed,
-                poops.some(poop => poop.flying) ? 280 : 0, (bananaRemaining > 0 || repelRemaining > 0) ? 160 : 0,
+                poops.some(poop => poop.flying) ? poopFlightSpeed() : 0, (bananaRemaining > 0 || repelRemaining > 0) ? 160 : 0,
                 Math.abs(blockVelocity.x), Math.abs(blockVelocity.y)) * seconds / 4));
             const stepSeconds = seconds / steps;
             for (let i = 0; i < steps; i++) {

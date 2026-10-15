@@ -28,15 +28,16 @@ window.BombContent = (() => {
     const tiers = Array.from({ length: 5 }, (_, tier) => Math.min(5000, 20 * 4 ** tier));
     const balance = {
         slowness: [0, 2, 4, 7, 12, 20],
-        freeze: [.25, .5, .8, 1.4, 2.6, 5],
+        freeze: [.25, 1, 1.5, 2.25, 3.5, 5],
         speed: [0, 5, 7, 10, 15, 25],
         awareness: [44, 50, 70, 110, 180, 300],
         bookStep: [0, 1, 1.2, 1.6, 2.4, 4],
         dropOdds: [0, 1, 1.5, 2.5, 4.5, 8],
         cowPiles: [0, 1, 2, 3, 5, 8],
         cowRepelDuration: [0, 3, 4, 5, 7, 10],
+        poopSpeedReduction: 1,
         treadmillDuration: [0, 5, 7, 10, 14, 20],
-        treadmillGainPerSecond: .05
+        treadmillGainPerSecond: .2
     };
     const dropChance = (id, tier) => tier === 0 ? 0 : (id === 'cow' || id === 'treadmill') ? .02 : balance.dropOdds[tier] / 100;
     icons.cow = cow;
@@ -52,11 +53,11 @@ window.BombContent = (() => {
     const drops = [
         { id: 'magnet', name: 'Magnet', desc: 'Unlock a magnet drop to pull current coins toward the block.' },
         { id: 'cat', name: 'Cat', desc: 'Unlock the cat. More tiers increase its odds of appearing.' },
-        { id: 'cow', name: 'Cow', desc: 'Unlock a wandering cow. More tiers add poop piles and make their repel effect last longer.' },
+        { id: 'cow', name: 'Cow', desc: 'Unlock a wandering cow. Poop homes in when thrown and trims the bomb’s speed boost on every hit. More tiers add piles and longer repel.' },
         { id: 'shield', name: 'Shield', desc: 'Unlock a drop that protects the next human hit, once.' },
         { id: 'banana', name: 'Banana peel', desc: 'Unlock a drop that sends the bomb around two tight circles.' },
         { id: 'string', name: 'String', desc: 'Unlock a 10-second, 100px tether. The bomb can still kill humans.' },
-        { id: 'treadmill', name: 'Treadmill', desc: 'Unlock a drop that keeps accelerating the block by 5% of normal speed each second, then resets.' }
+        { id: 'treadmill', name: 'Treadmill', desc: 'Unlock a drop that keeps accelerating the block by 20% of normal speed each second, then resets.' }
     ].map(drop => ({ ...drop, icon: drop.id, unlock: true,
         effect: tier => tier === 0 ? 'Locked · will not spawn' : drop.id === 'cow'
             ? balance.cowPiles[tier] + (tier === 1 ? ' pile' : ' piles') + ' every 6s · ' + balance.cowRepelDuration[tier] + 's repel · 2% spawn roll'
