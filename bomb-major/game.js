@@ -297,7 +297,7 @@ const playSpace = document.querySelector('.playSpace');
         const powerSize = 40, poopSize = 24, ropeLength = 100;
         const powerDrops = new Map();
         let cow = null, poops = [], shieldReady = false;
-        let bananaRemaining = 0, bananaSpin = null, repelRemaining = 0, tetherRemaining = 0;
+        let bananaRemaining = 0, bananaSpin = null, repelRemaining = 0, repelRecoveryRemaining = 0, tetherRemaining = 0;
         let treadmillRemaining = 0, treadmillElapsed = 0;
         let bookElapsed = 0, evasionTarget = null, evasionElapsed = 0;
         let noticeRemaining = 0, noticeText = '';
@@ -597,7 +597,9 @@ const playSpace = document.querySelector('.playSpace');
         }
         function awarenessRadius() { return content.balance.awareness[market.tier('awareness')]; }
         function blockMultiplier() { return 1 + content.balance.speed[market.tier('speed')] / 100; }
-        function currentBombSpeed() { return (bombSpeed + bombSpeedBoost) * (1 - content.balance.slowness[market.tier('slowness')] / 100); }
+        function bombSpeedFactor() { return 1 - content.balance.slowness[market.tier('slowness')] / 100; }
+        function minimumBombSpeed() { return (bombSpeed + elapsed * content.balance.bombPressurePerSecond) * bombSpeedFactor(); }
+        function currentBombSpeed() { return minimumBombSpeed() + bombSpeedBoost * bombSpeedFactor(); }
         function setBlockBoost(multiplier) {
             const magnitude = Math.hypot(blockVelocity.x, blockVelocity.y);
             const normalSpeed = Math.hypot(180, 140) * blockMultiplier();
@@ -741,10 +743,15 @@ const playSpace = document.querySelector('.playSpace');
             const previousBoost = bombSpeedBoost;
             bombSpeedBoost = Math.max(0, bombSpeedBoost - content.balance.poopSpeedReduction);
             const shaved = previousBoost - bombSpeedBoost;
-            // Another pile refreshes the timer; it does not add durations together.
-            repelRemaining = Math.max(repelRemaining, duration);
-            evasionTarget = safestBombPoint(); evasionElapsed = .3;
-            announce('Poop hit! ' + duration + 's repel' + (shaved > 0 ? ' · speed boost −' + shaved + 'px/s' : '') + '.'); sound.play('freeze');
+            // Speed shaving always works, but piles cannot maintain permanent immunity.
+            const canRepel = repelRemaining <= 0 && repelRecoveryRemaining <= 0;
+            if (canRepel) {
+                repelRemaining = duration;
+                evasionTarget = safestBombPoint(); evasionElapsed = .3;
+            }
+            const effect = canRepel ? duration + 's repel' : repelRemaining > 0 ? 'repel already active' : 'repel resisted';
+            announce('Poop hit! ' + effect + (shaved > 0 ? ' · teleport boost −' + shaved + 'px/s' : '') + '.');
+            sound.play(canRepel ? 'freeze' : 'block');
             return true;
         }
         function checkPoopBombContacts() {
@@ -755,7 +762,10 @@ const playSpace = document.querySelector('.playSpace');
         }
         function updateExtras(seconds) {
             for (const character of characters) character.invulnerable = Math.max(0, (character.invulnerable || 0) - seconds);
+            const wasRepelled = repelRemaining > 0;
             repelRemaining = Math.max(0, repelRemaining - seconds);
+            if (wasRepelled && repelRemaining <= 0) repelRecoveryRemaining = content.balance.repelRecoveryDuration;
+            else if (!wasRepelled) repelRecoveryRemaining = Math.max(0, repelRecoveryRemaining - seconds);
             const wasTethered = tetherRemaining > 0; tetherRemaining = Math.max(0, tetherRemaining - seconds);
             if (wasTethered && tetherRemaining <= 0) untangleBomb();
             if (cow) {
@@ -803,11 +813,12 @@ const playSpace = document.querySelector('.playSpace');
             rope.parentElement.setAttribute('viewBox', `0 0 ${playSpace.clientWidth} ${playSpace.clientHeight}`);
             rope.setAttribute('x1', blockPosition.x + blockSize / 2); rope.setAttribute('y1', blockPosition.y + blockSize / 2);
             rope.setAttribute('x2', bombPosition.x + size / 2); rope.setAttribute('y2', bombPosition.y + size / 2);
-            const effects = [];
+            const effects = ['Chase · ' + Math.round(currentBombSpeed()) + 'px/s · rising minimum ' + Math.round(minimumBombSpeed()) + 'px/s'];
             if (shieldReady) effects.push('Shield · 1 hit');
             if (tetherRemaining > 0) effects.push('String · ' + tetherRemaining.toFixed(1) + 's');
             if (bananaSpin) effects.push('Banana · ' + (2 * (1 - bananaSpin.elapsed / bananaSpin.duration)).toFixed(1) + ' turns left');
             if (repelRemaining > 0) effects.push('Poop repel · ' + repelRemaining.toFixed(1) + 's');
+            if (repelRecoveryRemaining > 0) effects.push('Repel resistance · ' + repelRecoveryRemaining.toFixed(1) + 's');
             if (treadmillRemaining > 0) effects.push('Treadmill · ' + treadmillRemaining.toFixed(1) + 's · ' + (1 + content.balance.treadmillGainPerSecond * treadmillElapsed).toFixed(2) + '× speed');
             if (market.hasBook()) effects.push('Book · tier ' + market.tier('book'));
             setText(document.querySelector('#active-effects'), effects.length ? effects.join('  ·  ') : 'Unlock helpful drops in the marketplace.');
@@ -817,7 +828,7 @@ const playSpace = document.querySelector('.playSpace');
             if (cow) cow.element.remove(); cow = null;
             poops.forEach(poop => poop.element.remove()); poops = [];
             powerDrops.forEach(drop => drop.element.remove()); powerDrops.clear();
-            shieldReady = false; bananaRemaining = 0; bananaSpin = null; repelRemaining = 0; tetherRemaining = 0;
+            shieldReady = false; bananaRemaining = 0; bananaSpin = null; repelRemaining = 0; repelRecoveryRemaining = 0; tetherRemaining = 0;
             bookElapsed = 0; evasionElapsed = 0; evasionTarget = null; noticeRemaining = 0;
         }
         function draw() {

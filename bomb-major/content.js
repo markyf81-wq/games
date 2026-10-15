@@ -36,6 +36,8 @@ window.BombContent = (() => {
         cowPiles: [0, 1, 2, 3, 5, 8],
         cowRepelDuration: [0, 3, 4, 5, 7, 10],
         poopSpeedReduction: 1,
+        bombPressurePerSecond: .5,
+        repelRecoveryDuration: 3,
         treadmillDuration: [0, 5, 7, 10, 14, 20],
         treadmillGainPerSecond: .2
     };
@@ -44,7 +46,7 @@ window.BombContent = (() => {
     icons.cat = document.querySelector('#catTemplate').content.firstElementChild.outerHTML;
     icons.magnet = document.querySelector('#magnetTemplate').content.querySelector('svg').outerHTML;
     const upgrades = [
-        { id: 'slowness', name: 'Slow bomb', icon: 'slowness', effect: tier => balance.slowness[tier] + '% slower bomb', desc: 'Slows the chase, including speed gained from jumps.' },
+        { id: 'slowness', name: 'Slow bomb', icon: 'slowness', effect: tier => balance.slowness[tier] + '% slower bomb', desc: 'Reduces all chase speed, including its rising baseline and teleport gains.' },
         { id: 'freeze', name: 'Bomb freeze', icon: 'freeze', effect: tier => balance.freeze[tier] + 's base freeze time', desc: 'Sets the starting freeze time. Jumps still shorten it.' },
         { id: 'speed', name: 'Fast block', icon: 'speed', effect: tier => '+' + balance.speed[tier] + '% block speed', desc: 'A modest speed boost for collecting coins and helping friends.' },
         { id: 'awareness', name: 'Safe jump', icon: 'awareness', effect: tier => balance.awareness[tier] + 'px safe teleport radius', desc: 'Keeps clicked friends farther away from the bomb.' },
@@ -53,7 +55,7 @@ window.BombContent = (() => {
     const drops = [
         { id: 'magnet', name: 'Magnet', desc: 'Unlock a magnet drop to pull current coins toward the block.' },
         { id: 'cat', name: 'Cat', desc: 'Unlock the cat. More tiers increase its odds of appearing.' },
-        { id: 'cow', name: 'Cow', desc: 'Unlock a wandering cow. Poop homes in when thrown and trims the bomb’s speed boost on every hit. More tiers add piles and longer repel.' },
+        { id: 'cow', name: 'Cow', desc: 'Unlock a wandering cow. Poop homes in and trims teleport speed. Repel cannot refresh and needs 3s recovery. Tiers add piles and longer repel.' },
         { id: 'shield', name: 'Shield', desc: 'Unlock a drop that protects the next human hit, once.' },
         { id: 'banana', name: 'Banana peel', desc: 'Unlock a drop that sends the bomb around two tight circles.' },
         { id: 'string', name: 'String', desc: 'Unlock a 10-second, 100px tether. The bomb can still kill humans.' },
