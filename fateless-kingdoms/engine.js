@@ -55,14 +55,25 @@ window.FKEngine = (() => {
   }
   function matchOptions(options = {}) {
     const includeOmens = options.includeOmens !== false, includeSpells = options.includeSpells !== false;
-    const maximum = Math.floor(cardPool({ includeOmens, includeSpells }).length / 2);
-    return { handSize: Math.max(1, Math.min(maximum, Number.isInteger(options.handSize) ? options.handSize : 15)), includeOmens, includeSpells };
+    const pool = cardPool({ includeOmens, includeSpells });
+    const guaranteedStart = options.guaranteedStart === true && (includeOmens || includeSpells);
+    const minimum = guaranteedStart ? 3 : 1;
+    const maximum = guaranteedStart ? Math.floor(pool.filter(unit).length / 2) + 3 : Math.floor(pool.length / 2);
+    return { handSize: Math.max(minimum, Math.min(maximum, Number.isInteger(options.handSize) ? options.handSize : 15)), includeOmens, includeSpells, guaranteedStart };
   }
   function newMatch(starter = Math.random() < .5 ? 0 : 1, settings = {}) {
-    const options = matchOptions(settings), deck = shuffle(cardPool(options));
-    const players = [0, 1].map(() => ({ hand: deck.splice(0, options.handSize), rows: emptyRows(), grave: [], wins: 0, passed: false }));
+    const options = matchOptions(settings);
+    let deck = shuffle(cardPool(options));
+    const players = [0, 1].map(() => ({ hand: [], rows: emptyRows(), grave: [], wins: 0, passed: false }));
+    if (options.guaranteedStart) {
+      const specialCards = deck.filter(id => !unit(id)), unitCards = deck.filter(unit);
+      players.forEach(player => { player.hand = shuffle([...specialCards.splice(0, 3), ...unitCards.splice(0, options.handSize - 3)]); });
+      // Unused Spells/Omens remain available for draws from the shared deck.
+      deck = shuffle([...specialCards, ...unitCards]);
+    } else players.forEach(player => { player.hand = deck.splice(0, options.handSize); });
     const s = { version: VERSION, rules: 'printed-v1', options, players, deck, weather: [], knownHands: [[], []], round: 1, starter, turn: starter, phase: 'playing', rounds: [], log: [], lastCard: null };
     log(s, `One shared deck. ${options.handSize} cards each. First to two round wins.`);
+    if (options.guaranteedStart) log(s, 'Each player starts with exactly 3 random Spell/Omen cards. All other starting cards are units.');
     log(s, `${starter === 0 ? 'You take' : 'The CPU takes'} the first turn.`);
     return s;
   }
@@ -293,6 +304,7 @@ window.FKEngine = (() => {
   function validState(s) {
     if (s?.version !== VERSION || s.rules !== 'printed-v1' || !['playing', 'roundEnd', 'gameOver'].includes(s.phase) || ![0, 1].includes(s.turn) || ![0, 1].includes(s.starter) || !Number.isInteger(s.round) || s.round < 1 || s.round > 3 || !Array.isArray(s.players) || s.players.length !== 2 || !Array.isArray(s.weather) || !Array.isArray(s.deck) || !Array.isArray(s.log) || !Array.isArray(s.rounds)) return false;
     if (s.options !== undefined && (!s.options || typeof s.options.includeOmens !== 'boolean' || typeof s.options.includeSpells !== 'boolean' || !Number.isInteger(s.options.handSize) || s.options.handSize < 1 || s.options.handSize > Math.floor(cardPool(s.options).length / 2))) return false;
+    if (s.options?.guaranteedStart !== undefined && (typeof s.options.guaranteedStart !== 'boolean' || s.options.guaranteedStart !== matchOptions(s.options).guaranteedStart || s.options.handSize !== matchOptions(s.options).handSize)) return false;
     const all = s.deck.slice();
     for (const p of s.players) {
       if (!Array.isArray(p.hand) || !Array.isArray(p.grave) || !p.rows || !Number.isInteger(p.wins) || p.wins < 0 || p.wins > 2 || typeof p.passed !== 'boolean') return false;

@@ -504,7 +504,7 @@
       if (location.protocol === 'file:' || typeof Worker === 'undefined') { fallbackCPU(view, token); return; }
       try {
         if (!worker) {
-          worker = new Worker('cpu-worker.js?v=auto-pass27');
+          worker = new Worker('cpu-worker.js?v=starting-cards36');
           worker.onmessage = event => {
             if (event.data.job !== job) return;
             if (event.data.error) { worker.terminate(); worker = null; fallbackCPU(E.publicView(state, 1), job); }
@@ -586,7 +586,7 @@
     const root = openDialog('How to play');
     const blocks = [
       ['Win the match', 'Win two rounds. There are up to three rounds. Highest field power wins a round after both players pass. A tie awards both players a round win; reaching two together draws the match.'],
-      ['One deck. One hand.', 'The default game uses all 62 unique cards and 15 starting cards per player. Settings lets you change the starting hand size and include or exclude Omens and Spells for your next game. Your hand carries across rounds; there is no between-round draw. A coin flip chooses the starting player, then the starter alternates each round.'],
+      ['One deck. One hand.', 'The default game uses all 62 unique cards and 15 starting cards per player. Settings lets you change the starting hand size and include or exclude Omens and Spells for your next game. An optional setting, off by default, deals exactly three random cards from the included Spell/Omen types to each player, with units filling the rest of each starting hand. Extra Spells/Omens remain in the shared deck for later draws. Your hand carries across rounds; there is no between-round draw. A coin flip chooses the starting player, then the starter alternates each round.'],
       ['Play or pass', 'Play one card on your turn, or pass. Passing ends your participation for that entire round. An empty hand automatically passes after all draw/recovery effects finish. Keeping any cards prevents an automatic pass, even if those cards cannot currently be played. Your opponent may continue playing until they also pass. Patience spends one turn without passing unless it leaves your hand empty.'],
       ['Three rows', 'Units enter their matching Combat, Ranged or Siege row. Infiltration units enter the enemy’s matching row and draw two cards for the player who played them. This includes Assassin, The Spy and Mechanical Men.'],
       ['Spells, Omens & destruction', 'Spells resolve immediately and go to the bottom of the shared deck. Omens remain on their chosen row or in the middle as weather. Destroyed cards go to the pile of the field they were on. Middle Omens go to the player who played them. All remaining field cards clear at round end, including protected cards.'],
@@ -655,6 +655,7 @@
     $('difficulty').value = level;
     $('starting-hand-size').value = nextOptions.handSize;
     $('include-omens').checked = nextOptions.includeOmens; $('include-spells').checked = nextOptions.includeSpells;
+    $('guaranteed-start').checked = nextOptions.guaranteedStart;
     $('music-enabled').checked = settings.music; $('effects-enabled').checked = settings.effects;
     $('music-volume').value = Math.round(settings.musicVolume * 100); $('effects-volume').value = Math.round(settings.effectsVolume * 100);
     $('music-volume-value').textContent = `${$('music-volume').value}%`; $('effects-volume-value').textContent = `${$('effects-volume').value}%`;
@@ -662,19 +663,27 @@
     syncDeckSettings(); $('settings-dialog').showModal();
   }
   function syncDeckSettings() {
-    const pool = E.cardPool({ includeOmens: $('include-omens').checked, includeSpells: $('include-spells').checked });
-    const maximum = Math.floor(pool.length / 2), input = $('starting-hand-size'); input.max = maximum;
+    const includeOmens = $('include-omens').checked, includeSpells = $('include-spells').checked;
+    const guarantee = $('guaranteed-start'); guarantee.disabled = !includeOmens && !includeSpells;
+    if (guarantee.disabled) guarantee.checked = false;
+    const pool = E.cardPool({ includeOmens, includeSpells });
+    const minimum = guarantee.checked ? 3 : 1;
+    const maximum = guarantee.checked ? Math.floor(pool.filter(id => C[id].type === 'unit').length / 2) + 3 : Math.floor(pool.length / 2);
+    const input = $('starting-hand-size'); input.min = minimum; input.max = maximum;
+    if (input.value !== '' && Number(input.value) < minimum) input.value = minimum;
     if (Number(input.value) > maximum) input.value = maximum;
-    $('deck-settings-note').textContent = `${pool.length} cards in the shared deck. Choose 1–${maximum} starting cards per player.`;
+    const types = includeOmens && includeSpells ? 'Spells/Omens' : includeOmens ? 'Omens' : 'Spells';
+    $('starting-card-note').textContent = guarantee.disabled ? 'Include Spells or Omens to enable the starting guarantee.' : `When enabled, each player starts with exactly 3 random ${types}, with units filling the rest of the hand. Extra Spells/Omens stay in the shared deck.`;
+    $('deck-settings-note').textContent = `${pool.length} cards in the shared deck. Choose ${minimum}–${maximum} starting cards per player.`;
   }
   ['settings-button', 'current-settings', 'welcome-settings'].forEach(id => $(id).addEventListener('click', openSettings));
   ['close-settings', 'cancel-settings'].forEach(id => $(id).addEventListener('click', () => $('settings-dialog').close()));
-  ['include-omens', 'include-spells'].forEach(id => $(id).addEventListener('change', syncDeckSettings));
+  ['include-omens', 'include-spells', 'guaranteed-start', 'starting-hand-size'].forEach(id => $(id).addEventListener('change', syncDeckSettings));
   $('music-volume').addEventListener('input', () => { $('music-volume-value').textContent = `${$('music-volume').value}%`; });
   $('effects-volume').addEventListener('input', () => { $('effects-volume-value').textContent = `${$('effects-volume').value}%`; });
   $('settings-form').addEventListener('submit', event => {
     event.preventDefault();
-    nextOptions = E.matchOptions({ handSize: Number($('starting-hand-size').value), includeOmens: $('include-omens').checked, includeSpells: $('include-spells').checked });
+    nextOptions = E.matchOptions({ handSize: Number($('starting-hand-size').value), includeOmens: $('include-omens').checked, includeSpells: $('include-spells').checked, guaranteedStart: $('guaranteed-start').checked });
     level = $('difficulty').value;
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ options: nextOptions, level })); } catch (_) { /* In-memory settings still work. */ }
     audio.configure({ music: $('music-enabled').checked, effects: $('effects-enabled').checked, musicVolume: Number($('music-volume').value) / 100, effectsVolume: Number($('effects-volume').value) / 100 });

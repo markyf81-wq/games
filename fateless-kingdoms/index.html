@@ -8,11 +8,11 @@
   <title>Fateless Kingdoms</title>
   <link rel="stylesheet" href="styles.css?v=straight-hands35">
   <script defer src="cards.js?v=sacrifice20"></script>
-  <script defer src="engine.js?v=auto-pass27"></script>
+  <script defer src="engine.js?v=starting-cards36"></script>
   <script defer src="cpu.js?v=settings1"></script>
   <script defer src="audio.js?v=results34"></script>
   <script defer src="effects.js?v=results34"></script>
-  <script defer src="game.js?v=straight-hands35"></script>
+  <script defer src="game.js?v=starting-cards36"></script>
 </head>
 <body>
   <header class="site-header">
@@ -71,8 +71,10 @@
           <label class="setting-field" for="starting-hand-size">Starting cards per player<input id="starting-hand-size" type="number" min="1" max="31" step="1" value="15" required></label>
           <label class="audio-toggle"><input id="include-omens" type="checkbox" checked> Include Omen cards</label>
           <label class="audio-toggle"><input id="include-spells" type="checkbox" checked> Include Spell cards</label>
+          <label class="audio-toggle"><input id="guaranteed-start" type="checkbox" aria-describedby="starting-card-note"> Exactly 3 Spells/Omens per player</label>
+          <p id="starting-card-note" class="setting-help">When enabled, deal exactly 3 random Spells/Omens per player, with units filling the rest of each hand.</p>
           <p id="deck-settings-note" class="setting-help"></p>
-          <p class="setting-help">Hand size and card types apply to your next game. Your current match keeps its cards.</p>
+          <p class="setting-help">Hand size, card types and starting guarantees apply to your next game. Your current match keeps its cards.</p>
         </fieldset>
         <fieldset class="settings-group"><legend>Sound &amp; music</legend>
           <p id="storage-note" class="setting-help">Your game and settings save automatically in this browser.</p>

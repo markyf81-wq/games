@@ -13,6 +13,8 @@ The first player to win **2 rounds** wins the game.
 3. Put the rest of the deck face down.  
 4. Keep your hand hidden from the other player.
 
+The browser version also offers an optional starting-hand setting, **off by default**: each player receives **exactly 3 random Spell/Omen cards combined**, chosen from whichever of those types are included. Fill all other starting-hand slots with random Unit cards. Extra included Spells and Omens remain in the shared deck and can still be drawn later. Each card is unique; deal without replacement. This option allows 3–27 starting cards per player and is unavailable when both Spells and Omens are excluded. Changes apply only to the next game; normal setup above remains the default.
+
 You only get these 15 cards for the whole game.  
 You do not draw new cards between rounds unless a card tells you to draw.
 
