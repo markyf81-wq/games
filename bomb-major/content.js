@@ -28,11 +28,13 @@ window.BombContent = (() => {
     const tiers = Array.from({ length: 5 }, (_, tier) => Math.min(5000, 20 * 4 ** tier));
     const balance = {
         slowness: [0, 2, 4, 7, 12, 20],
-        freeze: [.25, 1, 1.5, 2.25, 3.5, 5],
+        freeze: [1.5, 2, 2.3, 2.8, 3.6, 5],
         speed: [0, 5, 7, 10, 15, 25],
         awareness: [44, 50, 70, 110, 180, 300],
         bookStep: [0, 1, 1.2, 1.6, 2.4, 4],
         dropOdds: [0, 1, 1.5, 2.5, 4.5, 8],
+        catOdds: [0, 4, 5, 7, 10, 14],
+        cowOdds: 5,
         cowPiles: [0, 1, 1, 2, 2, 3],
         cowPoopInterval: 12,
         maximumPoops: 8,
@@ -43,13 +45,14 @@ window.BombContent = (() => {
         treadmillDuration: [0, 5, 7, 10, 14, 20],
         treadmillGainPerSecond: .2
     };
-    const dropChance = (id, tier) => tier === 0 ? 0 : (id === 'cow' || id === 'treadmill') ? .02 : balance.dropOdds[tier] / 100;
+    const dropChance = (id, tier) => tier === 0 ? 0 : id === 'cat' ? balance.catOdds[tier] / 100 :
+        id === 'cow' ? balance.cowOdds / 100 : id === 'treadmill' ? .02 : balance.dropOdds[tier] / 100;
     icons.cow = cow;
     icons.cat = document.querySelector('#catTemplate').content.firstElementChild.outerHTML;
     icons.magnet = document.querySelector('#magnetTemplate').content.querySelector('svg').outerHTML;
     const upgrades = [
         { id: 'slowness', name: 'Slow chicken', icon: 'slowness', effect: tier => balance.slowness[tier] + '% slower chicken', desc: 'Reduces all chase speed, including its rising baseline and teleport gains.' },
-        { id: 'freeze', name: 'Chicken freeze', icon: 'freeze', effect: tier => balance.freeze[tier] + 's base freeze time', desc: 'Sets the starting freeze time. Jumps still shorten it.' },
+        { id: 'freeze', name: 'Chicken freeze', icon: 'freeze', effect: tier => balance.freeze[tier] + 's freeze time', desc: 'Gives the chicken a longer breather. Jumps never shorten a freeze.' },
         { id: 'speed', name: 'Fast block', icon: 'speed', effect: tier => '+' + balance.speed[tier] + '% block speed', desc: 'A modest speed boost for collecting coins and helping characters.' },
         { id: 'awareness', name: 'Safe jump', icon: 'awareness', effect: tier => balance.awareness[tier] + 'px safe teleport radius', desc: 'Keeps clicked characters farther away from the chicken.' },
         { id: 'book', name: 'A little book of courage', icon: 'book', effect: tier => tier === 0 ? 'Not owned · no automatic movement' : balance.bookStep[tier] + 'px every 0.2s · ' + (balance.bookStep[tier] * 5) + 'px/s', desc: 'Humans take small steps away from the chicken every 0.2 seconds. Later tiers make them braver.' }
@@ -64,8 +67,8 @@ window.BombContent = (() => {
         { id: 'treadmill', name: 'Treadmill', desc: 'Unlock a drop that keeps accelerating the block by 20% of normal speed each second, then resets.' }
     ].map(drop => ({ ...drop, icon: drop.id, unlock: true,
         effect: tier => tier === 0 ? 'Locked · will not spawn' : drop.id === 'cow'
-            ? balance.cowPiles[tier] + (balance.cowPiles[tier] === 1 ? ' pile' : ' piles') + ' every ' + balance.cowPoopInterval + 's · ' + balance.cowRepelDuration[tier] + 's repel · 2% spawn roll'
+            ? balance.cowPiles[tier] + (balance.cowPiles[tier] === 1 ? ' pile' : ' piles') + ' every ' + balance.cowPoopInterval + 's · ' + balance.cowRepelDuration[tier] + 's repel · ' + balance.cowOdds + '% spawn roll'
             : drop.id === 'treadmill' ? balance.treadmillDuration[tier] + 's acceleration · 2% spawn roll'
-            : balance.dropOdds[tier] + '% spawn roll' }));
+            : (drop.id === 'cat' ? balance.catOdds[tier] : balance.dropOdds[tier]) + '% spawn roll' }));
     return { svg, icons, cow, models, tiers, balance, upgrades, drops, dropChance };
 })();

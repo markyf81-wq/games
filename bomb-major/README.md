@@ -2,15 +2,15 @@
 
 A cozy click-to-dodge arcade game. Open `index.html` in Google Chrome, or select it from the Games library. No installation, build, server or internet connection is needed.
 
-Click a human to teleport somewhere safe. Every successful teleport adds 2px/s to the chicken’s speed before the Slow chicken reduction and shortens freezes. Click the bouncing **Click Me** block to redirect it at the chicken; a hit freezes the chicken temporarily with a synthesized “bock bock” sound. Characters and the block collect coins, and every ten coins collected in the current round adds another human. Humans randomly spawn as explorers, gardeners, scholars or astronauts, all with the same abilities.
+Click a human to teleport somewhere safe. Every successful teleport adds 2px/s to the chicken’s speed before the Slow chicken reduction. Click the bouncing **Click Me** block to redirect it at the chicken; a hit freezes the chicken temporarily with a synthesized “bock bock” sound. Characters and the block collect coins, and every ten coins collected in the current round adds another human. Humans randomly spawn as explorers, gardeners, scholars or astronauts, all with the same abilities.
 
 When caught, characters run off-screen; nobody dies or explodes. The round ends when all humans have left the courtyard. **One more try** starts a fresh attempt. There are no timed levels. The marketplace is available before starting and after game over. **Sound on/off** controls music and effects; audio starts after an interaction.
 
 ## A steadily rising chase
 
-The chicken starts at **48px/s**. Its baseline gains **0.5px/s for every active second**—**30px/s per minute**, with no cap. Successful teleports add another **2px/s** each. **Slow chicken reduces the whole total**, including the time-based baseline, so it stays useful without stopping the difficulty ramp.
+The chicken starts at **32px/s**. Its baseline gains **0.5px/s for every active second**—**30px/s per minute**, with no cap. Successful teleports add another **2px/s** each. **Slow chicken reduces the whole total**, including the time-based baseline, so it stays useful without stopping the difficulty ramp.
 
-Cats reset only teleport-earned extra speed, and poop removes 1px/s of that extra speed per hit. Neither resets the rising baseline. With no teleport boost, the baseline is 78px/s after one minute, 138px/s after three minutes and 198px/s after five minutes; maxed Slow chicken reduces those to 62.4, 110.4 and 158.4px/s. The HUD shows chase speed and its current minimum. Time pressure resets for a new round and uses active round time, rather than time spent on menus or away from the tab.
+Cats reset only teleport-earned extra speed, and poop removes 1px/s of that extra speed per hit. Neither resets the rising baseline. With no teleport boost, the baseline is 62px/s after one minute, 122px/s after three minutes and 182px/s after five minutes; maxed Slow chicken reduces those to 49.6, 97.6 and 145.6px/s. The HUD shows chase speed and its current minimum. Time pressure resets for a new round and uses active round time, rather than time spent on menus or away from the tab.
 
 Poop repel cannot be refreshed while already active. After it ends, the chicken resists another repel for **3 seconds**. Hits during active repel or resistance still remove teleport-earned speed but do not restart immunity. Cow tiers retain their 3–10 second repel durations. Other items can still help during resistance.
 
@@ -21,12 +21,12 @@ Coins always spawn. All other drops, including the cat and cow, must first be un
 | Ability | Tier 1 | Tier 2 | Tier 3 | Tier 4 | Tier 5 |
 | --- | --- | --- | --- | --- | --- |
 | Slow chicken | 2% slower | 4% | 7% | 12% | 20% |
-| Chicken freeze | 1s | 1.5s | 2.25s | 3.5s | 5s |
+| Chicken freeze | 2s | 2.3s | 2.8s | 3.6s | 5s |
 | Fast block | 5% faster | 7% | 10% | 15% | 25% |
 | Safe jump | 50px | 70px | 110px | 180px | 300px |
 | A little book of courage | 1px/tick | 1.2px/tick | 1.6px/tick | 2.4px/tick | 4px/tick |
 
-Chicken freeze values are the base freeze duration, before jumps shorten it. Without upgrades the chicken freezes for 0.25s and the teleport safety radius is 44px. Freeze duration has a 0.1s floor. Slow chicken also reduces speed gained from jumps. A crowded or small courtyard can expand to make room for a safe jump; if no safe position fits, the character stays put.
+Chicken freezes last the full listed duration; jumping no longer shortens current or future freezes. Without upgrades the chicken freezes for 1.5s and the teleport safety radius is 44px. Slow chicken also reduces speed gained from jumps. A crowded or small courtyard can expand to make room for a safe jump; if no safe position fits, the character stays put.
 
 Five-segment bars show your progress: green is purchased, gold outlines the next tier and pale segments are still unpurchased. The shop shows current and next benefits before buying. Locked drops show an **Unlock tier 1** button.
 
@@ -45,7 +45,7 @@ Five-segment bars show your progress: green is purchased, gold outlines the next
 | String | Click it | Tethers the chicken within **100px** of the moving block for **10 seconds**. It can still make humans run off. |
 | Treadmill | Click it | The block gets faster continuously, then returns to its normal upgraded speed. |
 
-Magnet, cat, shield, banana and string tiers increase spawn-roll odds to **1%, 1.5%, 2.5%, 4.5% and 8%**. Cow tiers increase each batch to **1, 1, 2, 2 and 3 piles every 12 seconds**; its spawn-roll chance stays at 2% after unlocking. Cow tiers also increase poop repel duration to **3, 4, 5, 7 and 10 seconds**. Stationary and thrown piles both work. Hits do not extend an active repel; after it ends the chicken resists new repels for 3 seconds. Thrown poop keeps seeking until it hits or the round ends. Each hit removes half a teleport’s extra speed; it cannot lower the chicken below its current rising, Slow chicken-adjusted minimum speed. The cat still clears all teleport-earned speed, but never the time-based baseline. Treadmill tiers last **5, 7, 10, 14 and 20 seconds**, with a 2% spawn-roll chance after unlocking. While active, each second adds 20% of the block’s normal speed, reaching almost 2× over five seconds or 5× over twenty seconds. It combines with Fast block, and expiry restores that upgraded speed without changing direction. The effect strip shows time and speed; another treadmill cannot spawn while one is active. Round end/restart also clears the boost.
+Unlocked cats have **4%, 5%, 7%, 10% and 14%** spawn-roll odds at tiers 1–5. Magnet, shield, banana and string retain **1%, 1.5%, 2.5%, 4.5% and 8%**. Cow tiers increase each batch to **1, 1, 2, 2 and 3 piles every 12 seconds**; its spawn-roll chance is 5% after unlocking. Cow tiers also increase poop repel duration to **3, 4, 5, 7 and 10 seconds**. Stationary and thrown piles both work. Hits do not extend an active repel; after it ends the chicken resists new repels for 3 seconds. Thrown poop keeps seeking until it hits or the round ends. Each hit removes half a teleport’s extra speed; it cannot lower the chicken below its current rising, Slow chicken-adjusted minimum speed. The cat still clears all teleport-earned speed, but never the time-based baseline. Treadmill tiers last **5, 7, 10, 14 and 20 seconds**, with a 2% spawn-roll chance after unlocking. While active, each second adds 20% of the block’s normal speed, reaching almost 2× over five seconds or 5× over twenty seconds. It combines with Fast block, and expiry restores that upgraded speed without changing direction. The effect strip shows time and speed; another treadmill cannot spawn while one is active. Round end/restart also clears the boost.
 
 Only one drop of each type, cat or cow can be present at once. Blocked spawn attempts may be skipped. Stationary poop piles last 25 seconds; launched poop stays until it hits or the round is cleared, with up to 8 piles/projectiles present.
 

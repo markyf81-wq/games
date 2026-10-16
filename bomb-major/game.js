@@ -284,11 +284,9 @@ const playSpace = document.querySelector('.playSpace');
         const coinSize = 24;
         const magnetSize = 40;
         const coinPullSpeed = 900;
-        const bombSpeed = 48;
+        const bombSpeed = 32;
         const speedPerJump = 2;
         const collisionDistance = 42;
-        const freezeReductionPerJump = 0.1;
-        const minimumFreezeDuration = 0.1;
         const coinInterval = 1;
         const maximumCoins = 20;
         const coinStorageKey = 'bomb-major-coins';
@@ -458,7 +456,7 @@ const playSpace = document.querySelector('.playSpace');
             }
         }
         function currentFreezeDuration() {
-            return Math.max(minimumFreezeDuration, content.balance.freeze[market.tier('freeze')] - jumps * freezeReductionPerJump);
+            return content.balance.freeze[market.tier('freeze')];
         }
         function freezeBomb() {
             if (frozenRemaining <= 0) {
@@ -1093,13 +1091,8 @@ const playSpace = document.querySelector('.playSpace');
             }
             character.position = next;
             nudgeCharactersApart();
-            const previousFreezeDuration = currentFreezeDuration();
             jumps++;
             bombSpeedBoost += speedPerJump;
-            const wasFrozen = frozenRemaining > 0;
-            frozenRemaining = Math.max(0, frozenRemaining -
-                (previousFreezeDuration - currentFreezeDuration()));
-            if (wasFrozen && frozenRemaining <= 0) sound.play('thaw');
             collectCoins();
             draw();
             start();
