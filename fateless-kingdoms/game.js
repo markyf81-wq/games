@@ -287,12 +287,10 @@
     const handStyle = getComputedStyle(hand), handPixels = name => parseFloat(handStyle[name]) || 0;
     const handHeight = hand.clientHeight - handPixels('paddingTop') - handPixels('paddingBottom');
     const handWidth = hand.clientWidth - handPixels('paddingLeft') - handPixels('paddingRight');
-    const fanOffset = Math.max(0, count - 1) * .325;
-    const fanAngle = Math.min(7, Math.max(0, count - 1) * .4) * Math.PI / 180;
-    // Fill the actual space left below the heading, allowing for the fan's rotation and drop.
-    const cardWidth = Math.max(1, Math.floor(Math.min(handWidth, (handHeight - fanOffset - 4) / (1.414 + Math.sin(fanAngle)))));
+    // Straight cards fill the available hand height without rotation or a curved drop.
+    const cardWidth = Math.max(1, Math.floor(Math.min(handWidth, (handHeight - 4) / 1.414)));
     hand.style.setProperty('--hand-card-width', `${cardWidth}px`);
-    // Hover previews render outside the hand, so only the fanned cards need to fit here.
+    // Hover previews render outside the hand, so only the overlapping cards need to fit here.
     const overlap = count > 1 ? Math.min(cardWidth - 2, Math.max(cardWidth * .22, (count * cardWidth - hand.clientWidth + 40) / (count - 1))) : 0;
     hand.style.setProperty('--hand-overlap', `${overlap}px`);
     const rival = $('rival-hand'), backs = rival.children.length, backWidth = rival.firstElementChild?.offsetWidth || 30;
@@ -401,7 +399,7 @@
     // Use only the public count. Never put opponent card IDs or names in this DOM.
     for (let i = 0; i < state.players[1].hand.length; i++) {
       const back = node('span', 'rival-card card-back'); back.setAttribute('aria-hidden', 'true');
-      back.style.setProperty('--back-angle', `${(i - (state.players[1].hand.length - 1) / 2) * .45}deg`); rival.append(back);
+      rival.append(back);
     }
     let banner;
     if (lobbyOpen) banner = 'Begin a game to flip the coin and take your seat.';
@@ -428,7 +426,7 @@
       const rank = c => c.type === 'unit' ? ROWS.indexOf(c.row) : c.type === 'spell' ? 3 : 4;
       return rank(C[a]) - rank(C[b]) || (sort === 'type' ? C[a].name.localeCompare(C[b].name) : (C[b].power || 0) - (C[a].power || 0));
     });
-    sorted.forEach((id, index) => { const b = cardButton(id, 'hand'); const offset = index - (sorted.length - 1) / 2; b.style.setProperty('--fan-angle', `${Math.max(-7, Math.min(7, offset * .8))}deg`); b.style.setProperty('--fan-y', `${Math.abs(offset) * .65}px`); b.style.zIndex = String(index + 1); b.style.setProperty('--hand-stack', String(index + 1)); hand.append(b); });
+    sorted.forEach((id, index) => { const b = cardButton(id, 'hand'); b.style.zIndex = String(index + 1); b.style.setProperty('--hand-stack', String(index + 1)); hand.append(b); });
     if (!sorted.length) hand.append(node('p', 'empty-hand', 'Your hand is empty. You automatically pass for this round.'));
     hand.scrollLeft = scroll;
     hand.setAttribute('aria-label', `Your hand, ${sorted.length} cards`);
