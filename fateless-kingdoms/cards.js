@@ -13,7 +13,7 @@ window.FKCards = (() => {
     restoration: 'When played, return 1 unit of this row type from your destroyed pile to your hand.',
     convert: 'Swap this unit with the lowest-power enemy Combat unit. Choose one if tied. Neither unit can enter a row blocked by Dread.',
     accuracy: 'Gain +1 power for every friendly Ranged unit, including Target itself. Recalculate after each turn.',
-    shielded: 'Friendly Siege units cannot be destroyed while Stone Wall is in play. Printed wording includes Stone Wall itself. Round cleanup still clears the row.',
+    shielded: 'Friendly Siege units, including Stone Wall itself, cannot be destroyed while Stone Wall is in play. Round cleanup still clears the row.',
     bloodRage: 'Gain +1 power for every enemy Combat unit in play. Recalculate after each turn.',
     fortified: 'Gain +1 power for every other friendly Siege unit. Recalculate after each turn.',
     deathGaze: 'When played, destroy 1 highest-power enemy Ranged unit. Choose one if tied.'

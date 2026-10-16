@@ -2,18 +2,19 @@
 window.FKEffects = (() => {
   'use strict';
   const C = window.FKCards.cards, E = window.FKEngine;
-  let running = [], overlays = [], hidden = [], generation = 0;
+  let running = [], overlays = [], hidden = [], pauses = [], generation = 0;
   const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const bounds = element => element?.getBoundingClientRect();
-  const viable = r => r && r.width > 0 && r.height > 0 && r.right > 0 && r.left < window.innerWidth && r.bottom > 0 && r.top < window.innerHeight;
+  const viable = r => r && r.width > 0 && r.height > 0 && r.left + r.width > 0 && r.left < window.innerWidth && r.top + r.height > 0 && r.top < window.innerHeight;
   function capture() {
     const field = new Map(), hand = new Map();
     document.querySelectorAll('#battlefield [data-card]').forEach(el => field.set(el.dataset.card, { rect: bounds(el), element: el }));
     document.querySelectorAll('#hand [data-card]').forEach(el => hand.set(el.dataset.card, { rect: bounds(el), element: el }));
-    return { field, hand, cpu: bounds(document.querySelector('.opponent')), deck: bounds(document.getElementById('deck-count')), grave: [bounds(document.getElementById('human-grave')), bounds(document.getElementById('cpu-grave'))] };
+    return { field, hand, cpu: bounds(document.getElementById('rival-hand')), deck: bounds(document.getElementById('deck-count')), grave: [bounds(document.getElementById('human-grave')), bounds(document.getElementById('cpu-grave'))] };
   }
   function cancel() {
     generation++; running.forEach(a => a.cancel()); running = [];
+    pauses.forEach(p => { clearTimeout(p.timer); p.resolve(); }); pauses = [];
     overlays.forEach(n => n.remove()); overlays = [];
     hidden.forEach(n => n.classList.remove('fx-hidden')); hidden = [];
   }
@@ -29,13 +30,44 @@ window.FKEffects = (() => {
     document.body.append(n); overlays.push(n); return n;
   }
   function cardRect(anchor, width = 100) { return { left: anchor.left + anchor.width / 2 - width / 2, top: anchor.top + anchor.height / 2 - width * .707, width, height: width / .707 }; }
+  function pause(duration) {
+    return new Promise(resolve => { const p = { resolve }; p.timer = setTimeout(() => { pauses = pauses.filter(item => item !== p); resolve(); }, duration); pauses.push(p); });
+  }
+  async function showPlayed(id, actor, snapshot) {
+    cancel(); const token = generation;
+    const width = Math.min(220, window.innerWidth * .48, (window.innerHeight - 150) / 1.414);
+    const center = cardRect({ left: 0, top: 0, width: window.innerWidth, height: window.innerHeight }, width);
+    center.top = Math.max(20, center.top - 20);
+    const shade = document.createElement('div'); shade.className = 'fx-stage'; shade.setAttribute('aria-hidden', 'true'); document.body.append(shade); overlays.push(shade);
+    const label = document.createElement('div'); label.className = 'fx-play-label'; label.setAttribute('aria-hidden', 'true');
+    label.style.top = `${center.top + center.height + 16}px`; label.textContent = `${actor === 0 ? 'You play' : 'The rival plays'} ${C[id].name}`; document.body.append(label); overlays.push(label);
+    const source = actor === 0 ? snapshot.hand.get(id)?.rect : snapshot.cpu && cardRect(snapshot.cpu, 80);
+    const n = ghost(id, center); n.classList.add('showcased-card'); n.style.transformOrigin = '50% 50%';
+    const from = viable(source) ? source : { left: actor === 0 ? center.left : window.innerWidth - 70, top: actor === 0 ? window.innerHeight - 70 : 20, width: 70, height: 99 };
+    window.FKAudio.play('fly');
+    await animate(n, [
+      { transform: `translate(${from.left + from.width / 2 - center.left - center.width / 2}px,${from.top + from.height / 2 - center.top - center.height / 2}px) rotate(${actor === 0 ? -8 : 8}deg) scale(${from.width / center.width},${from.height / center.height})`, opacity: .7 },
+      { transform: 'translate(0,0) rotate(0) scale(1)', opacity: 1 }
+    ], { duration: 460, easing: 'cubic-bezier(.2,.7,.25,1)' });
+    if (token !== generation) return null;
+    window.FKAudio.play('land');
+    if (reduced() || !n.animate) await pause(2000);
+    else await animate(n, [
+      { transform: 'rotate(0) scale(1)' }, { transform: 'rotate(-3deg) scale(1.025)', offset: .2 },
+      { transform: 'rotate(3deg) scale(1.025)', offset: .4 }, { transform: 'rotate(-2deg) scale(1.02)', offset: .6 },
+      { transform: 'rotate(2deg) scale(1.015)', offset: .8 }, { transform: 'rotate(0) scale(1)' }
+    ], { duration: 2000, easing: 'ease-in-out' });
+    if (token !== generation) return null;
+    // transition() replaces this overlay with the flight to its final destination.
+    return center;
+  }
   async function fly(id, from, to, destination, back = false, delay = 0) {
-    if (!viable(from) || !viable(to) || reduced()) return;
+    if (!viable(from) || !to || to.width <= 0 || to.height <= 0 || reduced()) return;
     const n = ghost(id, from, back);
     if (destination) { destination.classList.add('fx-hidden'); hidden.push(destination); }
     const x = to.left - from.left, y = to.top - from.top, sx = to.width / from.width, sy = to.height / from.height;
     await animate(n, [
-      { transform: 'translate(0,0) rotate(-8deg) scale(1)', opacity: .8, filter: 'brightness(1.1)' },
+      { transform: 'translate(0,0) rotate(0) scale(1)', opacity: 1, filter: 'brightness(1.1)' },
       { transform: `translate(${x * .48}px,${y * .42 - 40}px) rotate(4deg) scale(${(sx + 1) / 2},${(sy + 1) / 2})`, opacity: 1, offset: .5 },
       { transform: `translate(${x}px,${y}px) rotate(0) scale(${sx},${sy})`, opacity: 1, filter: 'brightness(1)' }
     ], { duration: 570, delay, easing: 'cubic-bezier(.2,.65,.25,1)' });
@@ -63,12 +95,12 @@ window.FKEffects = (() => {
     if (move.pass) { window.FKAudio.play('pass'); return; }
     window.FKAudio.play('fly');
     if (card && !reduced()) {
-      const source = actor === 0 ? snapshot.hand.get(card.id)?.rect : snapshot.cpu && cardRect(snapshot.cpu, 90);
+      const source = snapshot.played || (actor === 0 ? snapshot.hand.get(card.id)?.rect : snapshot.cpu && cardRect(snapshot.cpu, 90));
       const dest = next.field.get(card.id);
       if (dest) later.push(fly(card.id, source, dest.rect, dest.element));
       else if (card.type === 'spell') {
-        const field = bounds(document.getElementById('battlefield'));
-        if (field) { const center = cardRect(field, 100); center.top = field.top + field.height / 2 - 70; later.push(fly(card.id, source, center, null).then(() => {})); }
+        const deck = next.deck;
+        if (deck) later.push(fly(card.id, source, cardRect(deck, 38), null));
       }
     }
     let destroyed = 0;
@@ -106,5 +138,5 @@ window.FKEffects = (() => {
     }
     if (before.phase === 'playing' && after.phase !== 'playing') window.FKAudio.play(after.players[0].wins > before.players[0].wins ? 'win' : 'lose');
   }
-  return Object.freeze({ capture, transition, cancel, reduced });
+  return Object.freeze({ capture, showPlayed, transition, cancel, reduced });
 })();

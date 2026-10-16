@@ -6,13 +6,13 @@
   <meta name="theme-color" content="#101b18">
   <meta name="description" content="A game of kingdoms, cunning and knowing when to walk away. Play Fateless Kingdoms against a CPU opponent.">
   <title>Fateless Kingdoms</title>
-  <link rel="stylesheet" href="styles.css">
-  <script defer src="cards.js"></script>
+  <link rel="stylesheet" href="styles.css?v=table2">
+  <script defer src="cards.js?v=table2"></script>
   <script defer src="engine.js"></script>
   <script defer src="cpu.js"></script>
   <script defer src="audio.js"></script>
-  <script defer src="effects.js"></script>
-  <script defer src="game.js"></script>
+  <script defer src="effects.js?v=table2"></script>
+  <script defer src="game.js?v=table2"></script>
 </head>
 <body>
   <header class="site-header">
@@ -22,11 +22,12 @@
   </header>
   <main class="game-layout">
     <section class="table-column" aria-label="Game table">
-      <div class="match-bar"><span class="eyebrow">A battle of nerve &amp; numbers</span><span id="round-label" class="round-label">Round I / III</span><span id="deck-count" class="deck-count"></span></div>
+      <div class="match-bar"><section class="rival-hand-section" aria-label="Rival hand"><span id="rival-hand-label" class="rival-hand-label">Rival’s hand</span><div id="rival-hand" class="rival-hand" role="img" aria-label="Face-down rival cards"></div></section><span id="round-label" class="round-label">Round I / III</span><span id="deck-count" class="deck-count"></span></div>
       <section class="scoreboard" aria-label="Match score">
         <div class="player-panel human"><span class="avatar" aria-hidden="true">♔</span><div><h1>Your kingdom</h1><div id="human-meta" class="player-meta"></div><div id="human-wins" class="round-wins"></div></div><strong id="human-score" class="total-score">0</strong></div>
         <div class="score-divider" aria-hidden="true">⚔<small>POWER</small></div>
         <div class="player-panel opponent"><strong id="cpu-score" class="total-score">0</strong><div><h2>The rival kingdom</h2><div id="cpu-meta" class="player-meta"></div><div id="cpu-wins" class="round-wins"></div></div><span class="avatar" aria-hidden="true">♚</span></div>
+        <ol id="round-track" class="round-track" aria-label="Round results"></ol>
       </section>
       <div id="turn-banner" class="turn-banner" role="status" aria-live="polite"></div>
       <div class="battle-area">
@@ -52,8 +53,9 @@
     </aside>
   </main>
   <dialog id="welcome-dialog" class="welcome-dialog"><div class="welcome-art" aria-hidden="true"></div><div class="welcome-copy"><span class="eyebrow">Your kingdom. Your last card.</span><h2>Victory takes<br>more than power.</h2><p>Fifteen cards. Three rows. Up to three rounds.<br>Know when to fight—and when to let a battle go.</p><div class="welcome-facts"><span>♜ <b>62</b> unique cards</span><span>⚔ <b>1</b> cunning rival</span></div><label class="welcome-music"><input id="welcome-music" type="checkbox"> Play background music</label><button id="begin-button" class="primary">Begin game <span>→</span></button><button id="resume-button" class="text-button" hidden>Resume saved match</button><p class="welcome-footnote">A coin flip decides who takes the first turn.</p></div></dialog>
-  <dialog id="coin-dialog" class="coin-dialog"><span class="eyebrow">Let fate choose</span><h2>Who goes first?</h2><div class="coin-stage"><div id="coin" class="coin"><span class="coin-face coin-heads">♔<small>Your kingdom</small></span><span class="coin-face coin-tails">♚<small>Rival kingdom</small></span></div></div><p id="coin-result" role="status" aria-live="polite">Flipping the coin…</p><button id="start-round-button" class="primary" disabled>Start round →</button></dialog>
+  <dialog id="coin-dialog" class="coin-dialog"><span class="eyebrow">Let fate choose</span><h2>Who goes first?</h2><div class="coin-stage"><div id="coin" class="coin"><span class="coin-face coin-heads">♔<small>Heads</small></span><span class="coin-face coin-tails">♚<small>Tails</small></span></div></div><p id="coin-result" role="status" aria-live="polite">Flipping the coin…</p><button id="start-round-button" class="primary" disabled>Start round →</button></dialog>
   <dialog id="content-dialog" class="content-dialog"><div class="dialog-heading"><h2 id="content-title"></h2><button id="close-content" class="icon-button" aria-label="Close dialog">×</button></div><div id="content-body"></div></dialog>
+  <dialog id="choice-dialog" class="choice-dialog" aria-labelledby="choice-card-name"><div class="dialog-heading"><div><span class="eyebrow">Your next move</span><h2 id="choice-card-name"></h2></div><button class="icon-button" data-action="cancel-selection" aria-label="Cancel this play">×</button></div><div id="choice-body" class="choice-body"></div><div class="choice-actions"><button class="quiet" data-action="cancel-selection">Cancel</button><div id="choice-confirm"></div></div></dialog>
   <dialog id="confirm-dialog" class="confirm-dialog"><span class="eyebrow">A new beginning</span><h2>Leave this match?</h2><p>Your current match will be replaced with a fresh shuffle.</p><div class="dialog-actions"><button id="cancel-new" class="quiet">Keep playing</button><button id="confirm-new" class="primary">Deal a new match</button></div></dialog>
   <dialog id="pass-dialog" class="confirm-dialog"><span class="eyebrow">Know when to walk away</span><h2>Pass this round?</h2><p id="pass-summary"></p><p>You cannot play again until the next round. The rival may keep playing until it also passes.</p><div class="dialog-actions"><button id="cancel-pass" class="quiet">Keep playing</button><button id="confirm-pass" class="primary">Pass this round</button></div></dialog>
   <dialog id="audio-dialog" class="confirm-dialog"><div class="dialog-heading"><h2>Sound &amp; music</h2><button id="close-audio" class="icon-button" aria-label="Close audio settings">×</button></div><p id="audio-note">An original ambient score and game effects, generated locally.</p><label class="audio-toggle"><input id="music-enabled" type="checkbox"> Background music</label><label class="audio-volume" for="music-volume">Music volume <output id="music-volume-value">25%</output><input id="music-volume" type="range" min="0" max="100" value="25"></label><label class="audio-toggle"><input id="effects-enabled" type="checkbox" checked> Sound effects</label><label class="audio-volume" for="effects-volume">Effects volume <output id="effects-volume-value">60%</output><input id="effects-volume" type="range" min="0" max="100" value="60"></label><button id="preview-audio" class="primary">Preview sound</button></dialog>

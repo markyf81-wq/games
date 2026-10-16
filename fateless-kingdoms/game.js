@@ -33,8 +33,9 @@
     }
     render();
   }
-  function resetSelection() { selected = null; selections = {}; picked = []; }
+  function resetSelection() { selected = null; selections = {}; picked = []; $('choice-dialog').close(); }
   function mobileFocus(id) {
+    if (document.querySelector('dialog[open]')) return;
     if (window.matchMedia('(max-width: 980px)').matches) $(id).scrollIntoView({ behavior: FX.reduced() ? 'auto' : 'smooth', block: 'start' });
   }
   function cardButton(id, context = 'board', p = null) {
@@ -53,8 +54,6 @@
       if (myTurn() && E.prompt(state, 0, id).kind === 'blocked') n.classList.add('unplayable');
       n.append(node('span', 'card-caption', c.name));
     }
-    if (canChoose(id)) n.classList.add('targetable');
-    if (picked.includes(id)) n.classList.add('target-picked');
     if (context === 'board' && c.type === 'unit') {
       if (E.protectedFrom(state, id, true)) { n.classList.add('protected-card'); n.append(node('span', 'protection-mark', '◇')); }
       if (p !== null && state.players[p].rows[c.row].includes('omen-ironward')) n.classList.add('omen-protected');
@@ -75,9 +74,7 @@
     rowNode.append(meta);
     const lane = node('div', 'row-cards');
     const cards = state.players[p].rows[row];
-    const chooseRow = canChoose(`${p}:${row}`);
-    if (chooseRow) { const b = button(`Place ${C[selected].name} here`, 'row-target'); b.dataset.choice = `${p}:${row}`; lane.append(b); rowNode.classList.add('target-row'); }
-    if (!cards.length && !chooseRow) lane.append(node('span', 'empty-row', E.blocked(state, p, row) ? 'Sealed by Dread' : '—'));
+    if (!cards.length) lane.append(node('span', 'empty-row', E.blocked(state, p, row) ? 'Sealed by Dread' : '—'));
     cards.forEach(id => lane.append(cardButton(id, 'board', p)));
     rowNode.append(lane);
     const status = node('div', 'row-status');
@@ -137,22 +134,81 @@
     if (selected && q) {
       if (q.kind === 'blocked') root.append(node('p', 'warning-message', q.message));
       if (q.kind === 'choice') {
-        root.append(node('h3', 'choice-title', q.title));
-        if (q.count > 1) root.append(node('p', 'choice-progress', `${picked.length} of ${q.count} selected`));
-        const list = node('div', 'choice-list');
-        q.options.forEach(o => { const b = button(o.label, `choice-button${picked.includes(o.value) ? ' chosen' : ''}`); b.dataset.choice = o.value; b.setAttribute('aria-pressed', String(picked.includes(o.value))); if (o.card) { const im = node('img'); im.src = C[o.card].image; im.alt = ''; b.prepend(im); } list.append(b); }); root.append(list);
-        if (q.count > 1) { const b = button('Confirm targets →', 'primary', 'confirm-targets'); b.disabled = picked.length !== q.count; root.append(b); }
+        root.append(node('p', 'target-summary', q.title), button('Choose targets →', 'primary', 'open-choices'));
       } else if (q.kind === 'ready') {
-        const a = q.action;
-        const targets = [...new Set(['restore', 'kill', 'convert', 'decoy', 'sacrifice', 'recover', 'weakest'].flatMap(k => a[k] || []))];
-        if (a.row?.length) { const [p, row] = a.row[0].split(':'); root.append(node('p', 'target-summary', `Place on ${p === '0' ? 'your' : 'the rival’s'} ${row} row.`)); }
-        else if (targets.length) root.append(node('p', 'target-summary', `Targets: ${targets.map(t => C[t].name).join(', ')}.`));
-        else if (c.type === 'unit') root.append(node('p', 'target-summary', `Play on ${a.destination === 0 ? 'your' : 'the rival’s'} ${c.row} row.`));
-        else root.append(node('p', 'target-summary', c.effect === 'patience' ? 'Spend this turn without passing.' : c.type === 'omen' ? 'Affects both kingdoms.' : 'Resolve all available effects, then return this Spell to the bottom of the deck.'));
+        root.append(node('p', 'target-summary', actionSummary(c, q.action)));
         root.append(button(`Play ${c.name} →`, 'primary', 'play-card'));
       }
       root.append(button('Cancel selection', 'text-button cancel-selection', 'cancel-selection'));
     } else if (state.players[0].hand.includes(id) && myTurn()) { const b = button('Select this card →', 'primary'); b.dataset.select = id; root.append(b); }
+  }
+  function actionSummary(c, a) {
+    const parts = [];
+    if (a.row?.length) { const [p, row] = a.row[0].split(':'); parts.push(`Place on ${p === '0' ? 'your' : 'the rival’s'} ${row} row.`); }
+    else if (c.type === 'unit') parts.push(`Play on ${a.destination === 0 ? 'your' : 'the rival’s'} ${c.row} row.`);
+    const names = ids => ids.map(id => C[id].name).join(', ');
+    for (const [key, verb] of [['restore', 'Return to hand'], ['kill', 'Destroy'], ['convert', 'Trade places with'], ['decoy', 'Return to hand'], ['sacrifice', 'Sacrifice'], ['recover', 'Recover'], ['weakest', 'Destroy']]) {
+      if (a[key]?.length) parts.push(`${verb}: ${names(a[key])}.`);
+    }
+    return parts.join(' ') || (c.effect === 'patience' ? 'Spend this turn without passing.' : c.type === 'omen' ? 'Affects both kingdoms.' : 'Resolve all available effects, then return this Spell to the bottom of the deck.');
+  }
+  function renderChoiceDialog() {
+    const dialog = $('choice-dialog'), q = currentPrompt();
+    if (!q || q.kind === 'blocked' || (q.kind !== 'choice' && !dialog.open)) { dialog.close(); return; }
+    const opening = !dialog.open, step = q.kind === 'choice' ? q.key : 'review';
+    const stepChanged = dialog.dataset.step !== step; dialog.dataset.step = step;
+    $('choice-card-name').textContent = C[selected].name;
+    const body = $('choice-body'), confirm = $('choice-confirm'); body.replaceChildren(); confirm.replaceChildren();
+    const intro = node('div', 'choice-intro'), artwork = node('img'); artwork.src = C[selected].image; artwork.alt = C[selected].name;
+    intro.append(artwork, node('p', '', C[selected].text)); body.append(intro);
+    const heading = node('h3', 'choice-question', q.kind === 'choice' ? q.title : 'Ready to play?'); heading.tabIndex = -1; body.append(heading);
+    if (q.kind === 'choice') {
+      body.append(node('p', 'choice-help', q.count > 1 ? `Select ${q.count} cards. ${picked.length} selected.` : 'Choose one option. You can review your play before committing.'));
+      const options = node('div', 'modal-choices');
+      q.options.forEach(o => {
+        const chosen = picked.includes(o.value), b = button('', `modal-choice${chosen ? ' chosen' : ''}${o.card ? ' card-option' : ' row-option'}`);
+        b.dataset.choice = o.value; b.dataset.focus = `choice-${q.key}-${o.value}`; b.setAttribute('aria-pressed', String(chosen));
+        if (o.card) {
+          const art = node('img'); art.src = C[o.card].image; art.alt = ''; b.append(art);
+          b.append(node('span', 'option-name', o.label));
+          const location = E.locate(state, o.card), power = location ? E.power(state, o.card) : C[o.card].power;
+          b.append(node('span', 'option-detail', `${C[o.card].row} · ${power} power`));
+        } else { b.append(node('span', 'option-row-icon', { combat: '⚔', ranged: '➶', siege: '♜' }[o.row]), node('span', 'option-name', o.label)); }
+        options.append(b);
+      });
+      body.append(options);
+      if (q.count > 1) { const b = button('Confirm targets →', 'primary', 'confirm-targets'); b.disabled = picked.length !== q.count; confirm.append(b); }
+    } else {
+      body.append(node('p', 'choice-review', actionSummary(C[selected], q.action)), button('Choose again', 'text-button', 'restart-choices'));
+      confirm.append(button(`Play ${C[selected].name} →`, 'primary', 'play-card'));
+    }
+    if (opening) dialog.showModal();
+    if (opening || stepChanged) { body.scrollTop = 0; heading.focus({ preventScroll: true }); }
+  }
+  function renderRoundTrack() {
+    const track = $('round-track'); track.replaceChildren();
+    for (let round = 1; round <= 3; round++) {
+      const result = state.rounds.find(r => r.round === round), active = !result && round === state.round && state.phase === 'playing';
+      const item = node('li', `round-result${result ? result.winner === null ? ' drawn' : result.winner === 0 ? ' human-won' : ' cpu-won' : active ? ' current' : ''}`);
+      const outcome = result ? result.winner === null ? 'Draw · both win' : result.winner === 0 ? 'You won' : 'Rival won' : active ? 'In play' : state.phase === 'gameOver' ? 'Not played' : 'Upcoming';
+      item.append(node('span', 'round-number', `R${round}`), node('strong', '', outcome));
+      if (result) item.append(node('span', 'round-result-score', `${result.scores[0]}–${result.scores[1]}`));
+      item.setAttribute('aria-label', `Round ${round}: ${outcome}${result ? `. You ${result.scores[0]}, rival ${result.scores[1]}.` : ''}`); track.append(item);
+    }
+  }
+  function layoutCards() {
+    const hand = $('hand'), count = hand.children.length;
+    const cardWidth = hand.querySelector('.hand-card')?.offsetWidth || 80;
+    // Leave enough edge space for the enlarged first and last cards as well.
+    const overlap = count > 1 ? Math.min(cardWidth - 2, Math.max(cardWidth * .22, (count * cardWidth - hand.clientWidth + 40) / (count - 1))) : 0;
+    hand.style.setProperty('--hand-overlap', `${overlap}px`);
+    const rival = $('rival-hand'), backs = rival.children.length, backWidth = rival.firstElementChild?.offsetWidth || 30;
+    const rivalOverlap = backs > 1 ? Math.max(backWidth * .25, (backs * backWidth - rival.clientWidth + 12) / (backs - 1)) : 0;
+    rival.style.setProperty('--rival-overlap', `${rivalOverlap}px`);
+    document.querySelectorAll('.row-cards').forEach(lane => {
+      const cards = lane.querySelectorAll('.board-card');
+      if (cards.length) lane.style.setProperty('--board-card-width', `${Math.max(1, Math.min(Math.min(110, lane.clientHeight - 6) * .707, (lane.clientWidth - 6 - (cards.length - 1) * 3) / cards.length))}px`);
+    });
   }
   function render() {
     const focus = document.activeElement?.dataset.focus;
@@ -163,14 +219,24 @@
       $(`${prefix}-score`).textContent = E.score(state, p);
       $(`${prefix}-meta`).textContent = `${player.hand.length} cards in hand${player.passed ? ' · Passed' : ''}`;
       const wins = $(`${prefix}-wins`); wins.replaceChildren(); wins.setAttribute('aria-label', `${player.wins} of 2 round wins`);
+      wins.append(node('span', 'win-count', `${player.wins} / 2 wins`));
       for (let i = 0; i < 2; i++) wins.append(node('span', i < player.wins ? 'won' : '', '◆'));
     });
+    renderRoundTrack();
+    const rival = $('rival-hand'); rival.replaceChildren();
+    $('rival-hand-label').textContent = `Rival’s hand (${state.players[1].hand.length})`;
+    rival.setAttribute('aria-label', `${state.players[1].hand.length} face-down rival cards`);
+    // Use only the public count. Never put opponent card IDs or names in this DOM.
+    for (let i = 0; i < state.players[1].hand.length; i++) {
+      const back = node('span', 'rival-card card-back'); back.setAttribute('aria-hidden', 'true');
+      back.style.setProperty('--back-angle', `${(i - (state.players[1].hand.length - 1) / 2) * .45}deg`); rival.append(back);
+    }
     let banner;
     if (lobbyOpen) banner = 'Begin a game to flip the coin and take your seat.';
-    else if (animating) banner = 'Resolving the play…';
+    else if (animating) banner = inspected ? `Playing ${C[inspected].name}…` : 'Resolving the play…';
     else if (state.phase !== 'playing') banner = winnerText();
     else if (busy || state.turn === 1) banner = 'The rival is considering its next move…';
-    else if (selected) banner = currentPrompt()?.kind === 'choice' ? 'Choose the highlighted targets or use the card panel.' : 'Review your card, then commit your play.';
+    else if (selected) banner = currentPrompt()?.kind === 'choice' ? 'Choose your targets in the window, or cancel this play.' : 'Review your card, then commit your play.';
     else banner = state.players[1].passed ? 'The rival has passed. Play on, or pass to settle the round.' : 'Your move. Play one card, or pass.';
     $('turn-banner').textContent = banner; $('turn-banner').classList.toggle('cpu-thinking', busy);
     renderField();
@@ -181,9 +247,6 @@
       const rank = c => c.type === 'unit' ? ROWS.indexOf(c.row) : c.type === 'spell' ? 3 : 4;
       return rank(C[a]) - rank(C[b]) || (sort === 'type' ? C[a].name.localeCompare(C[b].name) : (C[b].power || 0) - (C[a].power || 0));
     });
-    const cardWidth = parseFloat(getComputedStyle(hand).getPropertyValue('--hand-card-width')) || 110;
-    const overlap = sorted.length > 1 ? Math.min(cardWidth - 34, Math.max(30, (sorted.length * cardWidth - hand.clientWidth + 48) / (sorted.length - 1))) : 0;
-    hand.style.setProperty('--hand-overlap', `${overlap}px`);
     sorted.forEach((id, index) => { const b = cardButton(id, 'hand'); const offset = index - (sorted.length - 1) / 2; b.style.setProperty('--fan-angle', `${Math.max(-7, Math.min(7, offset * .8))}deg`); b.style.setProperty('--fan-y', `${Math.abs(offset) * .65}px`); b.style.zIndex = String(index + 1); hand.append(b); });
     if (!sorted.length) hand.append(node('p', 'empty-hand', 'Your hand is empty. Pass to end your part in this round.'));
     hand.scrollLeft = scroll;
@@ -199,6 +262,8 @@
     renderInspector();
     const history = $('history'); history.replaceChildren();
     publicChronicle(state.log).slice(-7).reverse().forEach(entry => { const item = node('li'); item.append(node('span', 'history-round', `R${entry.round}`), node('span', '', entry.text)); history.append(item); });
+    renderChoiceDialog();
+    layoutCards();
     if (focus) document.querySelector(`[data-focus="${focus}"]`)?.focus({ preventScroll: true });
   }
   function publicChronicle(entries) {
@@ -212,7 +277,10 @@
   }
   async function presentMove(actor, move) {
     const before = state, snapshot = FX.capture(), next = E.play(state, actor, move), ticket = ++presentation;
-    animating = true; state = next; resetSelection(); inspected = state.lastCard?.id; save(); render();
+    animating = true; resetSelection(); inspected = move.card || state.lastCard?.id; render();
+    try { if (move.card) snapshot.played = await FX.showPlayed(move.card, actor, snapshot); } catch (_) { FX.cancel(); }
+    if (ticket !== presentation) return;
+    state = next; save(); render();
     try { await FX.transition(before, next, snapshot, actor, move); } catch (_) { FX.cancel(); }
     if (ticket !== presentation) return;
     animating = false; busy = false; render(); if (actor === 0) mobileFocus('turn-banner'); tick();
@@ -276,14 +344,14 @@
     const root = openDialog(C[id].name);
     if (returnTo === 'collection') root.append(button('← All cards', 'text-button', 'collection'));
     else if (returnTo !== null) { const b = button('← Back to destroyed pile', 'text-button', 'back-grave'); b.dataset.player = String(returnTo); root.append(b); }
-    const layout = node('div', 'zoom-layout'), img = node('img'); img.src = C[id].image; img.alt = `${C[id].name} printed card`; layout.append(img);
+    const layout = node('div', 'zoom-layout'), img = node('img'); img.src = C[id].image; img.alt = C[id].name; layout.append(img);
     const copy = node('div'); copy.append(node('span', 'eyebrow', C[id].type === 'unit' ? `${C[id].row} · ${C[id].power} base power` : C[id].type), node('h3', '', C[id].abilityName || C[id].name), node('p', '', C[id].text));
     if (E.locate(state, id) && C[id].type === 'unit') copy.append(node('p', 'live-power', `Current power: ${E.power(state, id)}`));
     layout.append(copy); root.append(layout);
   }
   function showCollection() {
     const root = openDialog('The 62 cards');
-    root.append(node('p', 'dialog-intro', 'One copy of every card in one shared deck. Select a card to read its printed artwork and rulings.'));
+    root.append(node('p', 'dialog-intro', 'One copy of every card in one shared deck. Select a card to see its artwork and read its ability.'));
     const search = node('input', 'collection-search'); search.type = 'search'; search.placeholder = 'Find a card, ability or row…'; search.setAttribute('aria-label', 'Search the card collection'); root.append(search);
     const grid = node('div', 'collection-grid'); root.append(grid);
     const populate = () => { grid.replaceChildren(); const query = search.value.toLowerCase().trim(); IDS.filter(id => `${C[id].name} ${C[id].abilityName || ''} ${C[id].row || ''} ${C[id].type}`.toLowerCase().includes(query)).forEach(id => { const b = cardButton(id, 'collection'); b.dataset.collectionCard = id; grid.append(b); }); if (!grid.children.length) grid.append(node('p', '', 'No matching cards.')); };
@@ -308,9 +376,9 @@
       ['Spells, Omens & destruction', 'Spells resolve immediately and go to the bottom of the shared deck. Omens remain on their chosen row or in the middle as weather. Destroyed cards go to the pile of the field they were on. Middle Omens go to the player who played them. All remaining field cards clear at round end, including protected cards.'],
       ['Power & weather', 'Recalculate unit abilities after every turn, then apply weather, then War Chant. Weather plus War Chant means 3 power, regardless of play order. Ironward makes units ignore all Omens, including beneficial War Chant.'],
       ['Ties & protected targets', 'Death Gaze and Convert choose one tied target. Weakest Link chooses between ties to destroy at most three unprotected units on each side. Pridefall destroys the highest-power unprotected units on each side, including all ties. Protection is checked before a destruction event removes any cards.'],
-      ['Printed cards take priority', 'Target counts every friendly Ranged unit, including itself. Stone Wall protects all friendly Siege units, including itself. Sacrifice destroys one friendly unit and returns up to two destroyed units to your hand; it does not swap a unit into play or trigger its ability. Dread blocks cards entering its row, including moves through Convert.'],
+      ['Card abilities', 'Target counts every friendly Ranged unit, including itself. Stone Wall protects all friendly Siege units, including itself. Sacrifice destroys one friendly unit and returns up to two destroyed units to your hand; it does not swap a unit into play or trigger its ability. Dread blocks cards entering its row, including moves through Convert.'],
       ['No targets', 'Resolve as much of a card as possible. No-target effects do nothing. You may play a Spell or unit whose ability has no target, but Dread still prevents adding a card to a blocked row. If the shared deck is empty, draw nothing.'],
-      ['Controls & saving', 'Choose Begin game and flip the coin to decide who starts. A saved match can be resumed without another flip. Hover or focus a hand card to lift it; select it, choose targets and click Play. Pass opens a confirmation window. Click the visible destroyed-card stacks to browse either pile without losing your selection. Weather cards appear between the two fields. Audio controls offer optional music and sound effects. Escape closes dialogs or cancels card selection. Matches save automatically when storage is available.']
+      ['Controls & saving', 'Choose Begin game and flip the coin to decide who starts. A saved match can be resumed without another flip. Hover or focus a hand card to lift it; select it, choose targets in the modal and click Play. Cancel or Escape abandons the play before any cards move. Each played card is revealed in the centre before resolving. The rival’s hand stays face down. Round results remain beside the scores. Pass opens a confirmation window. Click the visible destroyed-card stacks to browse either pile without losing your selection. Weather cards appear between the two fields. Audio controls offer optional music and sound effects. Escape closes dialogs or cancels card selection. Matches save automatically when storage is available.']
     ];
     blocks.forEach(([title, text]) => { const section = node('section', 'rule-block'); section.append(node('h3', '', title), node('p', '', text)); root.append(section); });
     const link = node('a', 'rules-doc', 'Open the full rules document ↗'); link.href = RULES_URL; link.target = '_blank'; link.rel = 'noopener'; root.append(link);
@@ -332,6 +400,8 @@
     }
     switch (target.dataset.action) {
       case 'cancel-selection': resetSelection(); render(); break;
+      case 'open-choices': renderChoiceDialog(); break;
+      case 'restart-choices': selections = {}; picked = []; render(); break;
       case 'confirm-targets': { const q = currentPrompt(); if (q?.kind === 'choice' && picked.length === q.count) { selections[q.key] = picked.slice(); picked = []; render(); } break; }
       case 'play-card': { const q = currentPrompt(); if (q?.kind === 'ready') commit(q.action); break; }
       case 'next-round': state = E.nextRound(state); resetSelection(); inspected = null; save(); render(); tick(); break;
@@ -360,6 +430,7 @@
   $('start-round-button').addEventListener('click', () => { if (coinStarter === null || $('start-round-button').disabled) return; state = E.newMatch(coinStarter); coinStarter = null; lobbyOpen = false; $('coin-dialog').close(); resetSelection(); inspected = null; save(); render(); tick(); });
   $('welcome-dialog').addEventListener('cancel', event => event.preventDefault());
   $('coin-dialog').addEventListener('cancel', event => event.preventDefault());
+  $('choice-dialog').addEventListener('cancel', event => { event.preventDefault(); resetSelection(); render(); });
   function syncAudio() {
     const settings = audio.getSettings();
     $('music-enabled').checked = settings.music; $('effects-enabled').checked = settings.effects;
@@ -376,5 +447,8 @@
   $('preview-audio').addEventListener('click', async () => { await audio.unlock(); audio.play('sanctuary'); });
   document.addEventListener('pointerdown', () => audio.unlock(), { passive: true });
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && !document.querySelector('dialog[open]')) { resetSelection(); render(); } });
+  if (typeof ResizeObserver !== 'undefined') {
+    const resize = new ResizeObserver(layoutCards); resize.observe($('hand')); resize.observe($('battlefield')); resize.observe($('rival-hand'));
+  } else window.addEventListener('resize', layoutCards);
   render(); showLobby(loaded && state.phase !== 'gameOver');
 })();
