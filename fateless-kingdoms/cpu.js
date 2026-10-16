@@ -1,7 +1,7 @@
 /* Hidden-information search. Input is a public view, never the real opposing hand. */
 window.FKCPU = (() => {
   'use strict';
-  const E = window.FKEngine, { cards: C, ids: IDS, rows: ROWS } = window.FKCards;
+  const E = window.FKEngine, { cards: C, rows: ROWS } = window.FKCards;
   const levels = { casual: { samples: 2, depth: 2, candidates: 8, noise: 9 }, tactician: { samples: 5, depth: 4, candidates: 12, noise: .8 }, strategist: { samples: 10, depth: 6, candidates: 18, noise: 0 } };
   const sigmoid = n => Math.tanh(n);
   function cardValue(s, p, id) {
@@ -45,7 +45,7 @@ window.FKCPU = (() => {
     for (const player of s.players) { player.grave.forEach(id => known.add(id)); ROWS.forEach(row => player.rows[row].forEach(id => known.add(id))); }
     const revealedHand = [...new Set(s.knownHands?.[1 - p] || [])];
     revealedHand.forEach(id => known.add(id));
-    const unknown = E.shuffle(IDS.filter(id => !known.has(id)));
+    const unknown = E.shuffle(E.cardPool(s.options).filter(id => !known.has(id)));
     s.players[1 - p].hand = [...revealedHand, ...unknown.splice(0, Math.max(0, view.hiddenHandCount - revealedHand.length))];
     s.deck = unknown;
     delete s.hiddenHandCount; delete s.deckCount;

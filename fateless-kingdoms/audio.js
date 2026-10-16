@@ -2,9 +2,16 @@
 window.FKAudio = (() => {
   'use strict';
   const KEY = 'fateless-kingdoms.audio.v1';
-  let settings = { music: false, effects: true, musicVolume: .25, effectsVolume: .6 };
-  try { const saved = JSON.parse(localStorage.getItem(KEY)); if (saved) for (const key of Object.keys(settings)) if (typeof saved[key] === typeof settings[key]) settings[key] = typeof saved[key] === 'number' ? Math.max(0, Math.min(1, saved[key])) : saved[key]; } catch (_) {}
-  let ctx = null, musicBus, effectsBus, noiseBuffer, timer = null, beat = 0, nextBeat = 0;
+  const MUSIC_REVISION = 2;
+  let settings = { music: true, effects: true, musicVolume: .25, effectsVolume: .6 };
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY));
+    if (saved) for (const key of Object.keys(settings)) if (typeof saved[key] === typeof settings[key]) settings[key] = typeof saved[key] === 'number' ? Math.max(0, Math.min(1, saved[key])) : saved[key];
+    // Enable the new battle score once for existing players; later mute choices persist.
+    if (saved?.musicRevision !== MUSIC_REVISION) { settings.music = true; localStorage.setItem(KEY, JSON.stringify({ ...settings, musicRevision: MUSIC_REVISION })); }
+  } catch (_) {}
+  let ctx = null, musicBus, effectsBus, noiseBuffer, timer = null, beat = 0, nextBeat = 0, battle = false;
+  const musicVoices = new Set();
   const available = !!(window.AudioContext || window.webkitAudioContext);
   const frequency = midi => 440 * Math.pow(2, (midi - 69) / 12);
   function tone(freq, start, duration, gain, type = 'sine', bus = effectsBus, endFreq = null) {
@@ -14,7 +21,8 @@ window.FKAudio = (() => {
     if (endFreq) osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), start + duration);
     amp.gain.setValueAtTime(.0001, start); amp.gain.exponentialRampToValueAtTime(Math.max(.0002, gain), start + Math.min(.025, duration / 5)); amp.gain.exponentialRampToValueAtTime(.0001, start + duration);
     osc.connect(amp); amp.connect(bus); osc.start(start); osc.stop(start + duration + .025);
-    osc.onended = () => { osc.disconnect(); amp.disconnect(); };
+    if (bus === musicBus) musicVoices.add(osc);
+    osc.onended = () => { musicVoices.delete(osc); osc.disconnect(); amp.disconnect(); };
   }
   function noise(start, duration, gain, cutoff = 1000, bus = effectsBus) {
     if (!ctx || !bus) return;
@@ -22,11 +30,40 @@ window.FKAudio = (() => {
     source.buffer = noiseBuffer; source.loop = true; filter.type = 'lowpass'; filter.frequency.setValueAtTime(cutoff, start);
     amp.gain.setValueAtTime(.0001, start); amp.gain.linearRampToValueAtTime(gain, start + .025); amp.gain.exponentialRampToValueAtTime(.0001, start + duration);
     source.connect(filter); filter.connect(amp); amp.connect(bus); source.start(start); source.stop(start + duration + .02);
-    source.onended = () => { source.disconnect(); filter.disconnect(); amp.disconnect(); };
+    if (bus === musicBus) musicVoices.add(source);
+    source.onended = () => { musicVoices.delete(source); source.disconnect(); filter.disconnect(); amp.disconnect(); };
   }
-  function stopMusic() { if (timer) clearInterval(timer); timer = null; if (ctx && musicBus) musicBus.gain.setTargetAtTime(0, ctx.currentTime, .12); }
+  function stopMusic() {
+    if (timer) clearInterval(timer); timer = null;
+    if (ctx && musicBus) { musicBus.gain.setTargetAtTime(0, ctx.currentTime, .12); musicVoices.forEach(voice => { try { voice.stop(ctx.currentTime + .03); } catch (_) {} }); }
+  }
+  function orchestral(note, start, duration, gain, brass = false) {
+    const osc = ctx.createOscillator(), filter = ctx.createBiquadFilter(), amp = ctx.createGain();
+    osc.type = brass ? 'sawtooth' : 'triangle'; osc.frequency.value = frequency(note);
+    filter.type = 'lowpass'; filter.Q.value = .7; filter.frequency.setValueAtTime(brass ? 450 : 1800, start);
+    if (brass) filter.frequency.linearRampToValueAtTime(1450, start + .1);
+    amp.gain.setValueAtTime(.0001, start); amp.gain.exponentialRampToValueAtTime(gain, start + (brass ? .08 : .015)); amp.gain.exponentialRampToValueAtTime(.0001, start + duration);
+    osc.connect(filter); filter.connect(amp); amp.connect(musicBus); musicVoices.add(osc); osc.start(start); osc.stop(start + duration + .02);
+    osc.onended = () => { musicVoices.delete(osc); osc.disconnect(); filter.disconnect(); amp.disconnect(); };
+  }
+  function scheduleBattle() {
+    const chords = [[50, 57, 62, 65], [48, 55, 60, 64], [46, 53, 58, 62], [45, 52, 57, 61]], step = 60 / 116 / 2;
+    while (nextBeat < ctx.currentTime + .6) {
+      const chord = chords[Math.floor(beat / 16) % chords.length], within = beat % 16;
+      const pattern = [0, 2, 1, 2, 0, 3, 2, 1], note = chord[pattern[within % 8]] + 12;
+      orchestral(note, nextBeat, step * .85, within % 2 ? .045 : .07);
+      if (within % 2 === 0) tone(frequency(chord[0] - 12), nextBeat, step * 1.7, .13, 'triangle', musicBus);
+      if (within === 0 || within === 8) chord.slice(1).forEach((n, i) => orchestral(n, nextBeat + i * .015, step * 5.5, .045, true));
+      if ([0, 3, 6, 8, 11, 14].includes(within)) { tone(within % 2 ? 105 : 78, nextBeat, .27, .24, 'sine', musicBus, 35); noise(nextBeat, .12, .065, 350, musicBus); }
+      if (within === 4 || within === 12) { noise(nextBeat, .17, .13, 2800, musicBus); tone(150, nextBeat, .11, .065, 'triangle', musicBus, 80); }
+      noise(nextBeat, .045, within % 2 ? .025 : .04, 6000, musicBus);
+      if (within >= 14) tone(within === 14 ? 140 : 110, nextBeat + step * .5, .17, .11, 'sine', musicBus, 65);
+      nextBeat += step; beat++;
+    }
+  }
   function scheduleMusic() {
     if (!ctx || ctx.state !== 'running') return;
+    if (battle) { scheduleBattle(); return; }
     const chords = [[50, 57, 62, 65], [46, 53, 58, 62], [41, 53, 57, 60], [48, 55, 60, 64]], step = 60 / 72 / 2;
     while (nextBeat < ctx.currentTime + .6) {
       const chord = chords[Math.floor(beat / 16) % chords.length], within = beat % 16;
@@ -49,6 +86,10 @@ window.FKAudio = (() => {
     if (timer) return;
     nextBeat = ctx.currentTime + .08; scheduleMusic(); timer = setInterval(scheduleMusic, 150);
   }
+  function setBattle(active) {
+    if (battle === active) return;
+    stopMusic(); battle = active; beat = 0; startMusic();
+  }
   async function unlock() {
     if (!available) return false;
     try {
@@ -69,7 +110,7 @@ window.FKAudio = (() => {
   async function configure(patch) {
     settings = { ...settings, ...patch };
     settings.musicVolume = Math.max(0, Math.min(1, settings.musicVolume)); settings.effectsVolume = Math.max(0, Math.min(1, settings.effectsVolume));
-    try { localStorage.setItem(KEY, JSON.stringify(settings)); } catch (_) {}
+    try { localStorage.setItem(KEY, JSON.stringify({ ...settings, musicRevision: MUSIC_REVISION })); } catch (_) {}
     await unlock();
     if (ctx) effectsBus.gain.setTargetAtTime(settings.effectsVolume * .55, ctx.currentTime, .025);
     if (settings.music) startMusic(); else stopMusic();
@@ -94,5 +135,5 @@ window.FKAudio = (() => {
     chord.forEach((n, i) => tone(frequency(n), t + i * .09, name === 'win' ? 1.2 : .7, .075, 'triangle'));
   }
   document.addEventListener('visibilitychange', () => { if (document.hidden) { stopMusic(); if (ctx?.state === 'running') ctx.suspend().catch(() => {}); } else if (ctx) unlock(); });
-  return Object.freeze({ available, unlock, configure, play, getSettings: () => ({ ...settings }) });
+  return Object.freeze({ available, unlock, configure, setBattle, play, getSettings: () => ({ ...settings }) });
 })();

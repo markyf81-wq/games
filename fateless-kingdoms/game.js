@@ -3,22 +3,34 @@
   const E = window.FKEngine, { cards: C, ids: IDS, rows: ROWS } = window.FKCards;
   const $ = id => document.getElementById(id);
   const SAVE_KEY = 'fateless-kingdoms.match.v1';
+  const SETTINGS_KEY = 'fateless-kingdoms.settings.v1';
+  const LEVEL_NAMES = { casual: 'Beginner', tactician: 'Intermediate', strategist: 'Difficult' };
   const FX = window.FKEffects, audio = window.FKAudio;
   const RULES_URL = 'https://docs.google.com/document/d/1_rJXssMNrrnKWMbWg0otcn4MHUxq_NDlfLKYHsIC2Lc/edit';
   let state, level = 'tactician', selected = null, inspected = null, selections = {}, picked = [], busy = false, worker = null, job = 0, saveAvailable = true;
   let lobbyOpen = true, animating = false, presentation = 0, coinStarter = null, coinTimer = null;
+  let pendingState = null;
+  let nextOptions = E.matchOptions(), preferencesLoaded = false;
+  try {
+    const preferences = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    if (preferences && typeof preferences === 'object') {
+      nextOptions = E.matchOptions(preferences.options || {});
+      if (LEVEL_NAMES[preferences.level]) level = preferences.level;
+      preferencesLoaded = true;
+    }
+  } catch (_) { /* Defaults also work when settings storage is blocked. */ }
   let loaded = false;
   try {
     const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
-    if (E.validState(saved?.state)) { state = saved.state; loaded = true; if (['casual', 'tactician', 'strategist'].includes(saved.level)) level = saved.level; }
+    if (E.validState(saved?.state)) { state = saved.state; loaded = true; if (!preferencesLoaded && LEVEL_NAMES[saved.level]) level = saved.level; }
   } catch (_) { /* A blocked or corrupt save must not prevent a fresh match. */ }
-  if (!state) state = E.newMatch(0);
+  if (!state) state = E.newMatch(0, nextOptions);
   function node(tag, className, text) { const n = document.createElement(tag); if (className) n.className = className; if (text !== undefined) n.textContent = text; return n; }
   function button(text, className, action) { const n = node('button', className, text); if (action) n.dataset.action = action; return n; }
   function save() {
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ state, level })); }
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ state: pendingState || state, level })); }
     catch (_) { saveAvailable = false; }
-    $('save-note').textContent = saveAvailable ? 'Your match saves on this browser.' : 'Browser storage is unavailable. Keep this tab open to keep your match.';
+    $('storage-note').textContent = saveAvailable ? 'Your game and settings save automatically in this browser.' : 'Browser storage is unavailable. Keep this tab open to keep your match.';
   }
   const myTurn = () => !lobbyOpen && !animating && state.phase === 'playing' && state.turn === 0 && !busy && !state.players[0].passed;
   const currentPrompt = () => selected && myTurn() ? E.prompt(state, 0, selected, selections) : null;
@@ -203,21 +215,57 @@
     const overlap = count > 1 ? Math.min(cardWidth - 2, Math.max(cardWidth * .22, (count * cardWidth - hand.clientWidth + 40) / (count - 1))) : 0;
     hand.style.setProperty('--hand-overlap', `${overlap}px`);
     const rival = $('rival-hand'), backs = rival.children.length, backWidth = rival.firstElementChild?.offsetWidth || 30;
-    const rivalOverlap = backs > 1 ? Math.max(backWidth * .25, (backs * backWidth - rival.clientWidth + 12) / (backs - 1)) : 0;
+    const rivalOverlap = backs > 1 ? Math.min(backWidth - 2, Math.max(backWidth * .25, (backs * backWidth - rival.clientWidth + 12) / (backs - 1))) : 0;
     rival.style.setProperty('--rival-overlap', `${rivalOverlap}px`);
     document.querySelectorAll('.row-cards').forEach(lane => {
       const cards = lane.querySelectorAll('.board-card');
-      if (cards.length) lane.style.setProperty('--board-card-width', `${Math.max(1, Math.min(Math.min(110, lane.clientHeight - 6) * .707, (lane.clientWidth - 6 - (cards.length - 1) * 3) / cards.length))}px`);
+      if (!cards.length) return;
+      const style = getComputedStyle(lane), pixels = name => parseFloat(style[name]) || 0;
+      const height = lane.clientHeight - pixels('paddingTop') - pixels('paddingBottom');
+      const width = lane.clientWidth - pixels('paddingLeft') - pixels('paddingRight');
+      const cardWidth = Math.max(1, Math.floor(Math.min(Math.min(110, height - 2) * 877 / 1240, (width - (cards.length - 1) * pixels('columnGap')) / cards.length)));
+      lane.style.setProperty('--board-card-width', `${cardWidth}px`);
+      lane.style.setProperty('--power-badge-size', `${Math.max(10, Math.min(17, cardWidth * .5))}px`);
+      lane.style.setProperty('--power-badge-font', `${Math.max(7, Math.min(10, cardWidth * .3))}px`);
     });
+    layoutSidebar();
+  }
+  function layoutSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    if (window.matchMedia('(max-width: 980px)').matches) {
+      sidebar.style.removeProperty('--inspector-art-height'); sidebar.style.removeProperty('--history-gap'); return;
+    }
+    const inspector = $('inspector'), art = inspector.querySelector('.inspect-art'), history = document.querySelector('.history-panel');
+    const historyStyle = getComputedStyle(history), sidebarStyle = getComputedStyle(sidebar);
+    const items = [...$('history').children].filter(item => getComputedStyle(item).display !== 'none');
+    const itemHeight = items.reduce((sum, item) => sum + item.offsetHeight, 0);
+    const label = history.querySelector('.section-label');
+    const historyHeading = label.offsetHeight + (parseFloat(getComputedStyle(label).marginBottom) || 0) + (parseFloat(historyStyle.paddingTop) || 0) + (parseFloat(historyStyle.borderTopWidth) || 0);
+    const gap = parseFloat(sidebarStyle.rowGap) || 0;
+    const fixed = inspector.offsetHeight - (art?.offsetHeight || 0) + $('current-settings').offsetHeight + document.querySelector('.fair-play').offsetHeight + gap * 3;
+    if (art) {
+      const width = sidebar.clientWidth - (parseFloat(sidebarStyle.paddingLeft) || 0) - (parseFloat(sidebarStyle.paddingRight) || 0);
+      const available = sidebar.clientHeight - fixed - historyHeading - itemHeight - Math.max(0, items.length - 1) * 10;
+      const height = Math.max(30, Math.min((width - 12) * 1.414 + 10, available));
+      sidebar.style.setProperty('--inspector-art-height', `${height}px`);
+    }
+    const artHeight = art?.offsetHeight || 0;
+    const spacing = (sidebar.clientHeight - fixed - artHeight - historyHeading - itemHeight) / Math.max(1, items.length - 1);
+    sidebar.style.setProperty('--history-gap', `${Math.max(6, Math.min(36, spacing))}px`);
   }
   function render() {
     const focus = document.activeElement?.dataset.focus;
     $('round-label').textContent = `Round ${['I', 'II', 'III'][state.round - 1]} / III`;
     $('deck-count').textContent = `${state.deck.length} in shared deck`;
+    $('current-settings').replaceChildren(document.createTextNode(`CPU · ${LEVEL_NAMES[level]}`), node('span', '', 'Settings →'));
+    audio.setBattle(!lobbyOpen && state.phase === 'playing');
     [0, 1].forEach(p => {
       const prefix = p === 0 ? 'human' : 'cpu', player = state.players[p];
       $(`${prefix}-score`).textContent = E.score(state, p);
       $(`${prefix}-meta`).textContent = `${player.hand.length} cards in hand${player.passed ? ' · Passed' : ''}`;
+      const panel = document.querySelector(`.player-panel.${p === 0 ? 'human' : 'opponent'}`);
+      panel.classList.toggle('active-turn', !lobbyOpen && state.phase === 'playing' && state.turn === p && !player.passed);
+      panel.classList.toggle('has-passed', player.passed);
       const wins = $(`${prefix}-wins`); wins.replaceChildren(); wins.setAttribute('aria-label', `${player.wins} of 2 round wins`);
       wins.append(node('span', 'win-count', `${player.wins} / 2 wins`));
       for (let i = 0; i < 2; i++) wins.append(node('span', i < player.wins ? 'won' : '', '◆'));
@@ -239,6 +287,8 @@
     else if (selected) banner = currentPrompt()?.kind === 'choice' ? 'Choose your targets in the window, or cancel this play.' : 'Review your card, then commit your play.';
     else banner = state.players[1].passed ? 'The rival has passed. Play on, or pass to settle the round.' : 'Your move. Play one card, or pass.';
     $('turn-banner').textContent = banner; $('turn-banner').classList.toggle('cpu-thinking', busy);
+    $('turn-banner').classList.toggle('your-turn', myTurn());
+    $('turn-banner').classList.toggle('rival-turn', !lobbyOpen && state.phase === 'playing' && state.turn === 1);
     renderField();
     const hand = $('hand'), scroll = hand.scrollLeft, sort = $('sort-hand').value;
     hand.replaceChildren();
@@ -277,10 +327,12 @@
   }
   async function presentMove(actor, move) {
     const before = state, snapshot = FX.capture(), next = E.play(state, actor, move), ticket = ++presentation;
+    // Persist the committed move before its reveal, so refresh cannot undo it.
+    pendingState = next; save();
     animating = true; resetSelection(); inspected = move.card || state.lastCard?.id; render();
     try { if (move.card) snapshot.played = await FX.showPlayed(move.card, actor, snapshot); } catch (_) { FX.cancel(); }
     if (ticket !== presentation) return;
-    state = next; save(); render();
+    state = next; pendingState = null; save(); render();
     try { await FX.transition(before, next, snapshot, actor, move); } catch (_) { FX.cancel(); }
     if (ticket !== presentation) return;
     animating = false; busy = false; render(); if (actor === 0) mobileFocus('turn-banner'); tick();
@@ -308,7 +360,7 @@
       if (location.protocol === 'file:' || typeof Worker === 'undefined') { fallbackCPU(view, token); return; }
       try {
         if (!worker) {
-          worker = new Worker('cpu-worker.js');
+          worker = new Worker('cpu-worker.js?v=settings1');
           worker.onmessage = event => {
             if (event.data.job !== job) return;
             if (event.data.error) { worker.terminate(); worker = null; fallbackCPU(E.publicView(state, 1), job); }
@@ -322,16 +374,22 @@
   }
   function newMatch() {
     job++; presentation++; FX.cancel(); worker?.terminate(); worker = null; busy = false; animating = false;
-    state = E.newMatch(0); resetSelection(); inspected = null; render(); showLobby(false);
+    pendingState = null; clearTimeout(coinTimer); coinStarter = null;
+    try { localStorage.removeItem(SAVE_KEY); } catch (_) { saveAvailable = false; }
+    state = E.newMatch(0, nextOptions); resetSelection(); inspected = null; showLobby();
   }
-  function showLobby(resume) {
-    lobbyOpen = true; $('begin-button').disabled = false; $('resume-button').disabled = false; $('resume-button').hidden = !resume; $('welcome-music').checked = audio.getSettings().music;
-    if (resume) $('resume-button').textContent = `Resume saved match · Round ${state.round}`;
+  function showLobby() {
+    lobbyOpen = true; $('begin-button').disabled = false; $('welcome-music').checked = audio.getSettings().music;
+    syncWelcome();
     render(); $('welcome-dialog').showModal();
+  }
+  function syncWelcome() {
+    $('welcome-hand-size').textContent = `${nextOptions.handSize} cards each.`;
+    $('welcome-deck-size').textContent = E.cardPool(nextOptions).length;
   }
   async function flipCoin() {
     if (!lobbyOpen || $('begin-button').disabled) return;
-    $('begin-button').disabled = true; $('resume-button').disabled = true;
+    $('begin-button').disabled = true;
     await audio.configure({ music: $('welcome-music').checked }); audio.play('coin');
     $('welcome-dialog').close(); coinStarter = Math.random() < .5 ? 0 : 1;
     const coin = $('coin'); coin.classList.remove('flipping', 'settled'); coin.style.setProperty('--coin-turn', `${1800 + (coinStarter === 1 ? 180 : 0)}deg`);
@@ -370,7 +428,7 @@
     const root = openDialog('How to play');
     const blocks = [
       ['Win the match', 'Win two rounds. There are up to three rounds. Highest field power wins a round after both players pass. A tie awards both players a round win; reaching two together draws the match.'],
-      ['One deck. Fifteen cards.', 'The shared deck has one copy of each of the 62 cards. Each player starts with 15. Your hand carries across rounds; there is no between-round draw. Starting player is random, then alternates each round.'],
+      ['One deck. One hand.', 'The default game uses all 62 unique cards and 15 starting cards per player. Settings lets you change the starting hand size and include or exclude Omens and Spells for your next game. Your hand carries across rounds; there is no between-round draw. A coin flip chooses the starting player, then the starter alternates each round.'],
       ['Play or pass', 'Play one card on your turn, or pass. Passing ends your participation for that entire round. Your opponent may continue playing until they also pass. Patience spends one turn without passing.'],
       ['Three rows', 'Units enter their matching Combat, Ranged or Siege row. Infiltration units enter the enemy’s matching row and draw two cards for the player who played them. This includes Assassin, The Spy and Mechanical Men.'],
       ['Spells, Omens & destruction', 'Spells resolve immediately and go to the bottom of the shared deck. Omens remain on their chosen row or in the middle as weather. Destroyed cards go to the pile of the field they were on. Middle Omens go to the player who played them. All remaining field cards clear at round end, including protected cards.'],
@@ -378,7 +436,7 @@
       ['Ties & protected targets', 'Death Gaze and Convert choose one tied target. Weakest Link chooses between ties to destroy at most three unprotected units on each side. Pridefall destroys the highest-power unprotected units on each side, including all ties. Protection is checked before a destruction event removes any cards.'],
       ['Card abilities', 'Target counts every friendly Ranged unit, including itself. Stone Wall protects all friendly Siege units, including itself. Sacrifice destroys one friendly unit and returns up to two destroyed units to your hand; it does not swap a unit into play or trigger its ability. Dread blocks cards entering its row, including moves through Convert.'],
       ['No targets', 'Resolve as much of a card as possible. No-target effects do nothing. You may play a Spell or unit whose ability has no target, but Dread still prevents adding a card to a blocked row. If the shared deck is empty, draw nothing.'],
-      ['Controls & saving', 'Choose Begin game and flip the coin to decide who starts. A saved match can be resumed without another flip. Hover or focus a hand card to lift it; select it, choose targets in the modal and click Play. Cancel or Escape abandons the play before any cards move. Each played card is revealed in the centre before resolving. The rival’s hand stays face down. Round results remain beside the scores. Pass opens a confirmation window. Click the visible destroyed-card stacks to browse either pile without losing your selection. Weather cards appear between the two fields. Audio controls offer optional music and sound effects. Escape closes dialogs or cancels card selection. Matches save automatically when storage is available.']
+      ['Controls & saving', 'Choose Begin game and flip the coin to decide who starts. Refreshing the page restores your saved match automatically, without another coin flip. Reset game clears the saved match after confirmation and returns to Begin game. Hover or focus a hand card to lift it; select it, choose targets in the modal and click Play. Cancel or Escape abandons the play before any cards move. Each played card is revealed in the centre before resolving. The rival’s hand stays face down. Round results remain beside the scores. Pass opens a confirmation window. Click the visible destroyed-card stacks to browse either pile without losing your selection. Weather cards appear between the two fields. Settings includes CPU level, starting hand size, card types, music and sound effects. Music is enabled by default, with a battle theme during play. Escape closes dialogs or cancels card selection. Matches save automatically when storage is available.']
     ];
     blocks.forEach(([title, text]) => { const section = node('section', 'rule-block'); section.append(node('h3', '', title), node('p', '', text)); root.append(section); });
     const link = node('a', 'rules-doc', 'Open the full rules document ↗'); link.href = RULES_URL; link.target = '_blank'; link.rel = 'noopener'; root.append(link);
@@ -414,8 +472,6 @@
   $('cancel-pass').addEventListener('click', () => $('pass-dialog').close());
   $('confirm-pass').addEventListener('click', () => { $('pass-dialog').close(); commit({ pass: true }); });
   $('sort-hand').addEventListener('change', render);
-  $('difficulty').value = level;
-  $('difficulty').addEventListener('change', () => { level = $('difficulty').value; save(); });
   $('rules-button').addEventListener('click', showRules);
   $('collection-button').addEventListener('click', showCollection);
   $('human-grave').addEventListener('click', () => showGrave(0));
@@ -426,29 +482,51 @@
   $('confirm-new').addEventListener('click', () => { $('confirm-dialog').close(); newMatch(); });
   $('close-content').addEventListener('click', () => $('content-dialog').close());
   $('begin-button').addEventListener('click', flipCoin);
-  $('resume-button').addEventListener('click', () => { lobbyOpen = false; $('welcome-dialog').close(); audio.unlock(); render(); tick(); });
-  $('start-round-button').addEventListener('click', () => { if (coinStarter === null || $('start-round-button').disabled) return; state = E.newMatch(coinStarter); coinStarter = null; lobbyOpen = false; $('coin-dialog').close(); resetSelection(); inspected = null; save(); render(); tick(); });
+  $('start-round-button').addEventListener('click', () => { if (coinStarter === null || $('start-round-button').disabled) return; state = E.newMatch(coinStarter, nextOptions); coinStarter = null; lobbyOpen = false; $('coin-dialog').close(); resetSelection(); inspected = null; save(); render(); tick(); });
   $('welcome-dialog').addEventListener('cancel', event => event.preventDefault());
   $('coin-dialog').addEventListener('cancel', event => event.preventDefault());
   $('choice-dialog').addEventListener('cancel', event => { event.preventDefault(); resetSelection(); render(); });
-  function syncAudio() {
+  function openSettings() {
     const settings = audio.getSettings();
+    $('difficulty').value = level;
+    $('starting-hand-size').value = nextOptions.handSize;
+    $('include-omens').checked = nextOptions.includeOmens; $('include-spells').checked = nextOptions.includeSpells;
     $('music-enabled').checked = settings.music; $('effects-enabled').checked = settings.effects;
     $('music-volume').value = Math.round(settings.musicVolume * 100); $('effects-volume').value = Math.round(settings.effectsVolume * 100);
     $('music-volume-value').textContent = `${$('music-volume').value}%`; $('effects-volume-value').textContent = `${$('effects-volume').value}%`;
-    if (!audio.available) { $('audio-note').textContent = 'This browser does not provide Web Audio. You can still play with sound off.'; ['music-enabled', 'effects-enabled', 'music-volume', 'effects-volume', 'preview-audio'].forEach(id => $(id).disabled = true); }
+    if (!audio.available) { $('audio-note').textContent = 'This browser does not provide Web Audio. You can still play with sound off.'; ['music-enabled', 'effects-enabled', 'music-volume', 'effects-volume'].forEach(id => $(id).disabled = true); }
+    syncDeckSettings(); $('settings-dialog').showModal();
   }
-  $('audio-button').addEventListener('click', () => { syncAudio(); $('audio-dialog').showModal(); });
-  $('close-audio').addEventListener('click', () => $('audio-dialog').close());
-  $('music-enabled').addEventListener('change', () => audio.configure({ music: $('music-enabled').checked }));
-  $('effects-enabled').addEventListener('change', () => audio.configure({ effects: $('effects-enabled').checked }));
-  $('music-volume').addEventListener('input', () => { $('music-volume-value').textContent = `${$('music-volume').value}%`; audio.configure({ musicVolume: Number($('music-volume').value) / 100 }); });
-  $('effects-volume').addEventListener('input', () => { $('effects-volume-value').textContent = `${$('effects-volume').value}%`; audio.configure({ effectsVolume: Number($('effects-volume').value) / 100 }); });
-  $('preview-audio').addEventListener('click', async () => { await audio.unlock(); audio.play('sanctuary'); });
+  function syncDeckSettings() {
+    const pool = E.cardPool({ includeOmens: $('include-omens').checked, includeSpells: $('include-spells').checked });
+    const maximum = Math.floor(pool.length / 2), input = $('starting-hand-size'); input.max = maximum;
+    if (Number(input.value) > maximum) input.value = maximum;
+    $('deck-settings-note').textContent = `${pool.length} cards in the shared deck. Choose 1–${maximum} starting cards per player.`;
+  }
+  ['settings-button', 'current-settings', 'welcome-settings'].forEach(id => $(id).addEventListener('click', openSettings));
+  ['close-settings', 'cancel-settings'].forEach(id => $(id).addEventListener('click', () => $('settings-dialog').close()));
+  ['include-omens', 'include-spells'].forEach(id => $(id).addEventListener('change', syncDeckSettings));
+  $('music-volume').addEventListener('input', () => { $('music-volume-value').textContent = `${$('music-volume').value}%`; });
+  $('effects-volume').addEventListener('input', () => { $('effects-volume-value').textContent = `${$('effects-volume').value}%`; });
+  $('settings-form').addEventListener('submit', event => {
+    event.preventDefault();
+    nextOptions = E.matchOptions({ handSize: Number($('starting-hand-size').value), includeOmens: $('include-omens').checked, includeSpells: $('include-spells').checked });
+    level = $('difficulty').value;
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ options: nextOptions, level })); } catch (_) { /* In-memory settings still work. */ }
+    audio.configure({ music: $('music-enabled').checked, effects: $('effects-enabled').checked, musicVolume: Number($('music-volume').value) / 100, effectsVolume: Number($('effects-volume').value) / 100 });
+    $('settings-dialog').close(); $('welcome-music').checked = $('music-enabled').checked; syncWelcome();
+    if (lobbyOpen) state = E.newMatch(0, nextOptions); else save();
+    render();
+  });
   document.addEventListener('pointerdown', () => audio.unlock(), { passive: true });
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && !document.querySelector('dialog[open]')) { resetSelection(); render(); } });
   if (typeof ResizeObserver !== 'undefined') {
-    const resize = new ResizeObserver(layoutCards); resize.observe($('hand')); resize.observe($('battlefield')); resize.observe($('rival-hand'));
+    const resize = new ResizeObserver(layoutCards); resize.observe($('hand')); resize.observe($('battlefield')); resize.observe($('rival-hand')); resize.observe(document.querySelector('.sidebar'));
   } else window.addEventListener('resize', layoutCards);
-  render(); showLobby(loaded && state.phase !== 'gameOver');
+  window.addEventListener('pagehide', () => { if (!lobbyOpen) save(); });
+  if (loaded) {
+    lobbyOpen = false; render();
+    $('storage-note').textContent = 'Saved match restored. Your progress saves automatically in this browser.';
+    tick();
+  } else showLobby();
 })();

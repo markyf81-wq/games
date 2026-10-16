@@ -50,11 +50,19 @@ window.FKEngine = (() => {
     }
     return result;
   }
-  function newMatch(starter = Math.random() < .5 ? 0 : 1) {
-    const deck = shuffle(IDS);
-    const players = [0, 1].map(() => ({ hand: deck.splice(0, 15), rows: emptyRows(), grave: [], wins: 0, passed: false }));
-    const s = { version: VERSION, rules: 'printed-v1', players, deck, weather: [], knownHands: [[], []], round: 1, starter, turn: starter, phase: 'playing', rounds: [], log: [], lastCard: null };
-    log(s, 'One shared deck. Fifteen cards each. First to two round wins.');
+  function cardPool(options = {}) {
+    return IDS.filter(id => (options.includeOmens !== false || C[id].type !== 'omen') && (options.includeSpells !== false || C[id].type !== 'spell'));
+  }
+  function matchOptions(options = {}) {
+    const includeOmens = options.includeOmens !== false, includeSpells = options.includeSpells !== false;
+    const maximum = Math.floor(cardPool({ includeOmens, includeSpells }).length / 2);
+    return { handSize: Math.max(1, Math.min(maximum, Number.isInteger(options.handSize) ? options.handSize : 15)), includeOmens, includeSpells };
+  }
+  function newMatch(starter = Math.random() < .5 ? 0 : 1, settings = {}) {
+    const options = matchOptions(settings), deck = shuffle(cardPool(options));
+    const players = [0, 1].map(() => ({ hand: deck.splice(0, options.handSize), rows: emptyRows(), grave: [], wins: 0, passed: false }));
+    const s = { version: VERSION, rules: 'printed-v1', options, players, deck, weather: [], knownHands: [[], []], round: 1, starter, turn: starter, phase: 'playing', rounds: [], log: [], lastCard: null };
+    log(s, `One shared deck. ${options.handSize} cards each. First to two round wins.`);
     log(s, `${starter === 0 ? 'You take' : 'The CPU takes'} the first turn.`);
     return s;
   }
@@ -113,7 +121,7 @@ window.FKEngine = (() => {
     function pick(key, opts, count, title) {
       count = Math.min(count, opts.length);
       if (count === 0) return [];
-      if (opts.length === count) return opts.map(o => o.value);
+      // Nonempty selection steps always need an explicit choice, even if forced.
       const values = selections[key];
       if (Array.isArray(values) && values.length === count && new Set(values).size === count && values.every(v => opts.some(o => o.value === v))) return values;
       waiting = { kind: 'choice', key, title, options: opts, count };
@@ -130,11 +138,11 @@ window.FKEngine = (() => {
       } else if (c.ability === 'deathGaze') {
         const targets = rowUnits(temp, other(actor), 'ranged').filter(id => !protectedFrom(temp, id));
         const highest = Math.max(...targets.map(id => power(temp, id)));
-        a.kill = pick('kill', targets.filter(id => power(temp, id) === highest).map(option), 1, 'Choose a tied highest-power enemy Ranged unit');
+        a.kill = pick('kill', targets.filter(id => power(temp, id) === highest).map(option), 1, 'Choose a highest-power enemy Ranged unit');
       } else if (c.ability === 'convert') {
         const targets = !blocked(temp, actor, 'combat') && !blocked(temp, other(actor), 'combat') ? rowUnits(temp, other(actor), 'combat') : [];
         const lowest = Math.min(...targets.map(id => power(temp, id)));
-        a.convert = pick('convert', targets.filter(id => power(temp, id) === lowest).map(option), 1, 'Choose a tied lowest-power enemy Combat unit');
+        a.convert = pick('convert', targets.filter(id => power(temp, id) === lowest).map(option), 1, 'Choose a lowest-power enemy Combat unit');
       }
       if (waiting) return waiting;
       a.destination = dest;
@@ -148,10 +156,10 @@ window.FKEngine = (() => {
       a.decoy = pick('decoy', units(state, actor).filter(id => !has(state, actor, C[id].row, 'omen-sanctuary')).map(option), 1, 'Return one of your units to your hand');
       if (waiting) return waiting;
     } else if (c.effect === 'sacrifice') {
-      a.sacrifice = pick('sacrifice', units(state, actor).filter(id => !protectedFrom(state, id, true)).map(option), 1, 'Choose a friendly unit to destroy');
+      a.sacrifice = pick('sacrifice', units(state, actor).filter(id => !protectedFrom(state, id, true)).map(option), 1, 'Step 1: Choose a friendly unit to destroy');
       if (waiting) return waiting;
       const grave = [...state.players[actor].grave.filter(unit), ...a.sacrifice];
-      a.recover = pick('recover', grave.map(option), 2, 'Choose up to two destroyed units to return to your hand');
+      a.recover = pick('recover', grave.map(option), 2, 'Step 2: Choose up to two destroyed units to return to your hand');
       if (waiting) return waiting;
     } else if (c.effect === 'weakest-link') {
       a.weakest = [];
@@ -162,7 +170,7 @@ window.FKEngine = (() => {
         const cutoff = power(state, targets[count - 1]);
         const fixed = targets.filter(id => power(state, id) < cutoff);
         const tied = targets.filter(id => power(state, id) === cutoff);
-        const picked = pick(`weakest${p}`, tied.map(option), count - fixed.length, `Choose ${count - fixed.length} tied ${p === actor ? 'friendly' : 'enemy'} unit${count - fixed.length === 1 ? '' : 's'} to destroy`);
+        const picked = pick(`weakest${p}`, tied.map(option), count - fixed.length, `Choose ${count - fixed.length} ${p === actor ? 'friendly' : 'enemy'} unit${count - fixed.length === 1 ? '' : 's'} to destroy`);
         if (waiting) return waiting;
         a.weakest.push(...fixed, ...picked);
       }
@@ -269,6 +277,7 @@ window.FKEngine = (() => {
   }
   function validState(s) {
     if (s?.version !== VERSION || s.rules !== 'printed-v1' || !['playing', 'roundEnd', 'gameOver'].includes(s.phase) || ![0, 1].includes(s.turn) || ![0, 1].includes(s.starter) || !Number.isInteger(s.round) || s.round < 1 || s.round > 3 || !Array.isArray(s.players) || s.players.length !== 2 || !Array.isArray(s.weather) || !Array.isArray(s.deck) || !Array.isArray(s.log) || !Array.isArray(s.rounds)) return false;
+    if (s.options !== undefined && (!s.options || typeof s.options.includeOmens !== 'boolean' || typeof s.options.includeSpells !== 'boolean' || !Number.isInteger(s.options.handSize) || s.options.handSize < 1 || s.options.handSize > Math.floor(cardPool(s.options).length / 2))) return false;
     const all = s.deck.slice();
     for (const p of s.players) {
       if (!Array.isArray(p.hand) || !Array.isArray(p.grave) || !p.rows || !Number.isInteger(p.wins) || p.wins < 0 || p.wins > 2 || typeof p.passed !== 'boolean') return false;
@@ -281,7 +290,8 @@ window.FKEngine = (() => {
     if (s.knownHands !== undefined && (!Array.isArray(s.knownHands) || s.knownHands.length !== 2 || s.knownHands.some((hand, p) => !Array.isArray(hand) || new Set(hand).size !== hand.length || hand.some(id => !s.players[p].hand.includes(id))))) return false;
     if (s.weather.some(w => !C[w.id]?.weather || ![0, 1].includes(w.owner))) return false;
     all.push(...s.weather.map(w => w.id));
-    return all.length === IDS.length && new Set(all).size === IDS.length && all.every(id => C[id]);
+    const pool = cardPool(s.options), allowed = new Set(pool);
+    return all.length === pool.length && new Set(all).size === pool.length && all.every(id => allowed.has(id));
   }
-  return Object.freeze({ VERSION, clone, newMatch, nextRound, prompt, play, actions, publicView, validState, score, rowScore, power, protectedFrom, blocked, locate, units, rowUnits, shuffle });
+  return Object.freeze({ VERSION, clone, cardPool, matchOptions, newMatch, nextRound, prompt, play, actions, publicView, validState, score, rowScore, power, protectedFrom, blocked, locate, units, rowUnits, shuffle });
 })();

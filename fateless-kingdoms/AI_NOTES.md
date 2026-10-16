@@ -13,13 +13,13 @@ These support simulation and uncertainty-aware planning as useful directions. We
 ## Current implementation
 
 1. The app removes the human hand and real deck order before dispatching a CPU job. Only their counts remain.
-2. Publicly returned/recovered cards are remembered. Remaining unseen cards are sampled without replacement into plausible opposing hands and deck orders. A shared, one-copy deck makes this simpler than guessing collectible deck archetypes.
+2. Publicly returned/recovered cards are remembered. Remaining unseen cards from the configured match pool are sampled without replacement into plausible opposing hands and deck orders. A shared, one-copy deck makes this simpler than guessing collectible deck archetypes.
 3. Enumerate legal plays, row placements and target choices through the same rules engine used by the human. Cap alternative CPU target combinations for responsiveness; human selection is not capped.
 4. Shortlist promising moves while retaining a representative of each playable card and Pass.
 5. Evaluate those candidates against the same sampled deals, using greedy alternating continuations. Score match outcomes first, then round wins, remaining hand value and field advantage. This is a heuristic approximation, not an optimal solver.
 6. Pass immediately to secure an already-won round after the human passes. A separate conservative concession rule can save cards in a costly round when losing it would not end the match.
 
-Budgets: Casual uses 2 sampled deals, 2 continuation turns and modest selection noise; Tactician uses 5 samples and 4 turns; Strategist uses 10 samples and 6 turns with no rating noise. Candidate breadth also increases. These budgets define distinct behavior but playing strength still needs human feedback and measurement; no win-rate guarantee is implied.
+Budgets: Beginner uses 2 sampled deals, 2 continuation turns and modest selection noise; Intermediate uses 5 samples and 4 turns; Difficult uses 10 samples and 6 turns with no rating noise. Candidate breadth also increases. The internal keys casual/tactician/strategist remain unchanged for saved-game compatibility. These budgets define distinct behavior but playing strength still needs human feedback and measurement; no win-rate guarantee is implied.
 
 CPU work runs in a Web Worker over HTTP, with a yielding fallback when opened directly from disk. Everything runs locally. No chat model, cloud requests, subscription or live training is used.
 
