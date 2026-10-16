@@ -59,7 +59,7 @@ Players take turns. On your turn, choose one:
 * Play 1 card  
 * Pass
 
-You may pass whether you are winning or losing.
+You may pass whether you are winning or losing. If your hand is empty after resolving all effects of a play, you automatically pass for the round. This also applies when a new round starts with no cards in hand. If you still hold any cards, do not automatically pass, even when those cards cannot currently be played.
 
 If you pass, you cannot play again that round.  
 The other player keeps taking turns until they also pass.

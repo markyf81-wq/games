@@ -6,13 +6,13 @@
   <meta name="theme-color" content="#101b18">
   <meta name="description" content="A game of kingdoms, cunning and knowing when to walk away. Play Fateless Kingdoms against a CPU opponent.">
   <title>Fateless Kingdoms</title>
-  <link rel="stylesheet" href="styles.css?v=labels25">
+  <link rel="stylesheet" href="styles.css?v=intro33">
   <script defer src="cards.js?v=sacrifice20"></script>
-  <script defer src="engine.js?v=sacrifice20"></script>
+  <script defer src="engine.js?v=auto-pass27"></script>
   <script defer src="cpu.js?v=settings1"></script>
-  <script defer src="audio.js?v=battle2"></script>
-  <script defer src="effects.js?v=row-weather13"></script>
-  <script defer src="game.js?v=round-results26"></script>
+  <script defer src="audio.js?v=results34"></script>
+  <script defer src="effects.js?v=results34"></script>
+  <script defer src="game.js?v=results34"></script>
 </head>
 <body>
   <header class="site-header">
@@ -76,11 +76,12 @@
         </fieldset>
         <fieldset class="settings-group"><legend>Sound &amp; music</legend>
           <p id="storage-note" class="setting-help">Your game and settings save automatically in this browser.</p>
-          <p id="audio-note" class="setting-help">War drums, driving strings and horns during battle. A calmer theme between games.</p>
+          <p id="audio-note" class="setting-help">A dark cinematic battle soundtrack and a quieter lobby theme. Short victory, defeat or draw music plays at results.</p>
           <label class="audio-toggle"><input id="music-enabled" type="checkbox" checked> Background music</label>
           <label class="audio-volume" for="music-volume">Music volume <output id="music-volume-value">25%</output><input id="music-volume" type="range" min="0" max="100" value="25"></label>
           <label class="audio-toggle"><input id="effects-enabled" type="checkbox" checked> Sound effects</label>
           <label class="audio-volume" for="effects-volume">Effects volume <output id="effects-volume-value">60%</output><input id="effects-volume" type="range" min="0" max="100" value="60"></label>
+          <details class="music-credits"><summary>Music credits</summary><p><a href="https://www.scottbuckley.com.au/library/balefire/" target="_blank" rel="noopener">Balefire</a>, <a href="https://www.scottbuckley.com.au/library/legionnaire-2022/" target="_blank" rel="noopener">Legionnaire (2022 Remaster)</a> and <a href="https://www.scottbuckley.com.au/library/chronicle/" target="_blank" rel="noopener">Chronicle</a> by <a href="https://www.scottbuckley.com.au/" target="_blank" rel="noopener">Scott Buckley</a>, released under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. Re-encoded for web playback; short excerpts are used for results.</p></details>
         </fieldset>
       </div>
       <div class="settings-actions"><button id="cancel-settings" class="quiet" type="button">Cancel</button><button class="primary" type="submit">Save settings</button></div>

@@ -6,7 +6,6 @@
   const SETTINGS_KEY = 'fateless-kingdoms.settings.v1';
   const LEVEL_NAMES = { casual: 'Beginner', tactician: 'Intermediate', strategist: 'Difficult' };
   const FX = window.FKEffects, audio = window.FKAudio;
-  const RULES_URL = 'https://docs.google.com/document/d/1_rJXssMNrrnKWMbWg0otcn4MHUxq_NDlfLKYHsIC2Lc/edit';
   let state, level = 'tactician', selected = null, inspected = null, selections = {}, picked = [], busy = false, worker = null, job = 0, saveAvailable = true;
   let lobbyOpen = true, animating = false, presentation = 0, coinStarter = null, coinTimer = null;
   let pendingState = null;
@@ -130,7 +129,7 @@
     ['dread', 'war-chant', 'ironward', 'sanctuary'].forEach(effect => { if (rowCards.includes(`omen-${effect}`) && !(warded && effect === 'war-chant')) effects.append(node('span', `row-effect effect-${effect}`)); });
     if (rowCards.includes('siege-0')) effects.append(node('span', 'row-effect effect-shielded'));
     const meta = node('div', 'row-meta');
-    meta.append(node('span', 'row-icon', { combat: '⚔', ranged: '➶', siege: '♜' }[row]), node('span', 'row-name', row), node('strong', 'row-score', String(E.rowScore(state, p, row))));
+    meta.append(node('span', 'row-name', row), node('strong', 'row-score', String(E.rowScore(state, p, row))));
     rowNode.append(meta);
     const lane = node('div', 'row-cards');
     lane.append(effects);
@@ -188,6 +187,7 @@
       row.append(heading, node('td', '', String(result.scores[0])), node('td', '', String(result.scores[1])), node('td', '', result.winner === null ? 'Draw' : result.winner === 0 ? 'You won' : 'Rival won'));
       rounds.append(row);
     });
+    if (shownResult !== key) audio.playResult(outcome);
     shownResult = key; if (!dialog.open) dialog.showModal();
   }
   function renderInspector() {
@@ -208,7 +208,6 @@
       return;
     }
     const c = C[id];
-    const heading = node('div', 'section-label'); heading.append(node('span', '', selected ? 'Your next move' : 'Card details'), node('span', '', c.type === 'unit' ? c.row : c.type)); root.append(heading);
     const art = button('', 'inspect-art'); art.dataset.zoom = id; art.setAttribute('aria-label', `Enlarge ${c.name}`);
     const img = node('img'); img.src = c.image; img.alt = c.name; art.append(img); root.append(art);
     root.append(node('h2', '', c.name));
@@ -383,7 +382,7 @@
     $('round-label').textContent = `Round ${['I', 'II', 'III'][state.round - 1]} / III`;
     $('deck-count').textContent = `${state.deck.length} in shared deck`;
     $('current-settings').replaceChildren(document.createTextNode(`CPU · ${LEVEL_NAMES[level]}`), node('span', '', 'Settings →'));
-    audio.setBattle(!lobbyOpen && state.phase === 'playing');
+    audio.setScene(lobbyOpen ? 'lobby' : state.phase === 'playing' ? 'battle' : 'result');
     [0, 1].forEach(p => {
       const prefix = p === 0 ? 'human' : 'cpu', player = state.players[p];
       $(`${prefix}-score`).textContent = E.score(state, p);
@@ -392,8 +391,8 @@
       panel.classList.toggle('active-turn', !lobbyOpen && state.phase === 'playing' && state.turn === p && !player.passed);
       panel.classList.toggle('has-passed', player.passed);
       const wins = $(`${prefix}-wins`); wins.replaceChildren(); wins.setAttribute('aria-label', `${player.wins} of 2 round wins`);
-      wins.append(node('span', 'win-count', `${player.wins} / 2 wins`));
-      for (let i = 0; i < 2; i++) wins.append(node('span', i < player.wins ? 'won' : '', '◆'));
+      const count = node('span', 'win-count'); count.append(node('span', 'wins-label', 'Wins'), node('b', '', `${player.wins}/2`)); wins.append(count);
+      for (let i = 0; i < 2; i++) { const slot = node('span', `win-slot${i < player.wins ? ' won' : ''}`, i < player.wins ? '✓' : String(i + 1)); slot.setAttribute('aria-hidden', 'true'); wins.append(slot); }
     });
     renderRoundTrack();
     const rival = $('rival-hand'); rival.replaceChildren();
@@ -430,7 +429,7 @@
       return rank(C[a]) - rank(C[b]) || (sort === 'type' ? C[a].name.localeCompare(C[b].name) : (C[b].power || 0) - (C[a].power || 0));
     });
     sorted.forEach((id, index) => { const b = cardButton(id, 'hand'); const offset = index - (sorted.length - 1) / 2; b.style.setProperty('--fan-angle', `${Math.max(-7, Math.min(7, offset * .8))}deg`); b.style.setProperty('--fan-y', `${Math.abs(offset) * .65}px`); b.style.zIndex = String(index + 1); b.style.setProperty('--hand-stack', String(index + 1)); hand.append(b); });
-    if (!sorted.length) hand.append(node('p', 'empty-hand', 'Your hand is empty. Pass to end your part in this round.'));
+    if (!sorted.length) hand.append(node('p', 'empty-hand', 'Your hand is empty. You automatically pass for this round.'));
     hand.scrollLeft = scroll;
     hand.setAttribute('aria-label', `Your hand, ${sorted.length} cards`);
     const resultAvailable = !lobbyOpen && !animating && ['roundEnd', 'gameOver'].includes(state.phase);
@@ -496,7 +495,10 @@
     presentMove(1, move).catch(() => { animating = false; busy = false; if (state.phase === 'playing' && state.turn === 1) presentMove(1, { pass: true }); else { render(); tick(); } });
   }
   function tick() {
-    if (lobbyOpen || animating || busy || state.phase !== 'playing' || state.turn !== 1) return;
+    if (lobbyOpen || animating || busy || state.phase !== 'playing') return;
+    const settled = E.autoPassEmptyHands(state);
+    if (settled !== state) { state = settled; resetSelection(); save(); render(); }
+    if (state.phase !== 'playing' || state.turn !== 1) return;
     busy = true; render(); const token = ++job, view = E.publicView(state, 1);
     setTimeout(() => {
       if (token !== job) return;
@@ -504,7 +506,7 @@
       if (location.protocol === 'file:' || typeof Worker === 'undefined') { fallbackCPU(view, token); return; }
       try {
         if (!worker) {
-          worker = new Worker('cpu-worker.js?v=sacrifice20');
+          worker = new Worker('cpu-worker.js?v=auto-pass27');
           worker.onmessage = event => {
             if (event.data.job !== job) return;
             if (event.data.error) { worker.terminate(); worker = null; fallbackCPU(E.publicView(state, 1), job); }
@@ -521,9 +523,12 @@
     pendingState = null; clearTimeout(coinTimer); coinStarter = null;
     $('match-result-dialog').close(); shownResult = null;
     try { localStorage.removeItem(SAVE_KEY); } catch (_) { saveAvailable = false; }
+    audio.resetMusic();
     state = E.newMatch(0, nextOptions); resetSelection(); inspected = null; showLobby();
   }
   function showLobby() {
+    const boss = C[`${ROWS[Math.floor(Math.random() * ROWS.length)]}-15`];
+    document.querySelector('.welcome-art').style.setProperty('--welcome-card', `url("${boss.image}")`);
     lobbyOpen = true; $('begin-button').disabled = false; $('welcome-music').checked = audio.getSettings().music;
     syncWelcome();
     render(); $('welcome-dialog').showModal();
@@ -584,7 +589,7 @@
     const blocks = [
       ['Win the match', 'Win two rounds. There are up to three rounds. Highest field power wins a round after both players pass. A tie awards both players a round win; reaching two together draws the match.'],
       ['One deck. One hand.', 'The default game uses all 62 unique cards and 15 starting cards per player. Settings lets you change the starting hand size and include or exclude Omens and Spells for your next game. Your hand carries across rounds; there is no between-round draw. A coin flip chooses the starting player, then the starter alternates each round.'],
-      ['Play or pass', 'Play one card on your turn, or pass. Passing ends your participation for that entire round. Your opponent may continue playing until they also pass. Patience spends one turn without passing.'],
+      ['Play or pass', 'Play one card on your turn, or pass. Passing ends your participation for that entire round. An empty hand automatically passes after all draw/recovery effects finish. Keeping any cards prevents an automatic pass, even if those cards cannot currently be played. Your opponent may continue playing until they also pass. Patience spends one turn without passing unless it leaves your hand empty.'],
       ['Three rows', 'Units enter their matching Combat, Ranged or Siege row. Infiltration units enter the enemy’s matching row and draw two cards for the player who played them. This includes Assassin, The Spy and Mechanical Men.'],
       ['Spells, Omens & destruction', 'Spells resolve immediately and go to the bottom of the shared deck. Omens remain on their chosen row or in the middle as weather. Destroyed cards go to the pile of the field they were on. Middle Omens go to the player who played them. All remaining field cards clear at round end, including protected cards.'],
       ['Power & weather', 'Recalculate unit abilities after every turn, then apply weather, then War Chant. Weather plus War Chant means 3 power, regardless of play order. Ironward makes units ignore all Omens, including beneficial War Chant. Units use the power printed on their artwork. A top-right marker shows the net power change: green +N for an increase, red −N for a reduction. No marker appears when current and printed power match. Inspect a card to see its current power and active bonus sources.'],
@@ -594,7 +599,6 @@
       ['Controls & saving', 'Choose Begin game and flip the coin to decide who starts. Refreshing the page restores your saved match automatically, without another coin flip. Reset game clears the saved match after confirmation and returns to Begin game. Hover or focus a hand card to lift it; select it, choose targets in the modal and click Play. Cancel or Escape abandons the play before any cards move. Each played card is revealed in the centre before resolving. The rival’s hand stays face down. Round results remain beside the scores. Each completed round opens the result window; Continue starts the next round, or Play again begins a fresh match after the final result. Review board keeps the field visible, and Round result or Match result beside your hand reopens the window. Pass opens a confirmation window. Click your destroyed-card stack to browse your own pile without losing your selection. The rival’s destroyed pile stays face down and shows only its card count. Weather cards appear between the two fields. Settings includes CPU level, starting hand size, card types, music and sound effects. Music is enabled by default, with a battle theme during play. Escape closes dialogs or cancels card selection. Matches save automatically when storage is available.']
     ];
     blocks.forEach(([title, text]) => { const section = node('section', 'rule-block'); section.append(node('h3', '', title), node('p', '', text)); root.append(section); });
-    const link = node('a', 'rules-doc', 'Open the full rules document ↗'); link.href = RULES_URL; link.target = '_blank'; link.rel = 'noopener'; root.append(link);
   }
   document.addEventListener('click', event => {
     const target = event.target.closest('button'); if (!target) return;
@@ -656,7 +660,7 @@
     $('music-enabled').checked = settings.music; $('effects-enabled').checked = settings.effects;
     $('music-volume').value = Math.round(settings.musicVolume * 100); $('effects-volume').value = Math.round(settings.effectsVolume * 100);
     $('music-volume-value').textContent = `${$('music-volume').value}%`; $('effects-volume-value').textContent = `${$('effects-volume').value}%`;
-    if (!audio.available) { $('audio-note').textContent = 'This browser does not provide Web Audio. You can still play with sound off.'; ['music-enabled', 'effects-enabled', 'music-volume', 'effects-volume'].forEach(id => $(id).disabled = true); }
+    if (!audio.available) { $('audio-note').textContent = 'This browser does not provide audio playback. You can still play with sound off.'; ['music-enabled', 'effects-enabled', 'music-volume', 'effects-volume'].forEach(id => $(id).disabled = true); }
     syncDeckSettings(); $('settings-dialog').showModal();
   }
   function syncDeckSettings() {

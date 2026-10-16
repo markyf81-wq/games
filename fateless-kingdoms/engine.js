@@ -85,9 +85,23 @@ window.FKEngine = (() => {
     return victims;
   }
   function finishTurn(s, actor) {
-    if (s.players.every(p => p.passed)) return endRound(s);
     s.turn = s.players[other(actor)].passed ? actor : other(actor);
+    return settleEmptyHands(s);
+  }
+  function settleEmptyHands(s) {
+    for (let p = 0; p < 2; p++) {
+      if (!s.players[p].passed && s.players[p].hand.length === 0) {
+        s.players[p].passed = true;
+        log(s, `${p === 0 ? 'You automatically pass' : 'The CPU automatically passes'}: no cards remain in hand.`);
+      }
+    }
+    if (s.players.every(p => p.passed)) return endRound(s);
+    if (s.players[s.turn].passed) s.turn = other(s.turn);
     return s;
+  }
+  function autoPassEmptyHands(state) {
+    if (state.phase !== 'playing' || !state.players.some(p => !p.passed && p.hand.length === 0)) return state;
+    return settleEmptyHands(clone(state));
   }
   function endRound(s) {
     const scores = [score(s, 0), score(s, 1)];
@@ -110,7 +124,7 @@ window.FKEngine = (() => {
     for (const w of s.weather) s.players[w.owner].grave.push(w.id);
     s.weather = []; s.round++; s.starter = other(s.starter); s.turn = s.starter; s.phase = 'playing'; s.lastCard = null;
     log(s, `Round ${s.round}. No new cards are dealt. ${s.turn === 0 ? 'You' : 'The CPU'} start.`);
-    return s;
+    return settleEmptyHands(s);
   }
   const option = id => ({ value: id, card: id, label: C[id].name });
   function prompt(state, actor, cardId, selections = {}) {
@@ -183,7 +197,7 @@ window.FKEngine = (() => {
     const s = clone(state);
     if (proposal.pass) {
       s.players[actor].passed = true;
-      log(s, `${actor === 0 ? 'You pass' : 'The CPU passes'} at ${score(s, actor)} power.`);
+      log(s, s.players[actor].hand.length === 0 ? `${actor === 0 ? 'You automatically pass' : 'The CPU automatically passes'}: no cards remain in hand.` : `${actor === 0 ? 'You pass' : 'The CPU passes'} at ${score(s, actor)} power.`);
       return finishTurn(s, actor);
     }
     const q = prompt(state, actor, proposal.card, proposal.selections);
@@ -294,5 +308,5 @@ window.FKEngine = (() => {
     const pool = cardPool(s.options), allowed = new Set(pool);
     return all.length === pool.length && new Set(all).size === pool.length && all.every(id => allowed.has(id));
   }
-  return Object.freeze({ VERSION, clone, cardPool, matchOptions, newMatch, nextRound, prompt, play, actions, publicView, validState, score, rowScore, power, protectedFrom, blocked, locate, units, rowUnits, shuffle });
+  return Object.freeze({ VERSION, clone, cardPool, matchOptions, newMatch, nextRound, autoPassEmptyHands, prompt, play, actions, publicView, validState, score, rowScore, power, protectedFrom, blocked, locate, units, rowUnits, shuffle });
 })();

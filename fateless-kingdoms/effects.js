@@ -139,7 +139,6 @@ window.FKEffects = (() => {
     try { await Promise.all(later); } finally {
       if (token === generation) { clearTimeout(cueTimer); if (!cuePlayed) window.FKAudio.play(cue); running.forEach(a => a.cancel()); running = []; overlays.forEach(n => n.remove()); overlays = []; hidden.forEach(n => n.classList.remove('fx-hidden')); hidden = []; }
     }
-    if (before.phase === 'playing' && after.phase !== 'playing') window.FKAudio.play(after.players[0].wins > before.players[0].wins ? 'win' : 'lose');
   }
   return Object.freeze({ capture, showPlayed, transition, cancel, reduced });
 })();
