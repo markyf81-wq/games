@@ -6,19 +6,19 @@
   <meta name="theme-color" content="#101b18">
   <meta name="description" content="A game of kingdoms, cunning and knowing when to walk away. Play Fateless Kingdoms against a CPU opponent.">
   <title>Fateless Kingdoms</title>
-  <link rel="stylesheet" href="styles.css?v=mobile4">
-  <script defer src="cards.js?v=table2"></script>
-  <script defer src="engine.js?v=settings1"></script>
+  <link rel="stylesheet" href="styles.css?v=labels25">
+  <script defer src="cards.js?v=sacrifice20"></script>
+  <script defer src="engine.js?v=sacrifice20"></script>
   <script defer src="cpu.js?v=settings1"></script>
   <script defer src="audio.js?v=battle2"></script>
-  <script defer src="effects.js?v=table2"></script>
-  <script defer src="game.js?v=mobile4"></script>
+  <script defer src="effects.js?v=row-weather13"></script>
+  <script defer src="game.js?v=round-results26"></script>
 </head>
 <body>
   <header class="site-header">
     <a class="back-link" href="../index.html">← Game library</a>
     <a class="wordmark" href="index.html" aria-label="Fateless Kingdoms home"><span class="crest" aria-hidden="true">♜</span><span>FATELESS <b>KINGDOMS</b></span></a>
-    <nav aria-label="Game tools"><button id="rules-button" class="quiet">How to play</button><button id="collection-button" class="quiet">The cards</button><button id="settings-button" class="quiet">Settings</button><button id="new-button" class="quiet">Reset game</button></nav>
+    <nav aria-label="Game tools"><button id="rules-button" class="quiet">How to play</button><button id="collection-button" class="quiet">View full deck</button><button id="settings-button" class="quiet">Settings</button><button id="new-button" class="quiet">Reset game</button></nav>
   </header>
   <main class="game-layout">
     <section class="table-column" aria-label="Game table">
@@ -29,26 +29,23 @@
         <div class="player-panel opponent"><strong id="cpu-score" class="total-score">0</strong><div><h2>The rival kingdom</h2><div id="cpu-meta" class="player-meta"></div><div id="cpu-wins" class="round-wins"></div></div><span class="avatar" aria-hidden="true">♚</span></div>
         <ol id="round-track" class="round-track" aria-label="Round results"></ol>
       </section>
-      <div id="turn-banner" class="turn-banner" role="status" aria-live="polite"></div>
       <div class="battle-area">
         <section id="battlefield" class="battlefield" aria-label="Battlefield"></section>
         <aside class="pile-rail" aria-label="Destroyed card piles">
-          <button id="cpu-grave" class="grave-deck"><span class="pile-stack" aria-hidden="true"><span class="pile-rune">♜</span><img hidden alt=""><b class="pile-count">0</b></span><span class="pile-title">Rival destroyed</span><span class="pile-hint">Click to browse</span></button>
+          <div id="cpu-grave" class="grave-deck private-pile" role="img" aria-label="Rival destroyed pile, 0 cards. Contents hidden."><span class="pile-stack" aria-hidden="true"><span class="pile-rune">♜</span><b class="pile-count">0</b></span><span class="pile-title">Rival destroyed</span><span class="pile-hint">Contents hidden</span></div>
           <span class="pile-divider" aria-hidden="true">✦</span>
           <button id="human-grave" class="grave-deck"><span class="pile-stack" aria-hidden="true"><span class="pile-rune">♜</span><img hidden alt=""><b class="pile-count">0</b></span><span class="pile-title">Your destroyed</span><span class="pile-hint">Click to browse</span></button>
         </aside>
       </div>
-      <section class="hand-section" aria-labelledby="hand-title">
-        <div class="hand-heading"><div><span class="eyebrow">Make every card count</span><h2 id="hand-title">Your hand <span id="hand-count"></span></h2></div><div class="hand-tools"><label class="sr-only" for="sort-hand">Sort your hand</label><select id="sort-hand"><option value="row">By row</option><option value="power">By power</option><option value="type">By type</option></select><button id="pass-button" class="pass-button">Pass this round <span>→</span></button></div></div>
+      <section class="hand-section" aria-label="Your hand">
+        <div class="hand-heading"><div id="turn-banner" class="turn-banner" role="status" aria-live="polite"></div><div class="hand-tools"><label class="sr-only" for="sort-hand">Sort your hand</label><select id="sort-hand"><option value="row">By row</option><option value="power">By power</option><option value="type">By type</option></select><button id="pass-button" class="pass-button">Pass this round <span>→</span></button></div></div>
         <div id="hand" class="hand" role="group" aria-label="Cards in your hand"></div>
-        <p class="hand-note"><span class="hand-guidance"><span class="desktop-hint">Hover to lift a card. Select it to choose your play.</span><span class="touch-hint">Tap a card to choose your play.</span></span> <button id="browse-own-pile" class="text-button">Browse your destroyed pile</button></p>
       </section>
     </section>
     <aside class="sidebar" aria-label="Card details and battle history">
       <section id="inspector" class="inspector"></section>
-      <section class="history-panel"><div class="section-label"><span>Battle chronicle</span><span aria-hidden="true">✦</span></div><ol id="history" class="history" aria-label="Recent moves"></ol></section>
+      <section class="history-panel"><div class="section-label"><span>Battle chronicle</span><span aria-hidden="true">✦</span></div><ol id="history" class="history" aria-label="Battle chronicle, newest moves first" tabindex="0"></ol></section>
       <button id="current-settings" class="difficulty-label settings-summary" aria-label="Open game settings">CPU · Intermediate <span>Settings →</span></button>
-      <p class="fair-play">The rival knows the rules. Your hand stays hidden.</p>
     </aside>
   </main>
   <dialog id="welcome-dialog" class="welcome-dialog"><div class="welcome-art" aria-hidden="true"></div><div class="welcome-copy"><span class="eyebrow">Your kingdom. Your last card.</span><h2>Victory takes<br>more than power.</h2><p><span id="welcome-hand-size">15 cards each.</span> Three rows. Up to three rounds.<br>Know when to fight—and when to let a battle go.</p><div class="welcome-facts"><span>♜ <b id="welcome-deck-size">62</b> unique cards</span><span>⚔ <b>1</b> cunning rival</span></div><label class="welcome-music"><input id="welcome-music" type="checkbox" checked> Play background music</label><button id="welcome-settings" class="text-button">Game settings</button><button id="begin-button" class="primary">Begin game <span>→</span></button><p class="welcome-footnote">A coin flip decides who takes the first turn.</p></div></dialog>
@@ -57,6 +54,13 @@
   <dialog id="choice-dialog" class="choice-dialog" aria-labelledby="choice-card-name"><div class="dialog-heading"><div><span class="eyebrow">Your next move</span><h2 id="choice-card-name"></h2></div><button class="icon-button" data-action="cancel-selection" aria-label="Cancel this play">×</button></div><div id="choice-body" class="choice-body"></div><div class="choice-actions"><button class="quiet" data-action="cancel-selection">Cancel</button><div id="choice-confirm"></div></div></dialog>
   <dialog id="confirm-dialog" class="confirm-dialog"><span class="eyebrow">A new beginning</span><h2>Reset this game?</h2><p>This clears your saved match from this browser and returns to Begin game for a fresh shuffle and coin flip.</p><div class="dialog-actions"><button id="cancel-new" class="quiet">Keep playing</button><button id="confirm-new" class="primary">Reset game</button></div></dialog>
   <dialog id="pass-dialog" class="confirm-dialog"><span class="eyebrow">Know when to walk away</span><h2>Pass this round?</h2><p id="pass-summary"></p><p>You cannot play again until the next round. The rival may keep playing until it also passes.</p><div class="dialog-actions"><button id="cancel-pass" class="quiet">Keep playing</button><button id="confirm-pass" class="primary">Pass this round</button></div></dialog>
+  <dialog id="match-result-dialog" class="match-result-dialog" aria-labelledby="match-result-title" aria-describedby="match-result-message">
+    <span id="match-result-context" class="eyebrow">Match complete</span><div id="match-result-crest" class="match-result-crest" aria-hidden="true"></div>
+    <h2 id="match-result-title"></h2><p id="match-result-message"></p>
+    <div class="match-result-score"><div><span>Your kingdom</span><strong id="match-result-human-wins"></strong></div><span>Rounds won</span><div><span>Rival kingdom</span><strong id="match-result-cpu-wins"></strong></div></div>
+    <table class="match-result-rounds"><caption class="sr-only">Round scores</caption><thead><tr><th scope="col">Round</th><th scope="col">You</th><th scope="col">Rival</th><th scope="col">Result</th></tr></thead><tbody id="match-result-rounds"></tbody></table>
+    <div class="dialog-actions"><button id="review-match" class="quiet">Review board</button><button id="replay-match" class="primary" autofocus>Play again →</button></div>
+  </dialog>
   <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
     <div class="dialog-heading"><div><span class="eyebrow">Make the battle yours</span><h2 id="settings-title">Game settings</h2></div><button id="close-settings" class="icon-button" aria-label="Cancel settings">×</button></div>
     <form id="settings-form">

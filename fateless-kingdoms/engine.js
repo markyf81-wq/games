@@ -158,8 +158,9 @@ window.FKEngine = (() => {
     } else if (c.effect === 'sacrifice') {
       a.sacrifice = pick('sacrifice', units(state, actor).filter(id => !protectedFrom(state, id, true)).map(option), 1, 'Step 1: Choose a friendly unit to destroy');
       if (waiting) return waiting;
-      const grave = [...state.players[actor].grave.filter(unit), ...a.sacrifice];
-      a.recover = pick('recover', grave.map(option), 2, 'Step 2: Choose up to two destroyed units to return to your hand');
+      // Recovery uses the pile before this play; its sacrifice cannot immediately return.
+      const grave = state.players[actor].grave.filter(unit);
+      a.recover = pick('recover', grave.map(option), 2, 'Step 2: Choose up to two previously destroyed units to return to your hand');
       if (waiting) return waiting;
     } else if (c.effect === 'weakest-link') {
       a.weakest = [];

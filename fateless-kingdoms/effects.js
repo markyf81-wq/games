@@ -8,7 +8,10 @@ window.FKEffects = (() => {
   const viable = r => r && r.width > 0 && r.height > 0 && r.left + r.width > 0 && r.left < window.innerWidth && r.top + r.height > 0 && r.top < window.innerHeight;
   function capture() {
     const field = new Map(), hand = new Map();
-    document.querySelectorAll('#battlefield [data-card]').forEach(el => field.set(el.dataset.card, { rect: bounds(el), element: el }));
+    document.querySelectorAll('#battlefield [data-card]').forEach(el => {
+      const rect = bounds(el);
+      if (viable(rect)) field.set(el.dataset.card, { rect, element: el });
+    });
     document.querySelectorAll('#hand [data-card]').forEach(el => hand.set(el.dataset.card, { rect: bounds(el), element: el }));
     return { field, hand, cpu: bounds(document.getElementById('rival-hand')), deck: bounds(document.getElementById('deck-count')), grave: [bounds(document.getElementById('human-grave')), bounds(document.getElementById('cpu-grave'))] };
   }

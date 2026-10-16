@@ -33,7 +33,7 @@ window.FKCards = (() => {
     ['pridefall', 'Pridefall', 'Destroy the highest-power unprotected unit on each side, including all unprotected units tied at that power.'],
     ['weakest-link', 'Weakest Link', 'Destroy up to 3 lowest-power unprotected units on each side. Choose between ties at the cutoff.'],
     ['patience', 'Patience', 'Do nothing. Your turn ends, but you have not passed.'],
-    ['sacrifice', 'Sacrifice', 'Destroy 1 friendly unit, then bring up to 2 units from your destroyed pile into your hand. They are not played and their abilities do not trigger.'],
+    ['sacrifice', 'Sacrifice', 'Destroy 1 friendly unit, then bring up to 2 units already in your destroyed pile into your hand. You cannot return the unit sacrificed in this play. Returned units are not played and their abilities do not trigger.'],
     ['catastrophe', 'Catastrophe', 'Destroy every card in play on both sides, except protected units. Protection is checked before anything is removed.'],
     ['purge', 'Purge', 'Destroy all Omens in play, including weather and Omens on rows.']
   ].forEach(([slug, name, text]) => {

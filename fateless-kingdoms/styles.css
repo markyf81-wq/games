@@ -63,7 +63,7 @@ dialog{color:var(--ink);background:#13231b;border:1px solid #d9bb7755;border-rad
 .fx-hidden{visibility:hidden!important}.fx-card{position:fixed;z-index:1000;pointer-events:none;transform-origin:0 0;border-radius:5px;border:1px solid #dfc58799;box-shadow:0 10px 35px #0008;overflow:hidden;will-change:transform,opacity;backface-visibility:hidden}.fx-card img{display:block;width:100%;height:100%;object-fit:cover}.card-back{background:repeating-linear-gradient(45deg,#153528 0 5px,#1c3e2e 5px 10px)}.card-back:before{content:'♜';display:grid;place-items:center;position:absolute;inset:7px;border:1px solid #d9bb7766;color:#d9bb77;font:38px Georgia,serif}.burning-card:after{content:'';position:absolute;inset:-20%;background:radial-gradient(ellipse at 40% 100%,#fff4bbd0,transparent 35%),radial-gradient(ellipse at 70% 90%,#ff8619d0,transparent 45%);mix-blend-mode:screen;animation:fire-lick .3s ease-in-out infinite alternate}.fx-ember{position:fixed;z-index:1001;width:4px;height:6px;pointer-events:none;border-radius:50%;background:#ffd270;box-shadow:0 0 6px 2px #ff641b99}@keyframes fire-lick{to{transform:translateY(-20px) scaleX(.8)}}
 
 /* Start, coin flip, confirmation and local audio controls. */
-.welcome-music{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px;margin:15px 0}.welcome-music input,.audio-toggle input{accent-color:var(--gold);width:16px;height:16px}.welcome-copy #resume-button{display:block;margin:14px auto 0;font-size:11px}.coin-dialog{width:min(390px,92vw);padding:33px;text-align:center}.coin-dialog h2{font:30px Georgia,serif;margin-top:10px}.coin-stage{height:190px;display:grid;place-items:center;perspective:700px}.coin{width:130px;height:130px;position:relative;transform-style:preserve-3d;transform:rotateY(0)}.coin.flipping{animation:coin-flip 2.1s cubic-bezier(.15,.6,.3,1) forwards}.coin.settled{filter:drop-shadow(0 0 14px #d9bb7739)}.coin-face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:50%;border:4px double #e8ce8d;background:radial-gradient(circle at 30% 25%,#e8d391,#a58a47 68%,#6b562a);color:#40361c;box-shadow:inset 0 0 0 6px #7e622b50,inset 0 0 0 8px #f8e6a999,0 7px 15px #0005;font-size:54px;backface-visibility:hidden;-webkit-backface-visibility:hidden}.coin-face small{font:9px Georgia,serif;text-transform:uppercase;letter-spacing:1px}.coin-tails{transform:rotateY(180deg);background:radial-gradient(circle at 30% 25%,#c5c5b5,#84887d 68%,#535b53);border-color:#d0d3be;color:#26372b}.coin-dialog p{min-height:41px;color:var(--gold);font:16px/1.6 Georgia,serif;margin:0 0 15px}@keyframes coin-flip{0%{transform:translateY(20px) rotateY(0) scale(.8)}35%{transform:translateY(-35px) rotateY(780deg) scale(1.1)}100%{transform:translateY(0) rotateY(var(--coin-turn,1800deg)) scale(1)}}
+.welcome-music{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px;margin:15px 0}.welcome-music input,.audio-toggle input{accent-color:var(--gold);width:16px;height:16px}.welcome-copy #resume-button{display:block;margin:14px auto 0;font-size:11px}.coin-dialog{width:min(390px,92vw);padding:33px;text-align:center}.coin-dialog h2{font:30px Georgia,serif;margin-top:10px}.coin-stage{height:190px;display:grid;place-items:center;perspective:700px}.coin{width:130px;height:130px;position:relative;transform-style:preserve-3d;transform:rotateY(0)}.coin.flipping{animation:coin-flip 2.1s cubic-bezier(.15,.6,.3,1) forwards}.coin.settled{transform:rotateY(var(--coin-rest,0deg))}.coin.settled .coin-face{box-shadow:inset 0 0 0 6px #7e622b50,inset 0 0 0 8px #f8e6a999,0 0 14px #d9bb7739}.coin-face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:50%;border:4px double #e8ce8d;background:radial-gradient(circle at 30% 25%,#e8d391,#a58a47 68%,#6b562a);color:#40361c;box-shadow:inset 0 0 0 6px #7e622b50,inset 0 0 0 8px #f8e6a999,0 7px 15px #0005;font-size:54px;backface-visibility:hidden;-webkit-backface-visibility:hidden}.coin-face small{font:9px Georgia,serif;text-transform:uppercase;letter-spacing:1px}.coin-heads{transform:translateZ(1px)}.coin-tails{transform:rotateY(180deg) translateZ(1px);background:radial-gradient(circle at 30% 25%,#c5c5b5,#84887d 68%,#535b53);border-color:#d0d3be;color:#26372b}.coin-dialog p{min-height:41px;color:var(--gold);font:16px/1.6 Georgia,serif;margin:0 0 15px}@keyframes coin-flip{0%{transform:translateY(20px) rotateY(0) scale(.8)}35%{transform:translateY(-35px) rotateY(780deg) scale(1.1)}100%{transform:translateY(0) rotateY(var(--coin-turn,1800deg)) scale(1)}}
 #audio-dialog{width:min(410px,92vw)}#audio-dialog .dialog-heading{padding:0 0 18px;background:transparent;margin-bottom:15px}#audio-dialog .dialog-heading h2{font-size:25px}#audio-note{font-size:11px;margin-bottom:20px}.audio-toggle{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:13px;margin:20px 0 14px}.audio-volume{display:flex;justify-content:space-between;flex-wrap:wrap;font-size:10px;color:var(--muted);gap:10px}.audio-volume input{width:100%;accent-color:var(--gold);cursor:pointer;margin:0 0 12px}#preview-audio{margin-top:18px}#pass-dialog>p{margin-bottom:12px}
 
 @media(min-width:761px) and (min-height:650px){
@@ -128,14 +128,14 @@ html{height:100%;overflow:hidden}body{height:100vh;height:100dvh;min-height:0;ov
 .row-effect{background-repeat:no-repeat;background-position:center;background-size:cover;opacity:.85}.row-effect:before,.row-effect:after{display:none;animation:none!important}.effect-blizzard{background-image:url('assets/effects/blizzard.svg')}.effect-thunderstorm{background-image:url('assets/effects/thunderstorm.svg')}.effect-flood{background-image:url('assets/effects/flood.svg')}.effect-war-chant{background-image:url('assets/effects/war-chant.svg')}.effect-dread{background-image:url('assets/effects/dread.svg')}.effect-ironward{background-image:url('assets/effects/ironward.svg')}.effect-sanctuary{background-image:url('assets/effects/sanctuary.svg')}.effect-shielded{background-image:url('assets/effects/shielded.svg')}
 
 /* A balanced match header with solid current-turn and round-result states. */
-.match-bar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:14px;align-items:center}.match-bar .rival-hand-section{min-width:0}.match-bar .round-label{margin:0;border:1px solid #d9bb772c;border-radius:6px;background:#182d22;color:#e3d5ac;padding:6px 15px;font-size:15px;text-align:center}.match-bar .deck-count{justify-self:end;background:#172a20;padding:7px 10px;border-radius:5px;font-size:10px}.scoreboard{gap:5px 9px;grid-template-rows:minmax(0,1fr) 28px;padding:2px 0 4px}.player-panel{height:100%;min-height:0;border:1px solid #ffffff0b;background:#13261d;border-radius:6px;padding:5px 10px;gap:10px;transition:background .2s,border-color .2s}.player-panel.active-turn{background:#294c36;border-color:#71905a}.player-panel.opponent.active-turn{background:#343e4b;border-color:#758394}.player-panel.has-passed{background:#1a251e;border-color:#ffffff0c}.player-panel.has-passed .player-meta{color:#c3b28b}.player-panel h1,.player-panel h2{font-size:15px;line-height:1.2}.player-meta{font-size:9px;line-height:1.4}.total-score{font-size:34px;min-width:38px;text-align:center}.score-divider{color:#8eaa94;font-size:17px}.score-divider small{font-size:7px;line-height:1.3;letter-spacing:1px}.avatar{width:31px;height:31px;font-size:23px}.round-track{gap:7px}.round-result{background:#14281e;border:0;border-radius:5px;padding:6px 10px;justify-content:flex-start;gap:8px;color:#819c89;font-size:10px}.round-result.current{background:#dbbd77;color:#1a2c1d}.round-result.human-won{background:#315d40;color:#e0efd6}.round-result.cpu-won{background:#65434b;color:#f0dde0}.round-result.drawn{background:#355661;color:#d9ebef}.round-number{font-size:8px;letter-spacing:.8px;opacity:.8}.round-result-score{margin-left:auto;color:inherit;font-size:9px;opacity:.85}.round-result strong{font-weight:600}.round-wins{margin-top:2px;font-size:9px}.win-count{color:#b7c5aa;font-size:8px}.turn-banner{border:0;border-radius:5px;background:#1c3024;color:#a4baa0;letter-spacing:.2px}.turn-banner.your-turn{background:#315a3d;color:#ecdfb1}.turn-banner.rival-turn{background:#2b3d4b;color:#c7dae7}.table-column{grid-template-rows:42px 84px 26px minmax(0,1fr) var(--hand-space)}
+.match-bar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:14px;align-items:center}.match-bar .rival-hand-section{min-width:0}.match-bar .round-label{margin:0;border:1px solid #d9bb772c;border-radius:6px;background:#182d22;color:#e3d5ac;padding:6px 15px;font-size:15px;text-align:center}.match-bar .deck-count{justify-self:end;background:#172a20;padding:7px 10px;border-radius:5px;font-size:10px}.scoreboard{gap:5px 9px;grid-template-rows:minmax(0,1fr) 28px;padding:2px 0 4px}.player-panel{height:100%;min-height:0;border:1px solid #ffffff0b;background:#13261d;border-radius:6px;padding:5px 10px;gap:10px;transition:background .2s,border-color .2s}.player-panel.active-turn{background:#294c36;border-color:#71905a}.player-panel.opponent.active-turn{background:#343e4b;border-color:#758394}.player-panel.has-passed{background:#1a251e;border-color:#ffffff0c}.player-panel.has-passed .player-meta{color:#c3b28b}.player-panel h1,.player-panel h2{font-size:15px;line-height:1.2}.player-meta{font-size:9px;line-height:1.4}.total-score{font-size:34px;min-width:38px;text-align:center}.score-divider{color:#8eaa94;font-size:17px}.score-divider small{font-size:7px;line-height:1.3;letter-spacing:1px}.avatar{width:31px;height:31px;font-size:23px}.round-track{gap:7px}.round-result{background:#14281e;border:0;border-radius:5px;padding:6px 10px;justify-content:flex-start;gap:8px;color:#819c89;font-size:10px}.round-result.current{background:#dbbd77;color:#1a2c1d}.round-result.human-won{background:#315d40;color:#e0efd6}.round-result.cpu-won{background:#65434b;color:#f0dde0}.round-result.drawn{background:#355661;color:#d9ebef}.round-number{font-size:8px;letter-spacing:.8px;opacity:.8}.round-result-score{margin-left:auto;color:inherit;font-size:9px;opacity:.85}.round-result strong{font-weight:600}.round-wins{margin-top:2px;font-size:9px}.win-count{color:#b7c5aa;font-size:8px}.turn-banner{border:0;border-radius:5px;background:#1c3024;color:#a4baa0;letter-spacing:.2px}.turn-banner.your-turn{background:#315a3d;color:#ecdfb1}.turn-banner.rival-turn{background:#2b3d4b;color:#c7dae7}.table-column{grid-template-rows:42px 84px minmax(0,1fr) var(--hand-space)}
 
 /* Fill the desktop sidebar with readable artwork and evenly spaced history. */
 @media(min-width:981px){.sidebar{gap:clamp(10px,1.6vh,22px);padding-left:22px}.sidebar .inspect-art{height:var(--inspector-art-height,30vh);width:fit-content;max-width:100%;margin-bottom:16px;padding:5px}.sidebar .inspect-art img{max-width:100%;height:100%;width:auto}.sidebar .section-label{font-size:9px;letter-spacing:1.3px;margin-bottom:12px}.sidebar .inspector h2{font-size:clamp(24px,3vh,32px);line-height:1.2;margin-bottom:9px}.sidebar .ability-label{font-size:10px;letter-spacing:1px}.sidebar .inspector-copy{font-size:clamp(11px,1.3vh,14px);line-height:1.7;margin:9px 0 14px}.sidebar .target-summary,.sidebar .warning-message{font-size:11px;line-height:1.6;margin:9px 0;padding-top:9px}.sidebar .primary{font-size:11px;padding:11px 12px}.sidebar .history-panel{padding-top:14px}.sidebar .history{gap:var(--history-gap,12px)}.sidebar .history li{font-size:clamp(10px,1.25vh,13px);line-height:1.55}.sidebar .history-round{font-size:8px;padding-top:3px}.sidebar .settings-summary{font-size:11px;padding-top:12px}.sidebar .settings-summary span{font-size:9px}.sidebar .fair-play{font-size:11px;line-height:1.5}.sidebar .cancel-selection{font-size:10px;margin-top:9px}}
 @media(max-width:1100px){.player-panel{padding:4px 7px;gap:7px}.player-panel h1,.player-panel h2{font-size:14px}.match-bar{gap:10px}.match-bar .rival-hand-label{font-size:8px}.match-bar .round-label{font-size:13px;padding:5px 10px}}
 @media(max-width:980px){.table-column{grid-template-rows:28px 76px 23px minmax(0,1fr) var(--hand-space)}.scoreboard{grid-template-columns:minmax(0,1fr) 27px minmax(0,1fr);grid-template-rows:minmax(0,1fr) 22px;gap:3px 5px;padding:2px 0 4px}.player-panel{padding:3px 6px;gap:5px}.player-panel h1,.player-panel h2{font-size:12px}.player-meta{font-size:8px;line-height:1.3}.total-score{font-size:27px;min-width:29px}.round-wins{font-size:7px;margin-top:1px;gap:2px}.win-count{font-size:7px}.round-track{gap:5px}.round-result{padding:4px 6px;gap:4px;font-size:8px}.round-number{font-size:7px}.round-result-score{font-size:7px}.match-bar{gap:7px}.match-bar .round-label{font-size:12px;padding:4px 8px;border:0}.match-bar .deck-count{padding:4px 6px;font-size:8px}.score-divider{font-size:13px}.score-divider small{font-size:6px}}
 @media(max-width:550px){.match-bar{grid-template-columns:minmax(0,1fr) auto}.match-bar .deck-count{display:none}.match-bar .rival-hand-label{font-size:7px}.round-result{gap:3px;padding:4px}.round-number{font-size:6px}.round-result-score{font-size:7px}.player-panel h1,.player-panel h2{font-size:11px}.total-score{font-size:25px;min-width:25px}}
-@media(max-height:650px) and (min-width:981px){.table-column{grid-template-rows:30px 72px 22px minmax(0,1fr) var(--hand-space)}.scoreboard{grid-template-rows:minmax(0,1fr) 23px;gap:3px 5px}.round-result{padding:4px 7px;font-size:8px}.player-panel{padding:3px 7px}.player-panel h1,.player-panel h2{font-size:13px}.total-score{font-size:27px}.sidebar .inspector h2{font-size:21px}.sidebar .inspector-copy{font-size:10px}.sidebar .history li{font-size:9px}.sidebar .primary{padding:8px;font-size:10px}}
+@media(max-height:650px) and (min-width:981px){.table-column{grid-template-rows:30px 72px minmax(0,1fr) var(--hand-space)}.scoreboard{grid-template-rows:minmax(0,1fr) 23px;gap:3px 5px}.round-result{padding:4px 7px;font-size:8px}.player-panel{padding:3px 7px}.player-panel h1,.player-panel h2{font-size:13px}.total-score{font-size:27px}.sidebar .inspector h2{font-size:21px}.sidebar .inspector-copy{font-size:10px}.sidebar .history li{font-size:9px}.sidebar .primary{padding:8px;font-size:10px}}
 @media(max-height:650px) and (max-width:980px){.table-column{grid-template-rows:24px 68px 21px minmax(0,1fr) var(--hand-space)}.scoreboard{grid-template-rows:minmax(0,1fr) 21px;gap:2px 4px}.player-panel{padding:2px 5px}.player-panel h1,.player-panel h2{font-size:10px}.player-meta{font-size:7px}.total-score{font-size:22px;min-width:23px}.round-result{padding:3px;font-size:7px}.round-number{font-size:6px}.round-wins{font-size:6px}.win-count{font-size:6px}.score-divider small{font-size:5px}}
 
 @media(min-width:981px){.sidebar .inspector{display:flow-root}}
@@ -165,3 +165,115 @@ html{height:100%;overflow:hidden}body{height:100vh;height:100dvh;min-height:0;ov
 @media(max-height:650px) and (max-width:980px){.battlefield .battle-row{padding-block:1px}.battlefield .row-cards{padding-block:1px}.battlefield .row-name{font-size:6px}.battlefield .row-score{font-size:10px}.weather-subtitle{display:none}}
 /* Preserve the three-column row arrangement in short landscape windows. */
 @media(min-width:700px) and (max-width:980px) and (max-height:500px){.battlefield .field-half{display:flex;flex-direction:row;gap:0}.battlefield .battle-row{display:flex;flex-direction:column;flex:1;min-width:0;padding:1px;gap:1px}.battlefield .row-meta{display:flex;flex:0 0 12px;align-items:center;justify-content:space-between;border-right:0;border-bottom:1px solid var(--line);padding:0 2px;gap:2px}.battlefield .row-icon{font-size:9px}.battlefield .row-name{font-size:6px;align-self:center}.battlefield .row-score{font-size:9px;align-self:center}.battlefield .row-cards{flex:1;min-height:0;padding:1px;gap:2px}.battlefield .row-status{position:absolute;right:2px;bottom:2px}.battlefield .row-tag{font-size:5px;padding:1px}}
+
+/* The rival discard is a count-only, face-down marker. */
+.private-pile{cursor:default}.private-pile .pile-stack{background:repeating-linear-gradient(45deg,#153528 0 5px,#1c3e2e 5px 10px)}.private-pile:hover .pile-stack{transform:none;box-shadow:3px 3px 0 #28372b,4px 4px 0 #b7a87a44,6px 6px 0 #1b2b20,7px 7px 0 #b7a87a33}
+
+/* Field cards show only the signed change from their printed power. */
+.board-card.bonus-card{border-color:#a9ed8f}
+.bonus-outline{position:absolute;inset:0;z-index:1;border:1px solid #b8ffa0;border-radius:inherit;box-shadow:inset 0 0 7px #8bef6999;pointer-events:none}
+.bonus-mark{position:absolute;top:1px;right:1px;z-index:2;max-width:calc(100% - 2px);padding:2px;border:1px solid #c4ffaf;border-radius:2px;background:#285326;color:#e5ffd4;font-size:var(--bonus-marker-font,9px);font-weight:800;line-height:1;white-space:nowrap;pointer-events:none;box-shadow:0 1px 4px #000b}
+.bonus-card .power-badge,.bonus-card .protection-mark{z-index:2}
+.board-card.reduced-card{border-color:#dc9c88}.reduced-card .bonus-outline{border-color:#f0b29b;box-shadow:inset 0 0 7px #d46e4e88}.reduced-card .bonus-mark{background:#68372c;border-color:#edb09a;color:#fff0e7}.reduced-card .protection-mark{z-index:2}
+.live-bonus-copy{display:block;margin-top:.6em;padding:.45em .65em;border-left:2px solid #a9df8d;background:#7cb76a18;line-height:1.5}
+.bonus-sources{display:block;color:#c3eca9;font-weight:600}.bonus-weather-note{display:block;margin-top:.25em;color:var(--muted);font-size:.9em}
+@media(max-width:980px){.sidebar .live-bonus-copy{margin-top:.25em;padding:.2em .4em}}
+
+/* Match outcome opens after the final play has finished resolving. */
+.match-result-dialog{--result-color:var(--gold);width:min(520px,92vw);padding:clamp(20px,4vw,36px);overflow-y:auto;text-align:center;background:radial-gradient(ellipse at 50% 0,#c6aa6430,transparent 60%),#13231b;border-color:var(--result-color)}
+.match-result-dialog[data-outcome="defeat"]{--result-color:#d6a18a;background:radial-gradient(ellipse at 50% 0,#a9584130,transparent 60%),#13231b}.match-result-dialog[data-outcome="draw"]{--result-color:#a3cebe}
+.match-result-crest{font:64px/1 Georgia,serif;color:var(--result-color);margin:20px 0 12px;text-shadow:0 0 28px #d9bb7733}
+.match-result-dialog h2{font:clamp(34px,7vw,48px)/1.1 Georgia,serif;color:var(--result-color);margin:0 0 12px}.match-result-dialog>p{font-size:13px;line-height:1.7;color:var(--muted);margin:0}
+.match-result-score{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;margin:24px 0;padding:16px 0;border-block:1px solid var(--line)}.match-result-score>div{display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--muted)}.match-result-score strong{font:38px/1 Georgia,serif;color:var(--ink)}.match-result-score>span{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+.match-result-rounds{width:100%;border-collapse:collapse;text-align:left;font-size:12px}.match-result-rounds th,.match-result-rounds td{padding:9px 5px;border-bottom:1px solid var(--line)}.match-result-rounds th{font-weight:400;color:var(--muted)}.match-result-rounds td:last-child{text-align:right;color:var(--result-color)}.match-result-rounds thead th:last-child{text-align:right}.match-result-dialog .dialog-actions{gap:12px}.match-result-dialog .quiet{padding:12px;font-size:12px}.match-result-dialog .primary{font-size:12px}
+@media(max-height:600px){.match-result-crest{font-size:38px;margin:12px 0 8px}.match-result-dialog h2{font-size:32px}.match-result-score{margin:14px 0;padding:10px 0}.match-result-dialog .dialog-actions{margin-top:16px}}
+
+/* Crowded rows overlap at a readable size; the raised visual stays inside the viewport. */
+.battlefield .row-cards{grid-column:2/-1}
+.battlefield .weathered,.battlefield .blocked-row{background:none}
+.row-cards>.empty-row{position:relative;z-index:1}
+.row-cards>.board-card+.board-card{margin-left:calc(0px - var(--row-card-overlap,0px))}
+.battlefield .board-card:hover{transform:none;z-index:auto}
+.row-card-preview{position:fixed;z-index:1000;pointer-events:none;transform-origin:top left;box-shadow:0 8px 22px #000a,0 0 0 1px #d9bb7799;animation:row-card-lift .14s ease-out both}
+.row-card-preview .power-badge{right:1px;bottom:1px}.row-card-preview .bonus-outline{border-color:#b8ffa0}
+.row-card-preview.reduced-card .bonus-outline{border-color:#f0b29b}
+@keyframes row-card-lift{from{transform:translate(var(--preview-offset-x),var(--preview-offset-y)) scale(var(--preview-start-scale-x),var(--preview-start-scale-y))}to{transform:translate(0,0) scale(1)}}
+
+/* Keep the chronicle heading in place while the available move history scrolls. */
+.sidebar .history-panel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.history-panel>.section-label{flex-shrink:0}
+.sidebar .history{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;align-content:start;grid-auto-rows:max-content;padding:2px 7px 4px 0;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#6b7956 #102019}
+.sidebar .history li:nth-child(n){display:flex;flex-shrink:0}.history li>span:last-child{min-width:0;overflow-wrap:break-word}
+.history:focus-visible{outline:1px solid var(--gold);outline-offset:-1px}
+
+/* Full-deck browsing keeps its heading/search visible above the scrolling artwork. */
+.content-dialog.deck-dialog{width:min(960px,94vw);overflow:hidden}
+.content-dialog.deck-dialog[open]{display:flex;flex-direction:column}
+.deck-dialog>.dialog-heading{position:static;flex-shrink:0}
+#content-body.deck-browser{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.deck-browser>.dialog-intro,.deck-browser>.collection-search,.deck-browser>.deck-result-count{flex-shrink:0}
+.deck-browser>.dialog-intro{margin-bottom:12px}.deck-browser>.collection-search{margin-bottom:8px}
+.deck-result-count{font-size:11px;color:var(--muted);margin:0 0 12px}
+.deck-browser>.collection-grid{min-height:0;overflow-y:auto;overflow-x:hidden;align-content:start;padding:5px 9px 9px 5px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#6b7956 #102019}
+.deck-browser>.collection-grid:focus-visible{outline:1px solid var(--gold);outline-offset:-1px}
+
+/* Weather lines up with its row, rather than gathering in an unrelated centre stack. */
+.weather-slot{display:flex;align-items:center;justify-content:center;min-height:0;min-width:0;overflow:hidden}
+.weather-clear-note{display:none;color:var(--muted);font-size:9px}
+.battlefield .weather-strip.aligned-weather{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(3,minmax(0,1fr));padding:0;gap:0}
+.aligned-weather>.weather-slot{height:100%;border-bottom:1px solid var(--line)}.aligned-weather>.weather-slot:last-child{border-bottom:0}
+@media(max-width:980px){
+  .battlefield{grid-template-rows:minmax(0,1fr) var(--middle-height) minmax(0,1fr)}.battlefield .own-half{grid-row:3}
+  .battlefield.has-weather,.battlefield.has-weather+.pile-rail{grid-template-rows:minmax(0,3fr) minmax(0,1fr) minmax(0,3fr)}
+  .battlefield .weather-strip.aligned-weather{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:12px;padding:2px 6px;min-height:0;border-block:1px solid var(--line)}
+  .aligned-weather>.weather-slot{height:100%;border:0}
+  .battlefield .aligned-weather .weather-card{width:var(--weather-card-width,30px);height:auto;max-height:100%;aspect-ratio:877/1240}
+  .aligned-weather>.empty-weather-slot{display:none}.aligned-weather>.weather-clear-note{display:block}
+}
+@media(min-width:700px) and (max-width:980px) and (max-height:500px){.battlefield.has-weather,.battlefield.has-weather+.pile-rail{grid-template-rows:repeat(3,minmax(0,1fr))}}
+/* Use the shared viewport-clamped preview for hand hover and keyboard focus too. */
+.hand .hand-card:hover,.hand .hand-card:focus-visible{transform:translateY(var(--fan-y,0px)) rotate(var(--fan-angle,0deg));z-index:var(--hand-stack,1)!important}
+.row-card-preview .card-caption{display:none}
+
+/* Give mobile height to the battlefield rather than repeated footer/header controls. */
+@media(max-width:980px){
+  .site-header{padding:4px 12px;gap:4px 10px}.site-header .crest{font-size:22px}.site-header .wordmark{font-size:12px}.site-header .wordmark b{font-size:8px}
+  .site-header nav{padding-top:2px}.site-header nav .quiet{font-size:9px;padding:4px 3px;min-height:24px}
+  .game-layout{grid-template-rows:minmax(0,1fr) clamp(76px,10vh,92px);gap:5px;padding:5px 10px}
+  .table-column{--hand-space:clamp(84px,15vh,144px);grid-template-rows:24px 66px minmax(0,1fr) var(--hand-space)}
+  .scoreboard{grid-template-rows:minmax(0,1fr) 20px;gap:2px 4px;padding-bottom:2px}.round-result{padding:3px 4px}.turn-banner{padding:2px 5px;margin-bottom:3px;font-size:9px}
+  .hand-section{grid-template-rows:22px minmax(0,1fr);padding-top:7px}.hand-heading h2{font-size:16px}
+  .hand{--hand-card-width:clamp(20px,calc((var(--hand-space) - 36px)/1.7),100px);padding:12px 17px 4px}.hand-note{display:none}
+  .hand-tools .pass-button{min-width:110px;font-size:9px;padding:4px 8px;min-height:24px}
+  .sidebar{grid-template-rows:minmax(0,1fr);gap:0 10px;padding-top:4px}
+  .sidebar .settings-summary,.sidebar .fair-play{display:none}
+  .sidebar .inspector:not(.result-panel){grid-template-columns:32px minmax(0,1fr);grid-template-rows:16px minmax(0,1fr) auto auto;gap:2px 5px}
+  .sidebar .inspector:not(.result-panel) .inspect-art{width:32px;height:45px}.sidebar .inspector:not(.result-panel) h2{font-size:13px}
+  .sidebar .inspector:not(.result-panel) .inspector-copy{font-size:7.5px;line-height:1.3}
+  .sidebar .inspector:not(.result-panel) .play-actions{grid-column:1/-1;grid-row:3;display:flex;align-items:center;gap:6px;min-width:0}
+  .sidebar .inspector.has-blocked-choice .play-actions{grid-row:4}
+  .sidebar .play-actions .primary{flex:1;width:auto;min-width:0;font-size:8px;min-height:24px;padding:4px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sidebar .inspector .play-actions .cancel-selection{flex:0 0 auto;margin:0;padding:4px 2px;font-size:8px;min-height:24px}
+  .sidebar .history-panel>.section-label{font-size:7px;letter-spacing:.6px;margin-bottom:5px}.sidebar .history{gap:5px;padding-top:0}
+}
+@media(max-width:600px){
+  .site-header{padding:4px 10px;gap:3px 8px}.site-header .back-link{font-size:9px}.site-header .wordmark{font-size:11.5px;gap:6px;letter-spacing:1.5px}.site-header .wordmark b{letter-spacing:3px}.site-header .crest{font-size:21px}
+}
+@media(max-width:980px) and (max-height:650px){
+  .game-layout{grid-template-rows:minmax(0,1fr) 72px}.table-column{--hand-space:clamp(68px,16vh,100px);grid-template-rows:22px 58px minmax(0,1fr) var(--hand-space)}
+  .sidebar .inspector:not(.result-panel){grid-template-columns:26px minmax(0,1fr);grid-template-rows:14px minmax(0,1fr) auto auto}.sidebar .inspector:not(.result-panel) .inspect-art{width:26px;height:37px}.sidebar .inspector:not(.result-panel) h2{font-size:12px}
+}
+@media(min-width:700px) and (max-width:980px) and (max-height:500px){
+  .game-layout{grid-template-rows:minmax(0,1fr)}.sidebar{display:flex;gap:5px;padding:0 0 0 10px}.sidebar .inspector:not(.result-panel){flex-basis:86px}
+  .table-column{--hand-space:70px;grid-template-rows:22px 54px minmax(0,1fr) var(--hand-space)}
+}
+
+/* The removed hint and detached hover preview no longer need space above/below the hand. */
+.hand{padding-top:3px;padding-bottom:4px}
+@media(min-width:981px){.hand-section{grid-template-rows:28px minmax(0,1fr)}}
+
+/* Turn guidance shares the existing hand heading rather than a separate table row. */
+.hand-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.hand-heading .turn-banner{display:block;min-width:0;max-width:100%;min-height:0;margin:0;padding:3px 7px;font-size:10px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;justify-self:start}
+.hand-heading .turn-banner:before{display:none}
+@media(max-width:980px){.hand-heading{gap:6px}.hand-heading .turn-banner{font-size:8px;padding:3px 5px}}

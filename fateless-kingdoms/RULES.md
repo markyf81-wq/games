@@ -136,7 +136,7 @@ If both players reach 2 round wins at the same time because of a draw, the game 
 * **Pridefall:** On each side, ignore units protected from this Spell and destroy the highest-power remaining unit. Also destroy all unprotected units tied for that power.  
 * **Weakest Link:** Destroy the 3 lowest-power unprotected units in play on each side. If units tie at the cutoff, the player who played Weakest Link chooses which tied units to destroy. Destroy no more than 3 units per side, or as many eligible units as possible if fewer are available.  
 * **Patience:** Do nothing. Your turn ends.  
-* **Sacrifice:** Destroy any 1 unit card on your field. Bring any 2 unit cards from your destroyed pile into your hand. Resolve as much as possible if there are fewer eligible targets. Units return to your hand, not the field, so their when-played abilities do not trigger. Units protected from this Spell cannot be chosen for destruction.  
+* **Sacrifice:** Destroy any 1 unit card on your field. Bring any 2 unit cards from your destroyed pile into your hand. Only units already in your destroyed pile before this play are eligible to return; the unit sacrificed in this play cannot be returned by the same Sacrifice. Resolve as much as possible if there are fewer eligible targets. Units return to your hand, not the field, so their when-played abilities do not trigger. Units protected from this Spell cannot be chosen for destruction.  
 * **Catastrophe:** Destroy every card in play on both sides.  
 * **Purge:** Destroy all OMEN cards in play on both sides.
 
