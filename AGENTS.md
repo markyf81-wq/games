@@ -11,8 +11,9 @@ This repository holds independent browser games behind one shared selection page
 - `previews/`: local game card artwork.
 - `type-tails/`: the Type & Tails typing game. Read `type-tails/AGENTS.md` before changing it.
 - `bomb-major/`: the Chicken Major chase-and-dodge game. Read `bomb-major/AGENTS.md` before changing it.
+- `fateless-kingdoms/`: Mark's physical card game adapted for a human versus CPU. Read `fateless-kingdoms/AGENTS.md` before changing it.
 
-Both games now live in this repository. Do not list an unavailable game as playable or introduce a separate repository for a game without a request.
+All games live in this repository. Do not list an unavailable game as playable or introduce a separate repository for a game without a request.
 
 ## Adding a game
 
@@ -26,7 +27,7 @@ Both games now live in this repository. Do not list an unavailable game as playa
 
 ## Runtime and editing conventions
 
-Open the root `index.html` in Google Chrome. The library and both current games need no package manager, build, server, or network access. Keep ordinary deferred scripts; changing to modules or fetching JSON would introduce restrictions when opened with `file://`.
+Open the root `index.html` in Google Chrome. The library and current games need no package manager, build, server, or network access. Fateless Kingdoms optionally uses a Web Worker over HTTP and falls back to local yielding search when opened from disk. Keep ordinary deferred scripts; changing to modules or fetching JSON would introduce restrictions when opened with `file://`.
 
 The library renders metadata using DOM nodes and `textContent`. Keep metadata text separate from HTML. Maintain keyboard focus, useful labels and image alternatives, responsive layouts, and reduced-motion behavior.
 

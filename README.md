@@ -8,10 +8,15 @@ A shared library for small browser games. Open `index.html` in Google Chrome and
 | --- | --- | --- |
 | Type & Tails | [Play](type-tails/index.html) | [AGENTS.md](type-tails/AGENTS.md) |
 | Chicken Major | [Play](bomb-major/index.html) | [AGENTS.md](bomb-major/AGENTS.md) |
+| Fateless Kingdoms | [Play](fateless-kingdoms/index.html) | [AGENTS.md](fateless-kingdoms/AGENTS.md) |
 
 Type & Tails is a cozy typing game with 20-word rounds, eight difficulties unlocked by completed-round WPM, expanded touch-typing word pools with a fresh randomized selection each round, a Space-to-start ready prompt, automatic typo filtering, a pet and room shop, music, sound effects, and browser-local saved progress.
 
 Chicken Major is a chase-and-dodge arcade game where characters run off-screen when caught by a chasing chicken, with a bouncing freeze block, coin collection, extra characters, cat and magnet drops, and generated audio. Its original single HTML file is now split into HTML, CSS, and JavaScript inside `bomb-major/`.
+
+Fateless Kingdoms is Mark's physical card game adapted for one human versus a CPU. It includes all 62 printed cards, three rows per player, Spells and Omens, selectable targets, automatic scoring, best-of-three rounds, three CPU search budgets, a searchable card collection and a browser-local saved match. Begin game flips a coin to choose the starter; saved games can be resumed. The table includes a fanned hand, pass confirmation, browsable destroyed decks, shared weather cards, animated row effects, card flights and burns, plus optional locally generated music and sound effects. Its card artwork is exported as progressive JPEGs (about 3.8 MiB total); the original PSDs remain untouched. Printed card wording takes priority. See its [rules snapshot](fateless-kingdoms/RULES.md) and [CPU design/research notes](fateless-kingdoms/AI_NOTES.md).
+
+For an HTTP preview with background CPU search, run `python3 -m http.server 8787 --bind 127.0.0.1` from the repository root and open `http://127.0.0.1:8787/`. Direct-file play uses the same CPU with a yielding fallback and needs no server.
 
 ## Structure
 
@@ -25,6 +30,7 @@ Games/
   previews/            Library thumbnails
   type-tails/          Type & Tails code and its own agent guide
   bomb-major/          Chicken Major code and its own agent guide
+  fateless-kingdoms/    Card game, original card exports, rules and CPU
 ```
 
 ## Add another game
@@ -33,4 +39,4 @@ Put the game in its own folder with an `index.html` entry point and an `AGENTS.m
 
 Keep each game's saves, styles, scripts, and assets independent. See the root [agent guide](AGENTS.md) for the full conventions.
 
-Code reviewed; browser testing has not been run for the library setup.
+Fateless Kingdoms received approved focused rule/CPU checks and a Chrome play-through for its initial build. Existing games were not regression-tested as part of that addition.

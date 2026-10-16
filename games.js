@@ -26,5 +26,18 @@ const GAME_CATALOG = [
     imageAlt: 'An illustrated courtyard with a chasing chicken, sage block, characters, Pip the cat, and gold coins',
     accent: '#d3ddc3',
     detail: 'Dodge · collect · upgrade your abilities'
+  },
+  {
+    id: 'fateless-kingdoms',
+    title: 'Fateless Kingdoms',
+    subtitle: 'Your kingdom. Your last card.',
+    description: 'A tactical card game of three rows, powerful Omens and knowing when to pass. Face a CPU rival across up to three rounds, with 62 original cards and three difficulty levels.',
+    category: 'Strategy',
+    tags: ['Cards', 'Tactics', 'Single player'],
+    path: 'fateless-kingdoms/index.html',
+    image: 'previews/fateless-kingdoms.jpg',
+    imageAlt: 'King Ethoroc, Queen Krath and Dreadhold on the original Fateless Kingdoms cards',
+    accent: '#d9bb77',
+    detail: '62 cards · 3 CPU difficulties'
   }
 ];
