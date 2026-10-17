@@ -64,9 +64,12 @@
   }
   function save() {
     saveAvailable = storage.write('match', { state: pendingState || state, level });
-    $('storage-note').textContent = saveAvailable
-      ? 'Your game and settings save automatically in this browser.'
-      : 'Browser storage is unavailable. Keep this tab open to keep your match.';
+    updateStorageNote();
+  }
+  function updateStorageNote() {
+    const note = $('storage-note');
+    note.hidden = saveAvailable;
+    note.textContent = saveAvailable ? '' : 'Saving unavailable. Keep this page open to keep your match.';
   }
   const myTurn = () =>
     !lobbyOpen &&
@@ -345,17 +348,13 @@
     const a = state.players[0].wins,
       b = state.players[1].wins;
     if (state.phase === 'gameOver')
-      return a >= 2 && b >= 2
-        ? 'Two kingdoms. One shared victory.'
-        : a >= 2
-          ? 'The kingdom is yours.'
-          : 'The rival takes the kingdom.';
+      return a >= 2 && b >= 2 ? 'Match drawn.' : a >= 2 ? 'You won the match.' : 'The rival won the match.';
     const r = state.rounds[state.rounds.length - 1];
     return r.winner === null
-      ? 'A draw. Both kingdoms gain a win.'
+      ? 'Round drawn. Both gain a win.'
       : r.winner === 0
-        ? 'This battle is yours.'
-        : 'The rival wins this battle.';
+        ? 'You won the round.'
+        : 'The rival won the round.';
   }
   function showResult(force = false) {
     const key = `${state.phase}:${state.round}`;
@@ -391,13 +390,13 @@
         : { victory: 'Round won!', defeat: 'Round lost', draw: 'Round drawn' }
     )[outcome];
     $('match-result-crest').textContent = { victory: '♛', defeat: '⚔', draw: '⚖' }[outcome];
-    $('match-result-message').textContent = finished
-      ? {
-          victory: 'You won the match. The kingdom is yours.',
-          defeat: 'You lost this match. The rival takes the kingdom.',
-          draw: 'Both kingdoms reached two round wins. The match is a draw.'
-        }[outcome]
-      : `${winnerText()} Your remaining ${state.players[0].hand.length} cards carry forward. No new cards are dealt.`;
+    const message = $('match-result-message');
+    message.textContent = finished
+      ? outcome === 'draw'
+        ? 'Both kingdoms reached two wins.'
+        : ''
+      : `${state.players[0].hand.length} cards carry into the next round.`;
+    message.hidden = !message.textContent;
     $('replay-match').textContent = finished ? 'Play again →' : 'Continue →';
     $('match-result-human-wins').textContent = String(human);
     $('match-result-cpu-wins').textContent = String(rival);
@@ -441,35 +440,12 @@
         rounds.append(line);
       });
       root.append(rounds);
-      root.append(
-        node(
-          'p',
-          'result-note',
-          state.phase === 'roundEnd'
-            ? `Your remaining ${state.players[0].hand.length} cards carry forward. No new cards are dealt.`
-            : 'Every pass, every sacrifice, every card held back. Ready for another?'
-        )
-      );
       return;
     }
     root.classList.remove('result-panel');
     const id = inspected || state.lastCard?.id;
     if (!id) {
-      root.append(
-        node('span', 'eyebrow', 'The art of restraint'),
-        node('div', 'idle-crest', '♜'),
-        node('h2', '', 'Outthink. Outlast.'),
-        node(
-          'p',
-          'inspector-copy',
-          'Select a card in your hand to read its ability. Choose your targets, then commit your play.'
-        ),
-        node(
-          'p',
-          'inspector-tip',
-          'You have the same hand across all rounds. A narrow win can be worth more than a glorious one.'
-        )
-      );
+      root.append(node('div', 'idle-crest', '♜'));
       return;
     }
     const c = C[id];
@@ -559,15 +535,8 @@
     heading.tabIndex = -1;
     body.append(heading);
     if (choosing) {
-      body.append(
-        node(
-          'p',
-          'choice-help',
-          q.count > 1
-            ? `Select ${q.count} cards. ${picked.length} selected.`
-            : 'Choose one option. You can review your play before committing.'
-        )
-      );
+      if (q.count > 1)
+        body.append(node('p', 'choice-help', `Select ${q.count} cards. ${picked.length} selected.`));
       const options = node('div', 'modal-choices');
       q.options.forEach((o) => {
         const chosen = picked.includes(o.value),
@@ -1055,13 +1024,6 @@
     const root = openDialog(`Full deck · ${IDS.length} cards`);
     $('content-dialog').classList.add('deck-dialog');
     root.classList.add('deck-browser');
-    root.append(
-      node(
-        'p',
-        'dialog-intro',
-        `Browse all ${IDS.length} cards, including every unit, Spell and Omen. Select a card to enlarge its artwork and read its ability.`
-      )
-    );
     renderCardBrowser(root, {
       cards: IDS,
       collection: true,
@@ -1071,18 +1033,11 @@
   }
   function showGrave() {
     const root = openDialog('Your destroyed pile');
-    root.append(
-      node(
-        'p',
-        'dialog-intro',
-        'Browse these face-up cards before deciding your play. Closing this window keeps your card selection and targets. Restoration and Sacrifice recover units from your own pile.'
-      )
-    );
     renderCardBrowser(root, {
       cards: state.players[0].grave.slice().reverse(),
       searchLabel: 'Search destroyed pile',
       placeholder: 'Search this destroyed pile…',
-      emptyText: 'No destroyed cards yet. Cards will stack here when destroyed or cleared at round end.'
+      emptyText: 'No destroyed cards.'
     });
   }
   function showRules() {
@@ -1286,9 +1241,10 @@
     $('effects-volume').value = Math.round(settings.effectsVolume * 100);
     $('music-volume-value').textContent = `${$('music-volume').value}%`;
     $('effects-volume-value').textContent = `${$('effects-volume').value}%`;
+    updateStorageNote();
+    $('audio-note').hidden = audio.available;
+    $('audio-note').textContent = audio.available ? '' : 'Audio is not supported in this browser.';
     if (!audio.available) {
-      $('audio-note').textContent =
-        'This browser does not provide audio playback. You can still play with sound off.';
       ['music-enabled', 'effects-enabled', 'music-volume', 'effects-volume', 'mute-all'].forEach(
         (id) => ($(id).disabled = true)
       );
@@ -1312,12 +1268,15 @@
     input.max = maximum;
     if (input.value !== '' && Number(input.value) < minimum) input.value = minimum;
     if (Number(input.value) > maximum) input.value = maximum;
-    const types = includeOmens && includeSpells ? 'Spells/Omens' : includeOmens ? 'Omens' : 'Spells';
-    $('starting-card-note').textContent = guarantee.disabled
-      ? 'Include Spells or Omens to enable the starting guarantee.'
-      : `When enabled, each player starts with exactly 3 random ${types}, with units filling the rest of the hand. Extra Spells/Omens stay in the shared deck.`;
+    const note = $('starting-card-note');
+    note.hidden = !guarantee.checked && !guarantee.disabled;
+    note.textContent = guarantee.disabled
+      ? 'Include Spells or Omens to enable this option.'
+      : guarantee.checked
+        ? 'Remaining starting cards are units.'
+        : '';
     $('deck-settings-note').textContent =
-      `${pool.length} cards in the shared deck. Choose ${minimum}–${maximum} starting cards per player.`;
+      `${pool.length}-card deck · ${minimum}–${maximum} starting cards per player.`;
   }
   ['settings-button', 'current-settings', 'welcome-settings'].forEach((id) =>
     $(id).addEventListener('click', openSettings)
@@ -1420,8 +1379,6 @@
   if (loaded) {
     lobbyOpen = false;
     render();
-    $('storage-note').textContent =
-      'Saved match restored. Your progress saves automatically in this browser.';
     tick();
   } else showLobby();
 })();

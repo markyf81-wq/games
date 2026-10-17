@@ -19,7 +19,7 @@
     <script defer src="card-preview.js?v=refactor45"></script>
     <script defer src="cpu-controller.js?v=kids46"></script>
     <script defer src="table-layout.js?v=refactor45"></script>
-    <script defer src="game.js?v=kids46"></script>
+    <script defer src="game.js?v=concise-copy47"></script>
   </head>
   <body>
     <header class="site-header">
@@ -229,24 +229,18 @@
     <dialog id="welcome-dialog" class="welcome-dialog">
       <div class="welcome-art" aria-hidden="true"></div>
       <div class="welcome-copy">
-        <span class="eyebrow">Your kingdom. Your last card.</span>
-        <h2>Victory takes<br />more than power.</h2>
-        <p>
-          <span id="welcome-hand-size">15 cards each.</span> Three rows. Up to three rounds.<br />Know when to
-          fight—and when to let a battle go.
-        </p>
+        <h2>Fateless Kingdoms</h2>
+        <p><span id="welcome-hand-size">15 cards each.</span> Best of three rounds.</p>
         <div class="welcome-facts">
-          <span>♜ <b id="welcome-deck-size">62</b> unique cards</span><span>⚔ <b>1</b> cunning rival</span>
+          <span><b id="welcome-deck-size">62</b> cards</span>
         </div>
         <label class="welcome-music"
           ><input id="welcome-music" type="checkbox" checked /> Play background music</label
         ><button id="welcome-settings" class="text-button">Game settings</button
         ><button id="begin-button" class="primary">Begin game <span>→</span></button>
-        <p class="welcome-footnote">A coin flip decides who takes the first turn.</p>
       </div>
     </dialog>
     <dialog id="coin-dialog" class="coin-dialog">
-      <span class="eyebrow">Let fate choose</span>
       <h2>Who goes first?</h2>
       <div class="coin-stage">
         <div id="coin" class="coin">
@@ -267,7 +261,6 @@
     <dialog id="choice-dialog" class="choice-dialog" aria-labelledby="choice-card-name">
       <div class="dialog-heading">
         <div>
-          <span class="eyebrow">Your next move</span>
           <h2 id="choice-card-name"></h2>
         </div>
         <button class="icon-button" data-action="cancel-selection" aria-label="Cancel this play">×</button>
@@ -279,22 +272,17 @@
       </div>
     </dialog>
     <dialog id="confirm-dialog" class="confirm-dialog">
-      <span class="eyebrow">A new beginning</span>
       <h2>Reset this game?</h2>
-      <p>
-        This clears your saved match from this browser and returns to Begin game for a fresh shuffle and coin
-        flip.
-      </p>
+      <p>Your saved match will be cleared.</p>
       <div class="dialog-actions">
         <button id="cancel-new" class="quiet">Keep playing</button
         ><button id="confirm-new" class="primary">Reset game</button>
       </div>
     </dialog>
     <dialog id="pass-dialog" class="confirm-dialog">
-      <span class="eyebrow">Know when to walk away</span>
       <h2>Pass this round?</h2>
       <p id="pass-summary"></p>
-      <p>You cannot play again until the next round. The rival may keep playing until it also passes.</p>
+      <p>You cannot play again until the next round.</p>
       <div class="dialog-actions">
         <button id="cancel-pass" class="quiet">Keep playing</button
         ><button id="confirm-pass" class="primary">Pass this round</button>
@@ -337,7 +325,6 @@
     <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
       <div class="dialog-heading">
         <div>
-          <span class="eyebrow">Make the battle yours</span>
           <h2 id="settings-title">Game settings</h2>
         </div>
         <button id="close-settings" class="icon-button" aria-label="Cancel settings">×</button>
@@ -354,10 +341,7 @@
                 <option value="strategist">Difficult</option>
               </select></label
             >
-            <p class="setting-help">
-              Kids uses simple random choices without planning ahead. Difficulty applies from the next CPU
-              turn.
-            </p>
+            <p class="setting-help">CPU changes apply next turn.</p>
             <label class="setting-field" for="starting-hand-size"
               >Starting cards per player<input
                 id="starting-hand-size"
@@ -378,25 +362,14 @@
               ><input id="guaranteed-start" type="checkbox" aria-describedby="starting-card-note" /> Exactly 3
               Spells/Omens per player</label
             >
-            <p id="starting-card-note" class="setting-help">
-              When enabled, deal exactly 3 random Spells/Omens per player, with units filling the rest of each
-              hand.
-            </p>
+            <p id="starting-card-note" class="setting-help" hidden></p>
             <p id="deck-settings-note" class="setting-help"></p>
-            <p class="setting-help">
-              Hand size, card types and starting guarantees apply to your next game. Your current match keeps
-              its cards.
-            </p>
+            <p class="setting-help">Card settings apply to new games.</p>
           </fieldset>
           <fieldset class="settings-group">
             <legend>Sound &amp; music</legend>
-            <p id="storage-note" class="setting-help">
-              Your game and settings save automatically in this browser.
-            </p>
-            <p id="audio-note" class="setting-help">
-              A dark cinematic battle soundtrack and a quieter lobby theme. Short victory, defeat or draw
-              music plays at results.
-            </p>
+            <p id="storage-note" class="setting-help" role="status" hidden></p>
+            <p id="audio-note" class="setting-help" role="status" hidden></p>
             <label class="audio-toggle"><input id="mute-all" type="checkbox" /> Mute all audio</label>
             <label class="audio-toggle"
               ><input id="music-enabled" type="checkbox" checked /> Background music</label
