@@ -138,36 +138,52 @@ window.FKEngine = (() => {
     return settleEmptyHands(s);
   }
   const option = id => ({ value: id, card: id, label: C[id].name });
+  function destructionTargets(s, effect) {
+    const eligible = p => units(s, p).filter(id => !protectedFrom(s, id, true));
+    if (effect === 'pridefall') return [0, 1].flatMap(p => {
+      const targets = eligible(p), highest = Math.max(...targets.map(id => power(s, id)));
+      return targets.filter(id => power(s, id) === highest);
+    });
+    if (effect === 'weakest-link') return [0, 1].flatMap(eligible);
+    const field = ROWS.flatMap(row => [0, 1].flatMap(p => onRow(s, p, row)));
+    const targets = effect === 'purge' ? field.filter(id => C[id].type === 'omen') : field;
+    return [...targets, ...s.weather.map(w => w.id)].filter(id => !protectedFrom(s, id, true));
+  }
   function prompt(state, actor, cardId, selections = {}) {
     const c = C[cardId];
     if (state.phase !== 'playing' || state.turn !== actor || state.players[actor].passed || !state.players[actor].hand.includes(cardId) || !c) return { kind: 'blocked', message: 'This card cannot be played now.' };
     const a = { card: cardId, selections: clone(selections) };
     let waiting = null;
-    function pick(key, opts, count, title) {
+    function pick(key, opts, count, title, noTargets = `There are no valid targets for ${c.name}.`) {
       count = Math.min(count, opts.length);
-      if (count === 0) return [];
+      if (count === 0) { waiting = { kind: 'blocked', message: noTargets }; return null; }
       // Nonempty selection steps always need an explicit choice, even if forced.
       const values = selections[key];
       if (Array.isArray(values) && values.length === count && new Set(values).size === count && values.every(v => opts.some(o => o.value === v))) return values;
       waiting = { kind: 'choice', key, title, options: opts, count };
       return null;
     }
+    if (['pridefall', 'weakest-link', 'catastrophe', 'purge'].includes(c.effect) && !destructionTargets(state, c.effect).length) {
+      return { kind: 'blocked', message: c.effect === 'purge' ? 'There are no Omens in play to destroy.' : `There are no unprotected targets for ${c.name} to destroy.` };
+    }
     if (c.type === 'unit') {
       const dest = c.ability === 'infiltration' ? other(actor) : actor;
       if (blocked(state, dest, c.row)) return { kind: 'blocked', message: `Dread blocks the ${c.row} row this unit must enter.` };
+      if (c.ability === 'infiltration' && (state.deckCount ?? state.deck.length) === 0) return { kind: 'blocked', message: 'The shared deck is empty. Infiltration has no cards to draw.' };
       const temp = clone(state);
       temp.players[actor].hand = temp.players[actor].hand.filter(id => id !== cardId);
       onRow(temp, dest, c.row).push(cardId);
       if (c.ability === 'restoration') {
-        a.restore = pick('restore', temp.players[actor].grave.filter(id => unit(id) && C[id].row === c.row).map(option), 1, `Return a ${c.row} unit to your hand`);
+        a.restore = pick('restore', temp.players[actor].grave.filter(id => unit(id) && C[id].row === c.row).map(option), 1, `Return a ${c.row} unit to your hand`, `Your destroyed pile has no ${c.row} units to return.`);
       } else if (c.ability === 'deathGaze') {
         const targets = rowUnits(temp, other(actor), 'ranged').filter(id => !protectedFrom(temp, id));
         const highest = Math.max(...targets.map(id => power(temp, id)));
-        a.kill = pick('kill', targets.filter(id => power(temp, id) === highest).map(option), 1, 'Choose a highest-power enemy Ranged unit');
+        a.kill = pick('kill', targets.filter(id => power(temp, id) === highest).map(option), 1, 'Choose a highest-power enemy Ranged unit', 'There are no unprotected enemy Ranged units for Death Gaze to destroy.');
       } else if (c.ability === 'convert') {
-        const targets = !blocked(temp, actor, 'combat') && !blocked(temp, other(actor), 'combat') ? rowUnits(temp, other(actor), 'combat') : [];
+        if (blocked(temp, other(actor), 'combat')) return { kind: 'blocked', message: 'Dread blocks the enemy Combat row, so Mimic cannot trade places.' };
+        const targets = rowUnits(temp, other(actor), 'combat');
         const lowest = Math.min(...targets.map(id => power(temp, id)));
-        a.convert = pick('convert', targets.filter(id => power(temp, id) === lowest).map(option), 1, 'Choose a lowest-power enemy Combat unit');
+        a.convert = pick('convert', targets.filter(id => power(temp, id) === lowest).map(option), 1, 'Choose a lowest-power enemy Combat unit', 'There are no enemy Combat units for Mimic to trade places with.');
       }
       if (waiting) return waiting;
       a.destination = dest;
@@ -178,13 +194,14 @@ window.FKEngine = (() => {
       a.row = pick('row', opts, 1, `Choose ${c.effect === 'dread' ? 'an enemy' : 'a friendly'} row`);
       if (waiting) return waiting;
     } else if (c.effect === 'decoy') {
-      a.decoy = pick('decoy', units(state, actor).filter(id => !has(state, actor, C[id].row, 'omen-sanctuary')).map(option), 1, 'Return one of your units to your hand');
+      a.decoy = pick('decoy', units(state, actor).filter(id => !has(state, actor, C[id].row, 'omen-sanctuary')).map(option), 1, 'Return one of your units to your hand', 'There are no friendly units that Decoy can return. Sanctuary blocks this Spell.');
       if (waiting) return waiting;
     } else if (c.effect === 'sacrifice') {
-      a.sacrifice = pick('sacrifice', units(state, actor).filter(id => !protectedFrom(state, id, true)).map(option), 1, 'Step 1: Choose a friendly unit to destroy');
-      if (waiting) return waiting;
       // Recovery uses the pile before this play; its sacrifice cannot immediately return.
       const grave = state.players[actor].grave.filter(unit);
+      if (!grave.length) return { kind: 'blocked', message: 'Your destroyed pile has no units to recover. The unit sacrificed in this play cannot be recovered.' };
+      a.sacrifice = pick('sacrifice', units(state, actor).filter(id => !protectedFrom(state, id, true)).map(option), 1, 'Step 1: Choose a friendly unit to destroy', 'There are no unprotected friendly units to sacrifice.');
+      if (waiting) return waiting;
       a.recover = pick('recover', grave.map(option), 2, 'Step 2: Choose up to two previously destroyed units to return to your hand');
       if (waiting) return waiting;
     } else if (c.effect === 'weakest-link') {
@@ -247,17 +264,8 @@ window.FKEngine = (() => {
         for (const id of a.recover) { s.players[actor].grave = s.players[actor].grave.filter(x => x !== id); s.players[actor].hand.push(id); s.knownHands[actor].push(id); }
         if (a.recover.length) log(s, actor === 0 ? `${a.recover.map(id => C[id].name).join(' and ')} return to your hand.` : `The CPU returns ${a.recover.length} unit${a.recover.length === 1 ? '' : 's'} to its hand.`);
       }
-      if (c.effect === 'pridefall') {
-        const targets = [0, 1].flatMap(p => {
-          const eligible = units(s, p).filter(id => !protectedFrom(s, id, true));
-          const top = Math.max(...eligible.map(id => power(s, id)));
-          return eligible.filter(id => power(s, id) === top);
-        });
-        victims = destroy(s, targets, true);
-      }
+      if (['pridefall', 'catastrophe', 'purge'].includes(c.effect)) victims = destroy(s, destructionTargets(s, c.effect), true);
       if (c.effect === 'weakest-link') victims = destroy(s, a.weakest, true);
-      if (c.effect === 'catastrophe') victims = destroy(s, [...ROWS.flatMap(row => [0, 1].flatMap(p => onRow(s, p, row))), ...s.weather.map(w => w.id)], true);
-      if (c.effect === 'purge') victims = destroy(s, [...ROWS.flatMap(row => [0, 1].flatMap(p => onRow(s, p, row).filter(id => C[id].type === 'omen'))), ...s.weather.map(w => w.id)], true);
       if (victims.length) log(s, `Destroyed: ${victims.map(id => C[id].name).join(', ')}.`);
       s.deck.push(c.id); // Spells return to the bottom, never the destroyed pile.
     }

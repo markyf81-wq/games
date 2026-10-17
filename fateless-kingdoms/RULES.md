@@ -106,7 +106,7 @@ You do not draw cards between rounds.
 
 Some cards may let you draw from the deck.
 
-If a card tells you to draw but the deck is empty, draw nothing.
+Infiltration cannot be played when the shared deck is empty. If only one card remains, draw that card instead of two.
 
 ### **Omen Effects**
 
@@ -122,9 +122,13 @@ If a card says to affect a certain number of cards, but there are not enough car
 
 ### **No Target**
 
-You may still play a card even if its effect has no target.
+You cannot play a card when a required ability or Spell has no legal target. The card stays in your hand and your turn does not end. This applies to both players.
 
-If there is no target, the card’s effect simply does nothing.
+Convert needs an enemy Combat unit and both Combat rows must allow the swap. Restoration needs a unit of its row type in your destroyed pile. Death Gaze needs an unprotected enemy Ranged unit. Decoy needs an eligible friendly unit. Sacrifice needs both an unprotected friendly unit to destroy and at least one unit already in your destroyed pile to recover. Pridefall, Weakest Link and Catastrophe need at least one card they can destroy; Purge needs an Omen in play. A destruction Spell can still be played when only one side has eligible targets.
+
+Ordinary units and passive abilities can be played in a legal row even if their bonus or protection is not currently useful. Omens can be placed in legal rows or the shared weather area before units arrive, because their effects remain in play. Patience is always a valid play on your turn: spending the turn without passing is its effect.
+
+If you still have cards in hand but none can be played, choose whether to pass; do not automatically pass.
 
 ### **Winning The Game**
 
@@ -138,7 +142,7 @@ If both players reach 2 round wins at the same time because of a draw, the game 
 * **Pridefall:** On each side, ignore units protected from this Spell and destroy the highest-power remaining unit. Also destroy all unprotected units tied for that power.  
 * **Weakest Link:** Destroy the 3 lowest-power unprotected units in play on each side. If units tie at the cutoff, the player who played Weakest Link chooses which tied units to destroy. Destroy no more than 3 units per side, or as many eligible units as possible if fewer are available.  
 * **Patience:** Do nothing. Your turn ends.  
-* **Sacrifice:** Destroy any 1 unit card on your field. Bring any 2 unit cards from your destroyed pile into your hand. Only units already in your destroyed pile before this play are eligible to return; the unit sacrificed in this play cannot be returned by the same Sacrifice. Resolve as much as possible if there are fewer eligible targets. Units return to your hand, not the field, so their when-played abilities do not trigger. Units protected from this Spell cannot be chosen for destruction.  
+* **Sacrifice:** Destroy any 1 unit card on your field. Bring any 2 unit cards from your destroyed pile into your hand. Only units already in your destroyed pile before this play are eligible to return; the unit sacrificed in this play cannot be returned by the same Sacrifice. You need an unprotected friendly unit to destroy and at least one previously destroyed unit to recover. If only one recovery target is available, return that one. Units return to your hand, not the field, so their when-played abilities do not trigger. Units protected from this Spell cannot be chosen for destruction.  
 * **Catastrophe:** Destroy every card in play on both sides.  
 * **Purge:** Destroy all OMEN cards in play on both sides.
 
