@@ -353,3 +353,6 @@ html{height:100%;overflow:hidden}body{height:100vh;height:100dvh;min-height:0;ov
 .choice-description{min-width:0}.choice-description .ability-label{display:block;margin-bottom:8px}
 .card-details-dialog .choice-intro{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1fr);gap:24px;align-items:center;padding-bottom:20px}.card-details-dialog .choice-intro>img{width:100%;height:auto;max-height:48vh;max-height:48dvh;object-fit:contain;justify-self:center}.card-details-dialog .choice-intro p{font-size:14px;line-height:1.8}.choice-actions #choice-confirm{min-width:0}.choice-actions #choice-confirm .primary{width:100%;white-space:normal}.choice-actions .quiet{flex-shrink:0}
 @media(max-width:550px){.card-details-dialog .choice-intro{grid-template-columns:minmax(0,1fr);gap:16px}.card-details-dialog .choice-intro>img{width:auto;max-width:75%;max-height:34vh;max-height:34dvh}.card-details-dialog .choice-intro p{font-size:13px;line-height:1.6}.card-details-dialog .choice-question{font-size:20px}.choice-actions{gap:12px}.choice-actions .primary{font-size:11px;padding:11px}.choice-actions .quiet{min-width:75px}.choice-intro>img{flex-shrink:0}}
+
+/* The hand owns touch drags so the browser does not pan/cancel thumb previews. */
+.hand{touch-action:none}.hand .hand-card.touch-previewed{border-color:#eed49b;box-shadow:0 0 0 1px #e3c58480,0 0 12px #d9bb7740}

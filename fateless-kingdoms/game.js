@@ -389,6 +389,7 @@
       if (touchHold.shown) { heldClickPointer = touchHold.pointer; heldClickUntil = Infinity; }
       touchHold = null;
     }
+    rowPreviewSource?.classList.remove('touch-previewed');
     rowPreview?.remove(); rowPreview = null; rowPreviewSource = null;
   }
   function showRowPreview(card, touch = false) {
@@ -413,6 +414,11 @@
     preview.style.setProperty('--preview-start-scale-x', String(rect.width / width));
     preview.style.setProperty('--preview-start-scale-y', String(rect.height / height));
     rowPreview = preview; rowPreviewSource = card; document.body.append(preview);
+    if (touch && card.classList.contains('hand-card')) card.classList.add('touch-previewed');
+  }
+  function handCardAtPoint(x, y) {
+    const card = document.elementFromPoint(x, y)?.closest('.hand-card');
+    return card && $('hand').contains(card) ? card : null;
   }
   function layoutSidebar() {
     const sidebar = document.querySelector('.sidebar');
@@ -662,7 +668,7 @@
       ['Ties & protected targets', 'Death Gaze and Convert choose one tied target. Weakest Link chooses between ties to destroy at most three unprotected units on each side. Pridefall destroys the highest-power unprotected units on each side, including all ties. Protection is checked before a destruction event removes any cards.'],
       ['Card abilities', 'Target counts every friendly Ranged unit, including itself. Stone Wall protects all friendly Siege units, including itself. Sacrifice destroys one friendly unit and returns up to two units already in your destroyed pile to your hand. The unit sacrificed in this play cannot be returned by the same Sacrifice. It does not swap a unit into play or trigger its ability. Dread blocks cards entering its row, including moves through Convert.'],
       ['No targets', 'Resolve as much of a card as possible. No-target effects do nothing. You may play a Spell or unit whose ability has no target, but Dread still prevents adding a card to a blocked row. If the shared deck is empty, draw nothing.'],
-      ['Controls & saving', 'Choose Begin game and flip the coin to decide who starts. Refreshing the page restores your saved match automatically, without another coin flip. Reset game clears the saved match after confirmation and returns to Begin game. Hover or focus a card to preview it. On touch screens, hold a hand, battlefield or weather card to enlarge it, then release to close the preview. A normal tap still selects or inspects the card. Tap a hand card to open its artwork and details in a modal. Play or Choose targets and Cancel are inside that modal. Required choices stay in the same window until you confirm the play. Cancel or Escape abandons the play before any cards move. Each played card is revealed in the centre before resolving. The rival’s hand stays face down. Round results remain available in the match history. Each completed round opens the result window; Continue starts the next round, or Play again begins a fresh match after the final result. Review board keeps the field visible, and Round result or Match result beside your hand reopens the window. Pass opens a confirmation window. Click your destroyed-card stack to browse your own pile without losing your selection. The rival’s destroyed pile stays face down and shows only its card count. Weather cards appear between the two fields. Settings includes CPU level, starting hand size, card types, music and sound effects. Music is enabled by default, with a battle theme during play. In portrait mode, the header’s Menu, round number and Log buttons open slide-up panels; scores and Pass stay on the table, with card actions in the card modal. Match information includes the rival hand, round history and destroyed piles. The speaker button in the header mutes or unmutes all audio without changing your individual music/effects preferences. Escape closes dialogs or cancels card selection. Matches save automatically when storage is available.']
+      ['Controls & saving', 'Choose Begin game and flip the coin to decide who starts. Refreshing the page restores your saved match automatically, without another coin flip. Reset game clears the saved match after confirmation and returns to Begin game. Hover or focus a card to preview it. On touch screens, press a hand card and slide your thumb across the hand to preview each card. Release over a hand card to open its details and play controls; release outside the hand to cancel. For battlefield and weather cards, hold to preview and release to close. Tap a hand card to open its artwork and details in a modal. Play or Choose targets and Cancel are inside that modal. Required choices stay in the same window until you confirm the play. Cancel or Escape abandons the play before any cards move. Each played card is revealed in the centre before resolving. The rival’s hand stays face down. Round results remain available in the match history. Each completed round opens the result window; Continue starts the next round, or Play again begins a fresh match after the final result. Review board keeps the field visible, and Round result or Match result beside your hand reopens the window. Pass opens a confirmation window. Click your destroyed-card stack to browse your own pile without losing your selection. The rival’s destroyed pile stays face down and shows only its card count. Weather cards appear between the two fields. Settings includes CPU level, starting hand size, card types, music and sound effects. Music is enabled by default, with a battle theme during play. In portrait mode, the header’s Menu, round number and Log buttons open slide-up panels; scores and Pass stay on the table, with card actions in the card modal. Match information includes the rival hand, round history and destroyed piles. The speaker button in the header mutes or unmutes all audio without changing your individual music/effects preferences. Escape closes dialogs or cancels card selection. Matches save automatically when storage is available.']
     ];
     blocks.forEach(([title, text]) => { const section = node('section', 'rule-block'); section.append(node('h3', '', title), node('p', '', text)); root.append(section); });
   }
@@ -808,21 +814,39 @@
     if (event.pointerType !== 'touch' || !event.isPrimary || animating || document.querySelector('dialog[open]')) return;
     const card = event.target.closest('.board-card,.hand-card,.weather-card');
     if (!card) return;
-    const hold = { pointer: event.pointerId, card, x: event.clientX, y: event.clientY, shown: false, timer: null };
+    const hold = { pointer: event.pointerId, card, hand: card.classList.contains('hand-card'), x: event.clientX, y: event.clientY, shown: false, timer: null };
     touchHold = hold;
-    hold.timer = setTimeout(() => {
+    if (hold.hand) {
+      // Start immediately so a thumb can slide straight across the overlapping hand.
+      showRowPreview(card, true); hold.shown = rowPreviewSource === card;
+    } else hold.timer = setTimeout(() => {
       if (touchHold !== hold || !card.isConnected) return;
       showRowPreview(card, true); hold.shown = rowPreviewSource === card;
     }, 420);
   }, { passive: true });
   document.addEventListener('pointermove', event => {
-    if (touchHold?.pointer === event.pointerId && Math.hypot(event.clientX - touchHold.x, event.clientY - touchHold.y) > 10) clearRowPreview();
+    const hold = touchHold;
+    if (hold?.pointer !== event.pointerId) return;
+    if (hold.hand) {
+      // Pointer capture keeps event.target on the first card; hit-test the thumb instead.
+      const card = handCardAtPoint(event.clientX, event.clientY);
+      hold.card = card;
+      if (card) { showRowPreview(card, true); hold.shown = hold.shown || rowPreviewSource === card; }
+      else clearRowPreview(false);
+    } else if (Math.hypot(event.clientX - hold.x, event.clientY - hold.y) > 10) clearRowPreview();
   }, { passive: true });
-  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => document.addEventListener(type, event => {
+  document.addEventListener('pointerup', event => {
+    const hold = touchHold;
+    const card = hold?.pointer === event.pointerId && hold.hand && hold.shown ? handCardAtPoint(event.clientX, event.clientY) : null;
+    if (hold?.pointer === event.pointerId) clearRowPreview();
+    if (heldClickPointer === event.pointerId) heldClickUntil = performance.now() + 800;
+    if (card) selectHandCard(card.dataset.card);
+  }, { passive: true });
+  ['pointercancel', 'lostpointercapture'].forEach(type => document.addEventListener(type, event => {
     if (touchHold?.pointer === event.pointerId) clearRowPreview();
     if (heldClickPointer === event.pointerId) heldClickUntil = performance.now() + 800;
   }, { passive: true }));
-  // A completed hold must not turn into a selection or play when the finger lifts.
+  // Release handles a hand selection once; swallow the browser's follow-up click.
   document.addEventListener('click', event => {
     if (performance.now() < heldClickUntil && (event.detail > 0 || event.pointerType === 'touch')) {
       heldClickUntil = 0; heldClickPointer = null; event.preventDefault(); event.stopImmediatePropagation();
