@@ -13,13 +13,13 @@
     <script defer src="storage.js?v=refactor45"></script>
     <script defer src="cards.js?v=refactor45"></script>
     <script defer src="engine.js?v=refactor45"></script>
-    <script defer src="cpu.js?v=refactor45"></script>
+    <script defer src="cpu.js?v=kids46"></script>
     <script defer src="audio.js?v=refactor45"></script>
     <script defer src="effects.js?v=refactor45"></script>
     <script defer src="card-preview.js?v=refactor45"></script>
-    <script defer src="cpu-controller.js?v=refactor45"></script>
+    <script defer src="cpu-controller.js?v=kids46"></script>
     <script defer src="table-layout.js?v=refactor45"></script>
-    <script defer src="game.js?v=refactor45"></script>
+    <script defer src="game.js?v=kids46"></script>
   </head>
   <body>
     <header class="site-header">
@@ -348,12 +348,16 @@
             <legend>The game</legend>
             <label class="setting-field" for="difficulty"
               >CPU level<select id="difficulty">
+                <option value="kids">Kids</option>
                 <option value="casual">Beginner</option>
                 <option value="tactician" selected>Intermediate</option>
                 <option value="strategist">Difficult</option>
               </select></label
             >
-            <p class="setting-help">Difficulty applies from the next CPU turn.</p>
+            <p class="setting-help">
+              Kids uses simple random choices without planning ahead. Difficulty applies from the next CPU
+              turn.
+            </p>
             <label class="setting-field" for="starting-hand-size"
               >Starting cards per player<input
                 id="starting-hand-size"

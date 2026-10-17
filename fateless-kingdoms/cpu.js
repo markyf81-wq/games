@@ -1,4 +1,4 @@
-/* Hidden-information search. Input is a public view, never the real opposing hand. */
+/* Local CPU policies. Input is a public view, never the real opposing hand. */
 window.FKCPU = (() => {
   'use strict';
   const E = window.FKEngine,
@@ -85,7 +85,54 @@ window.FKCPU = (() => {
     }
     return state;
   }
+  function chooseKids(view) {
+    const actor = 1,
+      opponent = 0;
+    const mine = E.score(view, actor),
+      theirs = E.score(view, opponent);
+    if (!view.players[actor].hand.length || (view.players[opponent].passed && mine > theirs)) {
+      return { move: { pass: true }, samples: 0 };
+    }
+    // Read the board and ask for legal moves only. Never sample hidden cards,
+    // simulate a play or search an opponent response in this policy.
+    const moves = E.actions(view, actor, 8).filter((move) => !move.pass);
+    if (!moves.length) return { move: { pass: true }, samples: 0 };
+    const sensible = moves.filter((move) => {
+      const card = C[move.card];
+      if (card.weather) {
+        const rowPower = (p) =>
+          view.players[p].rows[card.weather].includes('omen-ironward')
+            ? 0
+            : E.rowScore(view, p, card.weather);
+        return rowPower(opponent) >= rowPower(actor);
+      }
+      if (card.effect === 'war-chant') {
+        const [side, row] = move.row[0].split(':');
+        return (
+          E.rowUnits(view, Number(side), row).length > 0 &&
+          !view.players[side].rows[row].includes('omen-ironward')
+        );
+      }
+      if (['pridefall', 'weakest-link', 'catastrophe', 'purge'].includes(card.effect)) return theirs >= mine;
+      if (card.effect === 'decoy') {
+        const target = move.decoy[0];
+        return E.power(view, target) <= 2 || C[target].ability === 'infiltration';
+      }
+      return true;
+    });
+    // Choose a card first so Omens with several row choices do not get extra votes.
+    // Keep playing if every legal move fails these deliberately simple guidelines.
+    const byCard = new Map();
+    for (const move of sensible.length ? sensible : moves) {
+      if (!byCard.has(move.card)) byCard.set(move.card, []);
+      byCard.get(move.card).push(move);
+    }
+    const cards = [...byCard.values()];
+    const choices = cards[Math.floor(Math.random() * cards.length)];
+    return { move: choices[Math.floor(Math.random() * choices.length)], samples: 0 };
+  }
   async function choose(view, level = 'tactician', yieldWork = () => Promise.resolve()) {
+    if (level === 'kids') return chooseKids(view);
     const p = 1,
       foe = 0,
       config = levels[level] || levels.tactician;

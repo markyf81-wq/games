@@ -4,7 +4,12 @@
     { cards: C, ids: IDS, rows: ROWS } = window.FKCards;
   const $ = (id) => document.getElementById(id);
   const storage = window.FKStorage;
-  const LEVEL_NAMES = { casual: 'Beginner', tactician: 'Intermediate', strategist: 'Difficult' };
+  const LEVEL_NAMES = {
+    kids: 'Kids',
+    casual: 'Beginner',
+    tactician: 'Intermediate',
+    strategist: 'Difficult'
+  };
   const FX = window.FKEffects,
     audio = window.FKAudio;
   let state,

@@ -8,7 +8,7 @@ The game uses ordinary deferred scripts, relative asset URLs and browser APIs. T
 | --- | --- | --- |
 | `cards.js` | Immutable card definitions, names, artwork and ability text | UI or mutable match state |
 | `engine.js` | Pure state transitions, scoring, protection, legal choices, save validation | DOM, audio, storage or CPU policy |
-| `cpu.js` | Hidden-information sampling and move evaluation | Real opponent hand or deck order |
+| `cpu.js` | Reactive Kids choices and sampled search for higher levels | Real opponent hand or deck order |
 | `cpu-worker.js` | Message bridge for background CPU search | Separate rules or alternate move validation |
 | `cpu-controller.js` | Delayed search, worker/fallback lifecycle and single completion | Move legality or DOM rendering |
 | `storage.js` | Existing storage keys and nonthrowing JSON persistence | State validation or UI messages |
@@ -38,7 +38,7 @@ A new game cancels CPU work and effects, increments the presentation token and r
 
 ## CPU isolation and cancellation
 
-Only `engine.publicView(state, 1)` goes into `CPUController`. Search reconstructs possible unknown cards from the public pool and observations. Worker errors fall back once to the same local search. A completed job releases its callback before invoking it, preventing a second response from playing again. Reset invalidates the pending job and terminates its worker; yielded fallback searches exit when their job is no longer current.
+Only `engine.publicView(state, 1)` goes into `CPUController`. The three search levels reconstruct possible unknown cards from the public pool and observations. Kids bypasses that path and randomly chooses legal current-board plays without sampling or turn simulation. Worker errors fall back once to the same local search. A completed job releases its callback before invoking it, preventing a second response from playing again. Reset invalidates the pending job and terminates its worker; yielded fallback searches exit when their job is no longer current.
 
 ## Persistence compatibility
 

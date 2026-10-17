@@ -10,7 +10,15 @@ The initial opponent is independently written JavaScript. No third-party Gwent c
 
 These support simulation and uncertainty-aware planning as useful directions. We did not find an authoritative technical description of CD Projekt's original Gwent CPU during the initial search.
 
-## Current implementation
+## Kids level
+
+Kids (`kids`) uses a separate reactive policy. It branches before the sampled search, requests legal plays from `engine.actions` using only the public view, and chooses randomly by card, then randomly among that card’s retained target/placement options. Grouping by card prevents a card with several row choices from being artificially more likely.
+
+A few deliberately rough visible-board guidelines avoid obvious waste when alternatives exist: destruction Spells are favoured only while level or behind on power; weather should not favour the rival’s current row; War Chant prefers a populated row without Ironward; Decoy prefers low-power or Infiltration units. When no moves meet these guidelines, it still chooses a legal play. It passes if no legal plays remain or the human has passed and it is strictly ahead. It does not ration its best cards for later rounds.
+
+Kids never samples hidden hands/deck orders, simulates a play with `engine.play`, predicts an opponent response or calls the continuation search. Its sample count is always zero. Its legal-target rules are identical to every other level. It is intended to be easier and less predictable, but its playing strength has not been measured.
+
+## Search levels (Beginner, Intermediate, Difficult)
 
 1. The app removes the human hand and real deck order before dispatching a CPU job. Only their counts remain.
 2. Publicly returned/recovered cards are remembered. Remaining unseen cards from the configured match pool are sampled without replacement into plausible opposing hands and deck orders. A shared, one-copy deck makes this simpler than guessing collectible deck archetypes.
@@ -25,6 +33,6 @@ CPU work runs in a Web Worker over HTTP, with a yielding fallback when opened di
 
 ## Limitations and useful next steps
 
-The current algorithm is sampled lookahead, **not full MCTS or ISMCTS**. It uses uniform guesses for unrevealed cards, heuristic leaf values and a greedy opponent model. It does not learn from the human's playing history. Stopping at the current round values future material heuristically rather than solving all future rounds.
+The three search levels use sampled lookahead, **not full MCTS or ISMCTS**. It uses uniform guesses for unrevealed cards, heuristic leaf values and a greedy opponent model. It does not learn from the human's playing history. Stopping at the current round values future material heuristically rather than solving all future rounds.
 
 Natural improvements are full information-set tree search with a bounded thinking time, better match-level passing evaluation, explicit combo planning (for example Decoy/Infiltration), opponent-policy variety, and self-play measurement against fixed baselines. Changes should be evaluated with an agreed testing scope, without giving harder opponents hidden information or extra cards.
