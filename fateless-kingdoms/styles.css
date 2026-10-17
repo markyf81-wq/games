@@ -444,9 +444,6 @@ select {
   text-align: center;
   pointer-events: none;
 }
-.hand-card.unplayable {
-  opacity: 0.45;
-}
 .empty-hand {
   color: var(--muted);
   font-family: Georgia, serif;
