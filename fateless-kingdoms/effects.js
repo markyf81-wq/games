@@ -2,10 +2,18 @@
 window.FKEffects = (() => {
   'use strict';
   const C = window.FKCards.cards, E = window.FKEngine;
-  let running = [], overlays = [], hidden = [], pauses = [], generation = 0;
+  let running = [], overlays = [], hidden = [], pauses = [], generation = 0, particleCount = 0;
   const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const bounds = element => element?.getBoundingClientRect();
   const viable = r => r && r.width > 0 && r.height > 0 && r.left + r.width > 0 && r.left < window.innerWidth && r.top + r.height > 0 && r.top < window.innerHeight;
+  const colors = { combat: '#d89580', ranged: '#a5d38e', siege: '#8ebcdd', spell: '#e5bd70', omen: '#c49ee6', blizzard: '#bee8fa', thunderstorm: '#acb5f7', flood: '#72cddd', 'war-chant': '#f2ce75', dread: '#d977a0', ironward: '#82d6bd', sanctuary: '#f1dc9c', catastrophe: '#f6a06a', purge: '#ccaff4' };
+  const tone = card => colors[card?.effect] || colors[card?.row] || colors[card?.type] || colors.spell;
+  function overlay(className, rect, color) {
+    const n = document.createElement('div'); n.className = className; n.setAttribute('aria-hidden', 'true');
+    if (rect) Object.assign(n.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
+    n.style.setProperty('--fx-color', color || colors.spell);
+    document.body.append(n); overlays.push(n); return n;
+  }
   function capture() {
     const field = new Map(), hand = new Map();
     document.querySelectorAll('#battlefield [data-card]').forEach(el => {
@@ -20,11 +28,15 @@ window.FKEffects = (() => {
     };
     return { field, hand, cpu: anchor('rival-hand'), deck: anchor('deck-count'), grave: [anchor('human-grave'), anchor('cpu-grave')] };
   }
-  function cancel() {
-    generation++; running.forEach(a => a.cancel()); running = [];
-    pauses.forEach(p => { clearTimeout(p.timer); p.resolve(); }); pauses = [];
+  function clearEffects() {
+    particleCount = 0; running.forEach(a => a.cancel()); running = [];
     overlays.forEach(n => n.remove()); overlays = [];
     hidden.forEach(n => n.classList.remove('fx-hidden')); hidden = [];
+  }
+  function cancel() {
+    generation++;
+    pauses.forEach(p => { clearTimeout(p.timer); p.resolve(); }); pauses = [];
+    clearEffects();
   }
   function animate(el, frames, options) {
     if (!el.animate || reduced()) return Promise.resolve();
@@ -32,45 +44,111 @@ window.FKEffects = (() => {
     return a.finished.catch(() => {});
   }
   function ghost(id, rect, back = false) {
-    const n = document.createElement('div'); n.className = `fx-card${back ? ' card-back' : ''}`; n.setAttribute('aria-hidden', 'true');
-    Object.assign(n.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
+    const n = overlay(`fx-card${back ? ' card-back' : ''}`, rect, tone(C[id]));
     if (!back) { const im = document.createElement('img'); im.src = C[id].image; im.alt = ''; n.append(im); }
-    document.body.append(n); overlays.push(n); return n;
+    return n;
   }
   function cardRect(anchor, width = 100) { return { left: anchor.left + anchor.width / 2 - width / 2, top: anchor.top + anchor.height / 2 - width * .707, width, height: width / .707 }; }
   function pause(duration) {
     return new Promise(resolve => { const p = { resolve }; p.timer = setTimeout(() => { pauses = pauses.filter(item => item !== p); resolve(); }, duration); pauses.push(p); });
+  }
+  async function sparks(rect, color, count = 8, delay = 0, rising = false) {
+    if (reduced() || !viable(rect)) return;
+    const limit = window.innerWidth <= 600 ? 32 : 72;
+    count = Math.min(count, Math.max(0, limit - particleCount)); particleCount += count;
+    await Promise.all(Array.from({ length: count }, (_, i) => {
+      const angle = Math.PI * 2 * i / Math.max(1, count), distance = 24 + Math.random() * 40;
+      const x = rising ? Math.random() * 40 - 20 : Math.cos(angle) * distance;
+      const y = rising ? -45 - Math.random() * 65 : Math.sin(angle) * distance;
+      const n = overlay(`fx-spark${rising ? ' fx-cinder' : ''}`, { left: rect.left + rect.width * (rising ? Math.random() : .5), top: rect.top + rect.height * (rising ? .6 : .5), width: 3, height: rising ? 6 : 3 }, color);
+      return animate(n, [
+        { opacity: 0, transform: 'translate(0,0) scale(.4)' },
+        { opacity: .9, offset: .15 },
+        { opacity: 0, transform: `translate(${x}px,${y}px) scale(.15)` }
+      ], { duration: rising ? 740 : 540, delay: delay + i * 12, easing: 'cubic-bezier(.1,.65,.25,1)' }).then(() => n.remove());
+    }));
+  }
+  async function impact(rect, color, delay = 0) {
+    if (reduced() || !viable(rect)) return;
+    const size = Math.min(180, Math.max(rect.width * 1.7, 55));
+    const ring = overlay('fx-impact', { left: rect.left + (rect.width - size) / 2, top: rect.top + (rect.height - size) / 2, width: size, height: size }, color);
+    await Promise.all([
+      animate(ring, [{ transform: 'scale(.25)', opacity: .8 }, { transform: 'scale(1.12)', opacity: 0 }], { duration: 580, delay, easing: 'ease-out' }).then(() => ring.remove()),
+      sparks(rect, color, 8, delay)
+    ]);
+  }
+  async function rowBurst(element, color, delay = 0) {
+    const rect = bounds(element);
+    if (reduced() || !viable(rect)) return;
+    const n = overlay('fx-row-burst', rect, color);
+    await animate(n, [{ opacity: 0, backgroundPosition: '130% 50%' }, { opacity: .6, offset: .25 }, { opacity: 0, backgroundPosition: '-30% 50%' }], { duration: 850, delay, easing: 'ease-out' });
+    n.remove();
+  }
+  async function feedback(before, after, next, delay = 0) {
+    if (reduced()) return;
+    const cues = [];
+    for (let p = 0; p < 2; p++) {
+      const score = document.getElementById(p === 0 ? 'human-score' : 'cpu-score'), difference = E.score(after, p) - E.score(before, p);
+      if (difference) {
+        const color = difference > 0 ? '#b8e5a0' : '#f0ac98';
+        cues.push(animate(score, [{ color, textShadow: `0 0 20px ${color}` }, { color: '#f0e9d8', textShadow: '0 0 0 transparent' }], { duration: 700, delay, fill: 'none' }));
+        const rect = bounds(score);
+        if (viable(rect)) {
+          const n = overlay('fx-score-change', rect, color); n.textContent = `${difference > 0 ? '+' : '−'}${Math.abs(difference)}`;
+          cues.push(animate(n, [{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'translateY(-10px)', offset: .2 }, { opacity: 0, transform: 'translateY(-30px)' }], { duration: 800, delay }).then(() => n.remove()));
+        }
+      }
+      if (after.players[p].wins > before.players[p].wins) {
+        const badge = document.getElementById(p === 0 ? 'human-wins' : 'cpu-wins');
+        cues.push(animate(badge, [{ filter: 'brightness(1)' }, { filter: 'brightness(1.7)', offset: .3 }, { filter: 'brightness(1)' }], { duration: 650, delay, fill: 'none' }));
+      }
+      for (const row of window.FKCards.rows) {
+        if (E.rowScore(before, p, row) === E.rowScore(after, p, row)) continue;
+        const label = document.querySelector(`.${p === 0 ? 'own' : 'enemy'}-half .row-${row} .row-score`);
+        if (label) cues.push(animate(label, [{ color: colors[row], textShadow: `0 0 14px ${colors[row]}` }, { color: '#e8e4d2', textShadow: 'none' }], { duration: 650, delay, fill: 'none' }));
+      }
+    }
+    for (const [id, dest] of next.field) {
+      if (!E.locate(before, id) || C[id].type !== 'unit' || E.power(before, id) === E.power(after, id)) continue;
+      const color = E.power(after, id) > E.power(before, id) ? '#b8e5a0' : '#f0ac98';
+      cues.push(animate(dest.element, [{ boxShadow: `0 0 0 2px ${color}, 0 0 18px ${color}` }, { boxShadow: '0 3px 7px #0004' }], { duration: 700, delay, fill: 'none' }));
+    }
+    await Promise.all(cues);
   }
   async function showPlayed(id, actor, snapshot) {
     cancel(); const token = generation;
     const width = Math.min(220, window.innerWidth * .48, (window.innerHeight - 150) / 1.414);
     const center = cardRect({ left: 0, top: 0, width: window.innerWidth, height: window.innerHeight }, width);
     center.top = Math.max(20, center.top - 20);
-    const shade = document.createElement('div'); shade.className = 'fx-stage'; shade.setAttribute('aria-hidden', 'true'); document.body.append(shade); overlays.push(shade);
-    const label = document.createElement('div'); label.className = 'fx-play-label'; label.setAttribute('aria-hidden', 'true');
-    label.style.top = `${center.top + center.height + 16}px`; label.textContent = `${actor === 0 ? 'You play' : 'The rival plays'} ${C[id].name}`; document.body.append(label); overlays.push(label);
+    const color = tone(C[id]);
+    const shade = overlay('fx-stage', null, color);
+    const auraSize = Math.min(center.height * 1.3, window.innerWidth - 16);
+    const aura = overlay('fx-reveal-aura', { left: center.left + (center.width - auraSize) / 2, top: center.top + (center.height - auraSize) / 2, width: auraSize, height: auraSize }, color);
+    const label = overlay('fx-play-label', null, color);
+    label.style.top = `${center.top + center.height + 16}px`;
+    const kicker = document.createElement('span'); kicker.textContent = `${actor === 0 ? 'You play' : 'The rival plays'} · ${C[id].row || C[id].type}`;
+    const name = document.createElement('strong'); name.textContent = C[id].name; label.append(kicker, name);
     const source = actor === 0 ? snapshot.hand.get(id)?.rect : snapshot.cpu && cardRect(snapshot.cpu, 80);
     const n = ghost(id, center); n.classList.add('showcased-card'); n.style.transformOrigin = '50% 50%';
     const from = viable(source) ? source : { left: actor === 0 ? center.left : window.innerWidth - 70, top: actor === 0 ? window.innerHeight - 70 : 20, width: 70, height: 99 };
     window.FKAudio.play('fly');
     await animate(n, [
-      { transform: `translate(${from.left + from.width / 2 - center.left - center.width / 2}px,${from.top + from.height / 2 - center.top - center.height / 2}px) rotate(${actor === 0 ? -8 : 8}deg) scale(${from.width / center.width},${from.height / center.height})`, opacity: .7 },
-      { transform: 'translate(0,0) rotate(0) scale(1)', opacity: 1 }
+      { transform: `translate(${from.left + from.width / 2 - center.left - center.width / 2}px,${from.top + from.height / 2 - center.top - center.height / 2}px) scale(${from.width / center.width},${from.height / center.height})`, opacity: .7 },
+      { transform: 'translate(0,0) scale(1)', opacity: 1 }
     ], { duration: 460, easing: 'cubic-bezier(.2,.7,.25,1)' });
     if (token !== generation) return null;
     window.FKAudio.play('land');
-    if (reduced() || !n.animate) await pause(2000);
-    else await animate(n, [
-      { transform: 'rotate(0) scale(1)' }, { transform: 'rotate(-3deg) scale(1.025)', offset: .2 },
-      { transform: 'rotate(3deg) scale(1.025)', offset: .4 }, { transform: 'rotate(-2deg) scale(1.02)', offset: .6 },
-      { transform: 'rotate(2deg) scale(1.015)', offset: .8 }, { transform: 'rotate(0) scale(1)' }
-    ], { duration: 2000, easing: 'ease-in-out' });
+    n.classList.add('reveal-ready');
+    await pause(reduced() ? 2000 : 1820);
+    if (token !== generation) return null;
+    await Promise.all([shade, label, aura].map(element => animate(element, [{ opacity: element === aura ? .2 : 1 }, { opacity: 0 }], { duration: 180 })));
     if (token !== generation) return null;
     // transition() replaces this overlay with the flight to its final destination.
     return center;
   }
   async function fly(id, from, to, destination, back = false, delay = 0) {
     if (!viable(from) || !to || to.width <= 0 || to.height <= 0 || reduced()) return;
+    const token = generation;
     const n = ghost(id, from, back);
     if (destination) { destination.classList.add('fx-hidden'); hidden.push(destination); }
     const x = to.left - from.left, y = to.top - from.top, sx = to.width / from.width, sy = to.height / from.height;
@@ -80,27 +158,27 @@ window.FKEffects = (() => {
       { transform: `translate(${x}px,${y}px) rotate(0) scale(${sx},${sy})`, opacity: 1, filter: 'brightness(1)' }
     ], { duration: 570, delay, easing: 'cubic-bezier(.2,.65,.25,1)' });
     if (destination) destination.classList.remove('fx-hidden'); n.remove();
+    if (token === generation && destination?.isConnected) await impact(to, tone(C[id]));
   }
   async function burn(id, rect, delay = 0) {
     if (!viable(rect) || reduced()) return;
     const n = ghost(id, rect); n.classList.add('burning-card');
     const promises = [animate(n, [
-      { opacity: 1, filter: 'brightness(1) saturate(1)', transform: 'scale(1)' },
-      { opacity: 1, filter: 'brightness(2.5) sepia(1) saturate(5)', transform: 'scale(1.06)', offset: .35 },
-      { opacity: .8, filter: 'brightness(.2) sepia(1)', transform: 'translateY(-12px) rotate(6deg) scale(.9)', offset: .7 },
-      { opacity: 0, filter: 'brightness(0)', transform: 'translateY(-25px) rotate(12deg) scale(.5)' }
+      { opacity: 1, filter: 'brightness(1)', clipPath: 'inset(0 0 0 0)', transform: 'scale(1)' },
+      { opacity: 1, filter: 'brightness(1.6) sepia(.8) saturate(2)', clipPath: 'inset(0 0 15% 0)', transform: 'scale(1.035)', offset: .3 },
+      { opacity: .65, filter: 'brightness(.35) sepia(1)', clipPath: 'inset(0 0 55% 0)', transform: 'translateY(-8px) scale(.98)', offset: .75 },
+      { opacity: 0, filter: 'brightness(.2)', clipPath: 'inset(0 0 100% 0)', transform: 'translateY(-18px) scale(.94)' }
     ], { duration: 800, delay, easing: 'ease-out' })];
-    for (let i = 0; i < 7; i++) {
-      const ember = document.createElement('i'); ember.className = 'fx-ember'; ember.setAttribute('aria-hidden', 'true');
-      ember.style.left = `${rect.left + Math.random() * rect.width}px`; ember.style.top = `${rect.top + rect.height * (.3 + Math.random() * .6)}px`;
-      document.body.append(ember); overlays.push(ember);
-      promises.push(animate(ember, [{ opacity: 0, transform: 'translate(0,0) scale(.5)' }, { opacity: 1, offset: .2 }, { opacity: 0, transform: `translate(${Math.random() * 60 - 30}px,-${55 + Math.random() * 60}px) scale(0)` }], { duration: 750, delay: delay + i * 35, easing: 'ease-out' }).then(() => ember.remove()));
-    }
+    promises.push(sparks(rect, '#ffbb6f', 7, delay + 80, true));
     await Promise.all(promises); n.remove();
   }
   async function transition(before, after, snapshot, actor, move = {}) {
     cancel(); const token = generation, later = [], next = capture(), card = C[move.card];
-    if (move.pass) { window.FKAudio.play('pass'); return; }
+    if (move.pass) {
+      window.FKAudio.play('pass');
+      try { await feedback(before, after, next); } finally { if (token === generation) clearEffects(); }
+      return;
+    }
     window.FKAudio.play('fly');
     if (card && !reduced()) {
       const source = snapshot.played || (actor === 0 ? snapshot.hand.get(card.id)?.rect : snapshot.cpu && cardRect(snapshot.cpu, 90));
@@ -134,15 +212,20 @@ window.FKEffects = (() => {
     const cue = destroyed ? 'burn' : card?.effect || card?.ability || 'land';
     if (card) {
       const effect = card.effect || card.ability;
-      if (effect && document.getElementById('battlefield').animate && !reduced()) {
-        const color = { blizzard: '#bfe8ff55', thunderstorm: '#b6baff55', flood: '#68c5e555', 'war-chant': '#f9bd5355', dread: '#ca547b44', ironward: '#72d9c755', sanctuary: '#efd69455', catastrophe: '#ee7e3e66', purge: '#d5b0ff55' }[effect];
-        if (color) later.push(animate(document.getElementById('battlefield'), [{ boxShadow: `inset 0 0 65px ${color}` }, { boxShadow: 'inset 0 0 0 transparent' }], { duration: 1100, delay: 300 }));
+      if (effect && !reduced()) {
+        const color = tone(card), loc = E.locate(after, card.id);
+        if (card.weather) {
+          for (const half of ['own', 'enemy']) later.push(rowBurst(document.querySelector(`.${half}-half .row-${card.weather} .row-cards`), color, 500));
+        } else if (card.type === 'omen' && loc) later.push(rowBurst(document.querySelector(`.${loc.p === 0 ? 'own' : 'enemy'}-half .row-${loc.row} .row-cards`), color, 500));
+        else if (['catastrophe', 'purge', 'pridefall', 'weakest-link'].includes(effect)) later.push(rowBurst(document.getElementById('battlefield'), color, 280));
       }
     }
     let cuePlayed = false;
     const cueTimer = setTimeout(() => { if (token === generation) { cuePlayed = true; window.FKAudio.play(cue); if (newHand.length || cpuGains) window.FKAudio.play('draw'); } }, reduced() ? 0 : 370);
+    later.push(feedback(before, after, next, reduced() ? 0 : 570));
     try { await Promise.all(later); } finally {
-      if (token === generation) { clearTimeout(cueTimer); if (!cuePlayed) window.FKAudio.play(cue); running.forEach(a => a.cancel()); running = []; overlays.forEach(n => n.remove()); overlays = []; hidden.forEach(n => n.classList.remove('fx-hidden')); hidden = []; }
+      clearTimeout(cueTimer);
+      if (token === generation) { if (!cuePlayed) { window.FKAudio.play(cue); if (newHand.length || cpuGains) window.FKAudio.play('draw'); } clearEffects(); }
     }
   }
   return Object.freeze({ capture, showPlayed, transition, cancel, reduced });

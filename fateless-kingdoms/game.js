@@ -286,6 +286,7 @@
   function renderChoiceDialog() {
     const dialog = $('choice-dialog'), q = currentPrompt();
     if (!q) { dialog.close(); return; }
+    dialog.dataset.state = q.kind;
     const choosing = choosingTargets && q.kind === 'choice';
     const review = choosingTargets && q.kind === 'ready' && Object.keys(selections).length > 0;
     const opening = !dialog.open, step = choosing ? q.key : review ? 'review' : 'details';
@@ -446,6 +447,7 @@
   }
   function render() {
     syncPortraitLayout();
+    document.body.dataset.ui = lobbyOpen ? 'lobby' : animating ? 'resolving' : state.phase !== 'playing' ? 'result' : busy || state.turn === 1 ? 'rival' : selected ? 'choosing' : 'ready';
     const focus = document.activeElement?.dataset.focus;
     $('round-label').textContent = `Round ${['I', 'II', 'III'][state.round - 1]} / III`;
     $('deck-count').textContent = `${state.deck.length} in shared deck`;
