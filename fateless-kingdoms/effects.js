@@ -13,7 +13,12 @@ window.FKEffects = (() => {
       if (viable(rect)) field.set(el.dataset.card, { rect, element: el });
     });
     document.querySelectorAll('#hand [data-card]').forEach(el => hand.set(el.dataset.card, { rect: bounds(el), element: el }));
-    return { field, hand, cpu: bounds(document.getElementById('rival-hand')), deck: bounds(document.getElementById('deck-count')), grave: [bounds(document.getElementById('human-grave')), bounds(document.getElementById('cpu-grave'))] };
+    // Portrait tucks the deck/piles/rival hand into Match; fly from/to its visible button.
+    const anchor = id => {
+      const rect = bounds(document.getElementById(id));
+      return viable(rect) ? rect : bounds(document.getElementById('portrait-match-button'));
+    };
+    return { field, hand, cpu: anchor('rival-hand'), deck: anchor('deck-count'), grave: [anchor('human-grave'), anchor('cpu-grave')] };
   }
   function cancel() {
     generation++; running.forEach(a => a.cancel()); running = [];

@@ -6,19 +6,24 @@
   <meta name="theme-color" content="#101b18">
   <meta name="description" content="A game of kingdoms, cunning and knowing when to walk away. Play Fateless Kingdoms against a CPU opponent.">
   <title>Fateless Kingdoms</title>
-  <link rel="stylesheet" href="styles.css?v=straight-hands35">
+  <link rel="stylesheet" href="styles.css?v=card-modal39">
   <script defer src="cards.js?v=sacrifice20"></script>
   <script defer src="engine.js?v=starting-cards36"></script>
   <script defer src="cpu.js?v=settings1"></script>
-  <script defer src="audio.js?v=results34"></script>
-  <script defer src="effects.js?v=results34"></script>
-  <script defer src="game.js?v=starting-cards36"></script>
+  <script defer src="audio.js?v=touch-mute37"></script>
+  <script defer src="effects.js?v=portrait-panels38"></script>
+  <script defer src="game.js?v=card-modal39"></script>
 </head>
 <body>
   <header class="site-header">
     <a class="back-link" href="../index.html">← Game library</a>
     <a class="wordmark" href="index.html" aria-label="Fateless Kingdoms home"><span class="crest" aria-hidden="true">♜</span><span>FATELESS <b>KINGDOMS</b></span></a>
-    <nav aria-label="Game tools"><button id="rules-button" class="quiet">How to play</button><button id="collection-button" class="quiet">View full deck</button><button id="settings-button" class="quiet">Settings</button><button id="new-button" class="quiet">Reset game</button></nav>
+    <div id="portrait-tools" class="portrait-tools" aria-label="Portrait game tools">
+      <button class="quiet" data-portrait-panel="menu" aria-label="Open game menu" aria-haspopup="dialog" aria-controls="portrait-panel" aria-expanded="false">☰</button>
+      <button id="portrait-match-button" class="quiet" data-portrait-panel="match" aria-label="Open match information" aria-haspopup="dialog" aria-controls="portrait-panel" aria-expanded="false">R1</button>
+      <button class="quiet" data-portrait-panel="chronicle" aria-label="Open Battle Chronicle" aria-haspopup="dialog" aria-controls="portrait-panel" aria-expanded="false">Log</button>
+    </div>
+    <nav aria-label="Game tools"><button id="rules-button" class="quiet">How to play</button><button id="collection-button" class="quiet">View full deck</button><button id="settings-button" class="quiet">Settings</button><button id="new-button" class="quiet">Reset game</button><button id="mute-button" class="quiet mute-button" aria-label="Mute all audio" aria-pressed="false" title="Mute all audio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5 5 9H2v6h3l5 4Z"/><path class="sound-waves" d="M14 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/><path class="sound-slash" d="m15 9 6 6m0-6-6 6"/></svg></button></nav>
   </header>
   <main class="game-layout">
     <section class="table-column" aria-label="Game table">
@@ -48,6 +53,19 @@
       <button id="current-settings" class="difficulty-label settings-summary" aria-label="Open game settings">CPU · Intermediate <span>Settings →</span></button>
     </aside>
   </main>
+  <dialog id="portrait-panel" class="portrait-panel" aria-labelledby="portrait-panel-title">
+    <div class="portrait-panel-heading"><h2 id="portrait-panel-title">Game menu</h2><button id="close-portrait-panel" class="icon-button" aria-label="Close panel" autofocus>×</button></div>
+    <div class="portrait-panel-tabs" role="tablist" aria-label="Information panels">
+      <button id="portrait-tab-menu" data-portrait-panel="menu" role="tab" aria-controls="portrait-pane-menu" aria-selected="false">Menu</button>
+      <button id="portrait-tab-match" data-portrait-panel="match" role="tab" aria-controls="portrait-pane-match" aria-selected="false">Match</button>
+      <button id="portrait-tab-chronicle" data-portrait-panel="chronicle" role="tab" aria-controls="portrait-pane-chronicle" aria-selected="false">Chronicle</button>
+    </div>
+    <div class="portrait-panel-body">
+      <section id="portrait-pane-menu" class="portrait-pane" role="tabpanel" aria-labelledby="portrait-tab-menu" hidden></section>
+      <section id="portrait-pane-match" class="portrait-pane" role="tabpanel" aria-labelledby="portrait-tab-match" hidden></section>
+      <section id="portrait-pane-chronicle" class="portrait-pane" role="tabpanel" aria-labelledby="portrait-tab-chronicle" hidden></section>
+    </div>
+  </dialog>
   <dialog id="welcome-dialog" class="welcome-dialog"><div class="welcome-art" aria-hidden="true"></div><div class="welcome-copy"><span class="eyebrow">Your kingdom. Your last card.</span><h2>Victory takes<br>more than power.</h2><p><span id="welcome-hand-size">15 cards each.</span> Three rows. Up to three rounds.<br>Know when to fight—and when to let a battle go.</p><div class="welcome-facts"><span>♜ <b id="welcome-deck-size">62</b> unique cards</span><span>⚔ <b>1</b> cunning rival</span></div><label class="welcome-music"><input id="welcome-music" type="checkbox" checked> Play background music</label><button id="welcome-settings" class="text-button">Game settings</button><button id="begin-button" class="primary">Begin game <span>→</span></button><p class="welcome-footnote">A coin flip decides who takes the first turn.</p></div></dialog>
   <dialog id="coin-dialog" class="coin-dialog"><span class="eyebrow">Let fate choose</span><h2>Who goes first?</h2><div class="coin-stage"><div id="coin" class="coin"><span class="coin-face coin-heads">♔<small>Heads</small></span><span class="coin-face coin-tails">♚<small>Tails</small></span></div></div><p id="coin-result" role="status" aria-live="polite">Flipping the coin…</p><button id="start-round-button" class="primary" disabled>Start round →</button></dialog>
   <dialog id="content-dialog" class="content-dialog"><div class="dialog-heading"><h2 id="content-title"></h2><button id="close-content" class="icon-button" aria-label="Close dialog">×</button></div><div id="content-body"></div></dialog>
@@ -79,6 +97,7 @@
         <fieldset class="settings-group"><legend>Sound &amp; music</legend>
           <p id="storage-note" class="setting-help">Your game and settings save automatically in this browser.</p>
           <p id="audio-note" class="setting-help">A dark cinematic battle soundtrack and a quieter lobby theme. Short victory, defeat or draw music plays at results.</p>
+          <label class="audio-toggle"><input id="mute-all" type="checkbox"> Mute all audio</label>
           <label class="audio-toggle"><input id="music-enabled" type="checkbox" checked> Background music</label>
           <label class="audio-volume" for="music-volume">Music volume <output id="music-volume-value">25%</output><input id="music-volume" type="range" min="0" max="100" value="25"></label>
           <label class="audio-toggle"><input id="effects-enabled" type="checkbox" checked> Sound effects</label>

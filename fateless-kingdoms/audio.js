@@ -4,7 +4,7 @@ window.FKAudio = (() => {
   'use strict';
   const KEY = 'fateless-kingdoms.audio.v1';
   const MUSIC_REVISION = 2;
-  let settings = { music: true, effects: true, musicVolume: .25, effectsVolume: .6 };
+  let settings = { music: true, effects: true, musicVolume: .25, effectsVolume: .6, muted: false };
   try {
     const saved = JSON.parse(localStorage.getItem(KEY));
     if (saved) for (const key of Object.keys(settings)) if (typeof saved[key] === typeof settings[key]) settings[key] = typeof saved[key] === 'number' ? Math.max(0, Math.min(1, saved[key])) : saved[key];
@@ -23,7 +23,7 @@ window.FKAudio = (() => {
     result: { files: [], index: 0, failed: new Set(), audio: null, fade: null, target: 0, pending: false, request: 0, finished: true }
   };
   const currentSoundtrack = () => scene === 'result' ? soundtracks.result : scene === 'battle' ? soundtracks.battle : soundtracks.ambient;
-  const shouldPlay = track => !track.finished && activated && settings.music && settings.musicVolume > 0 && !document.hidden && track === currentSoundtrack();
+  const shouldPlay = track => !track.finished && activated && !settings.muted && settings.music && settings.musicVolume > 0 && !document.hidden && track === currentSoundtrack();
 
   function fadeMusic(track, target, duration = 700) {
     if (!track.audio || (duration !== 0 && track.fade && track.target === target)) return;
@@ -139,7 +139,7 @@ window.FKAudio = (() => {
         ctx = new AudioContext(); effectsBus = ctx.createGain();
         const compressor = ctx.createDynamicsCompressor(); compressor.threshold.value = -18; compressor.ratio.value = 5;
         effectsBus.connect(compressor); compressor.connect(ctx.destination);
-        effectsBus.gain.value = settings.effectsVolume * .55;
+        effectsBus.gain.value = settings.muted ? 0 : settings.effectsVolume * .55;
         noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
         const samples = noiseBuffer.getChannelData(0); for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
       }
@@ -151,13 +151,18 @@ window.FKAudio = (() => {
     settings = { ...settings, ...patch };
     settings.musicVolume = Math.max(0, Math.min(1, settings.musicVolume)); settings.effectsVolume = Math.max(0, Math.min(1, settings.effectsVolume));
     try { localStorage.setItem(KEY, JSON.stringify({ ...settings, musicRevision: MUSIC_REVISION })); } catch (_) {}
+    // Master mute silences playing voices too, without changing individual preferences.
+    if (settings.muted) {
+      stopMusic(true);
+      if (ctx && effectsBus) effectsBus.gain.setTargetAtTime(0, ctx.currentTime, .015);
+    }
     await unlock();
-    if (ctx && effectsBus) effectsBus.gain.setTargetAtTime(settings.effectsVolume * .55, ctx.currentTime, .025);
-    if (settings.music && settings.musicVolume > 0) startMusic(); else stopMusic();
+    if (ctx && effectsBus) effectsBus.gain.setTargetAtTime(settings.muted ? 0 : settings.effectsVolume * .55, ctx.currentTime, .025);
+    if (!settings.muted && settings.music && settings.musicVolume > 0) startMusic(); else stopMusic(settings.muted);
     return { ...settings };
   }
   function play(name) {
-    if (!settings.effects || !ctx || ctx.state !== 'running' || document.hidden) return;
+    if (settings.muted || !settings.effects || !ctx || ctx.state !== 'running' || document.hidden) return;
     const t = ctx.currentTime;
     if (name === 'select') { tone(440, t, .08, .055, 'triangle', effectsBus, 660); return; }
     if (name === 'fly') { noise(t, .3, .14, 2500); return; }

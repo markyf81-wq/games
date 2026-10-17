@@ -9,9 +9,13 @@
   let state, level = 'tactician', selected = null, inspected = null, selections = {}, picked = [], busy = false, worker = null, job = 0, saveAvailable = true;
   let lobbyOpen = true, animating = false, presentation = 0, coinStarter = null, coinTimer = null;
   let pendingState = null;
-  let shownResult = null;
+  let shownResult = null, choosingTargets = false;
   let rowPreview = null, rowPreviewSource = null, keyboardNavigation = false;
+  let touchHold = null, heldClickUntil = 0, heldClickPointer = null;
   let renderedLog = null;
+  const portraitLayout = window.matchMedia('(max-width: 980px) and (orientation: portrait)');
+  const portraitHomes = [];
+  let portraitMounted = false;
   let nextOptions = E.matchOptions(), preferencesLoaded = false;
   try {
     const preferences = JSON.parse(localStorage.getItem(SETTINGS_KEY));
@@ -47,9 +51,63 @@
     }
     render();
   }
-  function resetSelection() { selected = null; selections = {}; picked = []; $('choice-dialog').close(); }
+  function resetSelection() { selected = null; selections = {}; picked = []; choosingTargets = false; $('choice-dialog').close(); }
+  function closePortraitPanel() {
+    const dialog = $('portrait-panel');
+    if (dialog.open) dialog.close();
+    document.querySelectorAll('#portrait-tools [data-portrait-panel]').forEach(button => button.setAttribute('aria-expanded', 'false'));
+  }
+  function syncPortraitLayout() {
+    if (portraitMounted === portraitLayout.matches) return;
+    closePortraitPanel(); clearRowPreview();
+    portraitMounted = portraitLayout.matches;
+    if (portraitMounted) {
+      const move = (element, host) => {
+        const marker = document.createComment('portrait panel home');
+        element.before(marker); portraitHomes.push({ element, marker }); host.append(element);
+      };
+      move(document.querySelector('.site-header nav'), $('portrait-pane-menu'));
+      move(document.querySelector('.back-link'), $('portrait-pane-menu'));
+      move($('mute-button'), $('portrait-tools'));
+      move(document.querySelector('.match-bar'), $('portrait-pane-match'));
+      move($('round-track'), $('portrait-pane-match'));
+      move(document.querySelector('.pile-rail'), $('portrait-pane-match'));
+      move(document.querySelector('.history-panel'), $('portrait-pane-chronicle'));
+    } else {
+      // Move the original nodes back so IDs, listeners and hidden-card boundaries stay intact.
+      while (portraitHomes.length) { const { element, marker } = portraitHomes.pop(); marker.replaceWith(element); }
+    }
+  }
+  function openPortraitPanel(panel) {
+    if (!portraitLayout.matches || !['menu', 'match', 'chronicle'].includes(panel)) return;
+    const dialog = $('portrait-panel');
+    if (document.querySelector('dialog[open]') && !dialog.open) return;
+    clearRowPreview();
+    $('portrait-panel-title').textContent = { menu: 'Game menu', match: 'Match information', chronicle: 'Battle Chronicle' }[panel];
+    document.querySelectorAll('.portrait-pane').forEach(pane => { pane.hidden = pane.id !== `portrait-pane-${panel}`; });
+    document.querySelectorAll('.portrait-panel-tabs button').forEach(button => {
+      const active = button.dataset.portraitPanel === panel;
+      button.setAttribute('aria-selected', String(active)); button.tabIndex = active ? 0 : -1;
+    });
+    document.querySelectorAll('#portrait-tools [data-portrait-panel]').forEach(button => button.setAttribute('aria-expanded', String(button.dataset.portraitPanel === panel)));
+    if (!dialog.open) dialog.showModal();
+    layoutCards(); document.querySelector('.portrait-panel-body').scrollTop = 0;
+  }
+  function renderPortraitStatus() {
+    $('portrait-match-button').textContent = `R${state.round} ▾`;
+    $('portrait-match-button').setAttribute('aria-label', `Round ${state.round} of 3. Open match information`);
+    $('portrait-match-button').title = `Round ${state.round} of 3 · Match information`;
+  }
+  function selectHandCard(id) {
+    if (!state.players[0].hand.includes(id)) return;
+    closePortraitPanel(); clearRowPreview();
+    if (!myTurn()) { showCard(id); return; }
+    selected = id; selections = {}; picked = []; choosingTargets = false;
+    audio.play('select'); render();
+  }
   function mobileFocus(id) {
     if (document.querySelector('dialog[open]')) return;
+    if (portraitLayout.matches) { if (id === 'inspector' && inspected) showCard(inspected); return; }
     if (window.matchMedia('(max-width: 980px)').matches) $(id).scrollIntoView({ behavior: FX.reduced() ? 'auto' : 'smooth', block: 'start' });
   }
   function powerBonus(id) {
@@ -174,6 +232,7 @@
     const finished = state.phase === 'gameOver', lastRound = state.rounds[state.rounds.length - 1];
     const human = state.players[0].wins, rival = state.players[1].wins;
     const outcome = finished ? human >= 2 && rival >= 2 ? 'draw' : human >= 2 ? 'victory' : 'defeat' : lastRound.winner === null ? 'draw' : lastRound.winner === 0 ? 'victory' : 'defeat';
+    closePortraitPanel();
     const dialog = $('match-result-dialog'); dialog.dataset.outcome = outcome;
     $('match-result-context').textContent = finished ? 'Match complete' : `Round ${state.round} complete`;
     $('match-result-title').textContent = (finished ? { victory: 'Victory!', defeat: 'Defeat', draw: 'A draw!' } : { victory: 'Round won!', defeat: 'Round lost', draw: 'Round drawn' })[outcome];
@@ -202,7 +261,7 @@
       return;
     }
     root.classList.remove('result-panel');
-    const id = selected || inspected || state.lastCard?.id;
+    const id = inspected || state.lastCard?.id;
     if (!id) {
       root.append(node('span', 'eyebrow', 'The art of restraint'), node('div', 'idle-crest', '♜'), node('h2', '', 'Outthink. Outlast.'), node('p', 'inspector-copy', 'Select a card in your hand to read its ability. Choose your targets, then commit your play.'), node('p', 'inspector-tip', 'You have the same hand across all rounds. A narrow win can be worth more than a glorious one.'));
       return;
@@ -213,19 +272,6 @@
     root.append(node('h2', '', c.name));
     if (c.abilityName) root.append(node('span', 'ability-label', c.abilityName));
     const copy = node('p', 'inspector-copy', c.text); appendBonusDetails(copy, id); root.append(copy);
-    const q = currentPrompt();
-    if (selected && q) {
-      const actions = node('div', 'play-actions');
-      if (q.kind === 'blocked') { root.classList.add('has-blocked-choice'); root.append(node('p', 'warning-message', q.message)); }
-      if (q.kind === 'choice') {
-        root.append(node('p', 'target-summary', q.title)); actions.append(button('Choose targets →', 'primary', 'open-choices'));
-      } else if (q.kind === 'ready') {
-        root.append(node('p', 'target-summary', actionSummary(c, q.action)));
-        actions.append(button(`Play ${c.name} →`, 'primary', 'play-card'));
-      }
-      const cancel = button('Cancel', 'text-button cancel-selection', 'cancel-selection'); cancel.setAttribute('aria-label', 'Cancel selection');
-      actions.append(cancel); root.append(actions);
-    } else if (state.players[0].hand.includes(id) && myTurn()) { const b = button('Select this card →', 'primary'); b.dataset.select = id; root.append(b); }
   }
   function actionSummary(c, a) {
     const parts = [];
@@ -239,15 +285,22 @@
   }
   function renderChoiceDialog() {
     const dialog = $('choice-dialog'), q = currentPrompt();
-    if (!q || q.kind === 'blocked' || (q.kind !== 'choice' && !dialog.open)) { dialog.close(); return; }
-    const opening = !dialog.open, step = q.kind === 'choice' ? q.key : 'review';
-    const stepChanged = dialog.dataset.step !== step; dialog.dataset.step = step;
+    if (!q) { dialog.close(); return; }
+    const choosing = choosingTargets && q.kind === 'choice';
+    const review = choosingTargets && q.kind === 'ready' && Object.keys(selections).length > 0;
+    const opening = !dialog.open, step = choosing ? q.key : review ? 'review' : 'details';
+    const stepChanged = dialog.dataset.step !== step || dialog.dataset.card !== selected;
+    dialog.dataset.step = step; dialog.dataset.card = selected;
+    dialog.classList.toggle('card-details-dialog', !choosing);
     $('choice-card-name').textContent = C[selected].name;
     const body = $('choice-body'), confirm = $('choice-confirm'); body.replaceChildren(); confirm.replaceChildren();
     const intro = node('div', 'choice-intro'), artwork = node('img'); artwork.src = C[selected].image; artwork.alt = C[selected].name;
-    intro.append(artwork, node('p', '', C[selected].text)); body.append(intro);
-    const heading = node('h3', 'choice-question', q.kind === 'choice' ? q.title : 'Ready to play?'); heading.tabIndex = -1; body.append(heading);
-    if (q.kind === 'choice') {
+    const description = node('div', 'choice-description');
+    if (C[selected].abilityName) description.append(node('span', 'ability-label', C[selected].abilityName));
+    description.append(node('p', '', C[selected].text)); intro.append(artwork, description); body.append(intro);
+    const heading = node('h3', 'choice-question', choosing ? q.title : q.kind === 'blocked' ? 'Cannot play this card' : review ? 'Ready to play?' : 'Your next move');
+    heading.tabIndex = -1; body.append(heading);
+    if (choosing) {
       body.append(node('p', 'choice-help', q.count > 1 ? `Select ${q.count} cards. ${picked.length} selected.` : 'Choose one option. You can review your play before committing.'));
       const options = node('div', 'modal-choices');
       q.options.forEach(o => {
@@ -263,11 +316,16 @@
       });
       body.append(options);
       if (q.count > 1) { const b = button('Confirm targets →', 'primary', 'confirm-targets'); b.disabled = picked.length !== q.count; confirm.append(b); }
+    } else if (q.kind === 'blocked') body.append(node('p', 'warning-message', q.message));
+    else if (q.kind === 'choice') {
+      body.append(node('p', 'choice-review', q.title));
+      confirm.append(button('Choose targets →', 'primary', 'open-choices'));
     } else {
-      body.append(node('p', 'choice-review', actionSummary(C[selected], q.action)), button('Choose again', 'text-button', 'restart-choices'));
+      body.append(node('p', 'choice-review', actionSummary(C[selected], q.action)));
+      if (review) body.append(button('Choose again', 'text-button', 'restart-choices'));
       confirm.append(button(`Play ${C[selected].name} →`, 'primary', 'play-card'));
     }
-    if (opening) dialog.showModal();
+    if (opening) { closePortraitPanel(); clearRowPreview(); dialog.showModal(); }
     if (opening || stepChanged) { body.scrollTop = 0; heading.focus({ preventScroll: true }); }
   }
   function renderRoundTrack() {
@@ -325,20 +383,25 @@
     }
     layoutSidebar();
   }
-  function clearRowPreview() {
+  function clearRowPreview(cancelHold = true) {
+    if (cancelHold && touchHold) {
+      clearTimeout(touchHold.timer);
+      if (touchHold.shown) { heldClickPointer = touchHold.pointer; heldClickUntil = Infinity; }
+      touchHold = null;
+    }
     rowPreview?.remove(); rowPreview = null; rowPreviewSource = null;
   }
-  function showRowPreview(card) {
+  function showRowPreview(card, touch = false) {
     if (card === rowPreviewSource || animating || document.querySelector('dialog[open]')) return;
-    clearRowPreview();
+    clearRowPreview(!touch);
     const rect = card.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
     // All cards share a viewport-relative size, independent of their lane size or overlap.
     const ratio = 877 / 1240;
-    const width = Math.max(1, Math.min(window.innerWidth * .306, window.innerHeight * .378 * ratio, window.innerWidth - 16, (window.innerHeight - 16) * ratio));
+    const width = Math.max(1, Math.min(window.innerWidth * (touch ? .65 : .306), window.innerHeight * (touch ? .6 : .378) * ratio, window.innerWidth - 16, (window.innerHeight - 16) * ratio));
     const height = width / ratio;
-    const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.left + (rect.width - width) / 2));
-    const top = Math.max(8, Math.min(window.innerHeight - height - 8, rect.top + (rect.height - height) / 2 - 6));
+    const left = Math.max(8, Math.min(window.innerWidth - width - 8, touch ? (window.innerWidth - width) / 2 : rect.left + (rect.width - width) / 2));
+    const top = Math.max(8, Math.min(window.innerHeight - height - 8, touch ? rect.top - height - 18 : rect.top + (rect.height - height) / 2 - 6));
     const preview = node('div', `${card.className.replace(/\b(board-card|hand-card|weather-card|selected|unplayable)\b/g, '')} row-card-preview`);
     preview.setAttribute('aria-hidden', 'true');
     [...card.children].forEach(child => preview.append(child.cloneNode(true)));
@@ -376,11 +439,13 @@
     sidebar.style.setProperty('--history-gap', `${Math.max(6, Math.min(36, spacing))}px`);
   }
   function render() {
+    syncPortraitLayout();
     const focus = document.activeElement?.dataset.focus;
     $('round-label').textContent = `Round ${['I', 'II', 'III'][state.round - 1]} / III`;
     $('deck-count').textContent = `${state.deck.length} in shared deck`;
     $('current-settings').replaceChildren(document.createTextNode(`CPU · ${LEVEL_NAMES[level]}`), node('span', '', 'Settings →'));
     audio.setScene(lobbyOpen ? 'lobby' : state.phase === 'playing' ? 'battle' : 'result');
+    syncMuteButton();
     [0, 1].forEach(p => {
       const prefix = p === 0 ? 'human' : 'cpu', player = state.players[p];
       $(`${prefix}-score`).textContent = E.score(state, p);
@@ -443,8 +508,10 @@
         image.hidden = !top; if (top) image.src = C[top].image; else image.removeAttribute('src');
       }
     });
-    renderInspector();
-    const history = $('history'), scrollTop = history.scrollTop, scrollHeight = history.scrollHeight;
+    renderInspector(); renderPortraitStatus();
+    const history = $('history');
+    const historyScroller = portraitLayout.matches && $('portrait-panel').open && !$('portrait-pane-chronicle').hidden ? document.querySelector('.portrait-panel-body') : history;
+    const scrollTop = historyScroller.scrollTop, scrollHeight = historyScroller.scrollHeight;
     const historyChanged = renderedLog !== state.log;
     if (historyChanged) {
       history.replaceChildren();
@@ -453,7 +520,7 @@
     }
     renderChoiceDialog();
     layoutCards();
-    if (historyChanged) history.scrollTop = !lobbyOpen && scrollTop > 0 ? Math.max(0, scrollTop + history.scrollHeight - scrollHeight) : 0;
+    if (historyChanged) historyScroller.scrollTop = !lobbyOpen && scrollTop > 0 ? Math.max(0, scrollTop + historyScroller.scrollHeight - scrollHeight) : 0;
     if (focus) document.querySelector(`[data-focus="${focus}"]`)?.focus({ preventScroll: true });
     showResult();
   }
@@ -517,6 +584,7 @@
     }, 350);
   }
   function newMatch() {
+    closePortraitPanel();
     job++; presentation++; FX.cancel(); worker?.terminate(); worker = null; busy = false; animating = false;
     pendingState = null; clearTimeout(coinTimer); coinStarter = null;
     $('match-result-dialog').close(); shownResult = null;
@@ -546,7 +614,7 @@
     void coin.offsetWidth; coin.classList.add('flipping');
     clearTimeout(coinTimer); coinTimer = setTimeout(() => { coin.classList.remove('flipping'); coin.classList.add('settled'); $('coin-result').textContent = coinStarter === 0 ? 'Heads. Your kingdom goes first.' : 'Tails. The rival kingdom goes first.'; $('start-round-button').disabled = false; audio.play('sanctuary'); }, FX.reduced() ? 0 : 2100);
   }
-  function openDialog(title) { $('content-title').textContent = title; $('content-dialog').classList.remove('deck-dialog'); $('content-body').classList.remove('deck-browser'); $('content-body').replaceChildren(); if (!$('content-dialog').open) $('content-dialog').showModal(); return $('content-body'); }
+  function openDialog(title) { closePortraitPanel(); $('content-title').textContent = title; $('content-dialog').classList.remove('deck-dialog'); $('content-body').classList.remove('deck-browser'); $('content-body').replaceChildren(); if (!$('content-dialog').open) $('content-dialog').showModal(); return $('content-body'); }
   function showCard(id, returnTo = null) {
     const root = openDialog(C[id].name);
     if (returnTo === 'collection') root.append(button('← All cards', 'text-button', 'collection'));
@@ -594,29 +662,29 @@
       ['Ties & protected targets', 'Death Gaze and Convert choose one tied target. Weakest Link chooses between ties to destroy at most three unprotected units on each side. Pridefall destroys the highest-power unprotected units on each side, including all ties. Protection is checked before a destruction event removes any cards.'],
       ['Card abilities', 'Target counts every friendly Ranged unit, including itself. Stone Wall protects all friendly Siege units, including itself. Sacrifice destroys one friendly unit and returns up to two units already in your destroyed pile to your hand. The unit sacrificed in this play cannot be returned by the same Sacrifice. It does not swap a unit into play or trigger its ability. Dread blocks cards entering its row, including moves through Convert.'],
       ['No targets', 'Resolve as much of a card as possible. No-target effects do nothing. You may play a Spell or unit whose ability has no target, but Dread still prevents adding a card to a blocked row. If the shared deck is empty, draw nothing.'],
-      ['Controls & saving', 'Choose Begin game and flip the coin to decide who starts. Refreshing the page restores your saved match automatically, without another coin flip. Reset game clears the saved match after confirmation and returns to Begin game. Hover or focus a hand card to lift it; select it, choose targets in the modal and click Play. Cancel or Escape abandons the play before any cards move. Each played card is revealed in the centre before resolving. The rival’s hand stays face down. Round results remain beside the scores. Each completed round opens the result window; Continue starts the next round, or Play again begins a fresh match after the final result. Review board keeps the field visible, and Round result or Match result beside your hand reopens the window. Pass opens a confirmation window. Click your destroyed-card stack to browse your own pile without losing your selection. The rival’s destroyed pile stays face down and shows only its card count. Weather cards appear between the two fields. Settings includes CPU level, starting hand size, card types, music and sound effects. Music is enabled by default, with a battle theme during play. Escape closes dialogs or cancels card selection. Matches save automatically when storage is available.']
+      ['Controls & saving', 'Choose Begin game and flip the coin to decide who starts. Refreshing the page restores your saved match automatically, without another coin flip. Reset game clears the saved match after confirmation and returns to Begin game. Hover or focus a card to preview it. On touch screens, hold a hand, battlefield or weather card to enlarge it, then release to close the preview. A normal tap still selects or inspects the card. Tap a hand card to open its artwork and details in a modal. Play or Choose targets and Cancel are inside that modal. Required choices stay in the same window until you confirm the play. Cancel or Escape abandons the play before any cards move. Each played card is revealed in the centre before resolving. The rival’s hand stays face down. Round results remain available in the match history. Each completed round opens the result window; Continue starts the next round, or Play again begins a fresh match after the final result. Review board keeps the field visible, and Round result or Match result beside your hand reopens the window. Pass opens a confirmation window. Click your destroyed-card stack to browse your own pile without losing your selection. The rival’s destroyed pile stays face down and shows only its card count. Weather cards appear between the two fields. Settings includes CPU level, starting hand size, card types, music and sound effects. Music is enabled by default, with a battle theme during play. In portrait mode, the header’s Menu, round number and Log buttons open slide-up panels; scores and Pass stay on the table, with card actions in the card modal. Match information includes the rival hand, round history and destroyed piles. The speaker button in the header mutes or unmutes all audio without changing your individual music/effects preferences. Escape closes dialogs or cancels card selection. Matches save automatically when storage is available.']
     ];
     blocks.forEach(([title, text]) => { const section = node('section', 'rule-block'); section.append(node('h3', '', title), node('p', '', text)); root.append(section); });
   }
   document.addEventListener('click', event => {
     const target = event.target.closest('button'); if (!target) return;
+    if (target.dataset.portraitPanel) { openPortraitPanel(target.dataset.portraitPanel); return; }
     if (target.dataset.choice) { selectChoice(target.dataset.choice); return; }
     if (target.dataset.collectionCard) { showCard(target.dataset.collectionCard, target.dataset.graveOwner === undefined ? 'collection' : 0); return; }
     if (target.dataset.zoom) { showCard(target.dataset.zoom); return; }
     if (target.dataset.inspect) { inspected = target.dataset.inspect; resetSelection(); render(); return; }
-    if (target.dataset.select) { selected = target.dataset.select; selections = {}; picked = []; audio.play('select'); render(); mobileFocus('inspector'); return; }
+    if (target.dataset.select) { selectHandCard(target.dataset.select); return; }
     if (target.dataset.card) {
       const id = target.dataset.card;
       if (canChoose(id)) { selectChoice(id); return; }
-      inspected = id;
-      if (target.dataset.context === 'hand' && myTurn()) { selected = id; selections = {}; picked = []; audio.play('select'); }
-      else resetSelection();
+      if (target.dataset.context === 'hand') { selectHandCard(id); return; }
+      inspected = id; resetSelection();
       render(); mobileFocus('inspector'); return;
     }
     switch (target.dataset.action) {
       case 'cancel-selection': resetSelection(); render(); break;
-      case 'open-choices': renderChoiceDialog(); break;
-      case 'restart-choices': selections = {}; picked = []; render(); break;
+      case 'open-choices': choosingTargets = true; renderChoiceDialog(); break;
+      case 'restart-choices': selections = {}; picked = []; choosingTargets = true; render(); break;
       case 'confirm-targets': { const q = currentPrompt(); if (q?.kind === 'choice' && picked.length === q.count) { selections[q.key] = picked.slice(); picked = []; render(); } break; }
       case 'play-card': { const q = currentPrompt(); if (q?.kind === 'ready') commit(q.action); break; }
       case 'new-match': newMatch(); break;
@@ -641,7 +709,7 @@
   $('rules-button').addEventListener('click', showRules);
   $('collection-button').addEventListener('click', showCollection);
   $('human-grave').addEventListener('click', showGrave);
-  $('new-button').addEventListener('click', () => $('confirm-dialog').showModal());
+  $('new-button').addEventListener('click', () => { closePortraitPanel(); $('confirm-dialog').showModal(); });
   $('cancel-new').addEventListener('click', () => $('confirm-dialog').close());
   $('confirm-new').addEventListener('click', () => { $('confirm-dialog').close(); newMatch(); });
   $('close-content').addEventListener('click', () => $('content-dialog').close());
@@ -651,15 +719,17 @@
   $('coin-dialog').addEventListener('cancel', event => event.preventDefault());
   $('choice-dialog').addEventListener('cancel', event => { event.preventDefault(); resetSelection(); render(); });
   function openSettings() {
+    closePortraitPanel();
     const settings = audio.getSettings();
     $('difficulty').value = level;
     $('starting-hand-size').value = nextOptions.handSize;
     $('include-omens').checked = nextOptions.includeOmens; $('include-spells').checked = nextOptions.includeSpells;
     $('guaranteed-start').checked = nextOptions.guaranteedStart;
     $('music-enabled').checked = settings.music; $('effects-enabled').checked = settings.effects;
+    $('mute-all').checked = settings.muted;
     $('music-volume').value = Math.round(settings.musicVolume * 100); $('effects-volume').value = Math.round(settings.effectsVolume * 100);
     $('music-volume-value').textContent = `${$('music-volume').value}%`; $('effects-volume-value').textContent = `${$('effects-volume').value}%`;
-    if (!audio.available) { $('audio-note').textContent = 'This browser does not provide audio playback. You can still play with sound off.'; ['music-enabled', 'effects-enabled', 'music-volume', 'effects-volume'].forEach(id => $(id).disabled = true); }
+    if (!audio.available) { $('audio-note').textContent = 'This browser does not provide audio playback. You can still play with sound off.'; ['music-enabled', 'effects-enabled', 'music-volume', 'effects-volume', 'mute-all'].forEach(id => $(id).disabled = true); }
     syncDeckSettings(); $('settings-dialog').showModal();
   }
   function syncDeckSettings() {
@@ -686,29 +756,88 @@
     nextOptions = E.matchOptions({ handSize: Number($('starting-hand-size').value), includeOmens: $('include-omens').checked, includeSpells: $('include-spells').checked, guaranteedStart: $('guaranteed-start').checked });
     level = $('difficulty').value;
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ options: nextOptions, level })); } catch (_) { /* In-memory settings still work. */ }
-    audio.configure({ music: $('music-enabled').checked, effects: $('effects-enabled').checked, musicVolume: Number($('music-volume').value) / 100, effectsVolume: Number($('effects-volume').value) / 100 });
+    audio.configure({ music: $('music-enabled').checked, effects: $('effects-enabled').checked, muted: $('mute-all').checked, musicVolume: Number($('music-volume').value) / 100, effectsVolume: Number($('effects-volume').value) / 100 });
     $('settings-dialog').close(); $('welcome-music').checked = $('music-enabled').checked; syncWelcome();
     if (lobbyOpen) state = E.newMatch(0, nextOptions); else save();
     render();
   });
+  function syncMuteButton() {
+    const muted = audio.getSettings().muted, button = $('mute-button');
+    button.setAttribute('aria-pressed', String(muted));
+    button.setAttribute('aria-label', muted ? 'Unmute all audio' : 'Mute all audio');
+    button.title = muted ? 'Unmute all audio' : 'Mute all audio';
+    button.disabled = !audio.available;
+  }
+  $('close-portrait-panel').addEventListener('click', closePortraitPanel);
+  $('portrait-panel').addEventListener('close', () => {
+    document.querySelectorAll('#portrait-tools [data-portrait-panel]').forEach(button => button.setAttribute('aria-expanded', 'false'));
+  });
+  $('portrait-panel').addEventListener('click', event => {
+    const rect = $('portrait-panel').getBoundingClientRect();
+    if (event.target === $('portrait-panel') && (event.clientY < rect.top || event.clientY > rect.bottom || event.clientX < rect.left || event.clientX > rect.right)) closePortraitPanel();
+  });
+  document.querySelector('.portrait-panel-tabs').addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    const tabs = [...event.currentTarget.querySelectorAll('button')], current = tabs.indexOf(document.activeElement);
+    const index = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    event.preventDefault(); openPortraitPanel(tabs[index].dataset.portraitPanel); tabs[index].focus();
+  });
+  const changePortrait = () => { closePortraitPanel(); render(); };
+  if (portraitLayout.addEventListener) portraitLayout.addEventListener('change', changePortrait); else portraitLayout.addListener(changePortrait);
+  $('mute-button').addEventListener('click', () => {
+    audio.configure({ muted: !audio.getSettings().muted });
+    syncMuteButton();
+  });
   document.addEventListener('pointerover', event => {
     const card = event.target.closest('.board-card,.hand-card,.weather-card');
-    if (card && event.pointerType !== 'touch') showRowPreview(card);
+    if (card && event.pointerType !== 'touch' && !touchHold) showRowPreview(card);
   });
   document.addEventListener('pointerout', event => {
-    if (rowPreviewSource && !rowPreviewSource.contains(event.relatedTarget) && rowPreviewSource.contains(event.target)) clearRowPreview();
+    if (event.pointerType !== 'touch' && rowPreviewSource && !rowPreviewSource.contains(event.relatedTarget) && rowPreviewSource.contains(event.target)) clearRowPreview();
   });
   document.addEventListener('focusin', event => {
+    if (touchHold) return;
     const card = event.target.closest('.board-card,.hand-card,.weather-card');
     if (card && keyboardNavigation) showRowPreview(card); else clearRowPreview();
   });
   document.addEventListener('focusout', event => { if (event.target === rowPreviewSource) clearRowPreview(); });
-  document.addEventListener('pointerdown', () => { keyboardNavigation = false; clearRowPreview(); audio.unlock(); }, { passive: true });
+  document.addEventListener('pointerdown', event => {
+    keyboardNavigation = false; clearRowPreview();
+    if (event.isPrimary) { heldClickUntil = 0; heldClickPointer = null; }
+    audio.unlock();
+    if (event.pointerType !== 'touch' || !event.isPrimary || animating || document.querySelector('dialog[open]')) return;
+    const card = event.target.closest('.board-card,.hand-card,.weather-card');
+    if (!card) return;
+    const hold = { pointer: event.pointerId, card, x: event.clientX, y: event.clientY, shown: false, timer: null };
+    touchHold = hold;
+    hold.timer = setTimeout(() => {
+      if (touchHold !== hold || !card.isConnected) return;
+      showRowPreview(card, true); hold.shown = rowPreviewSource === card;
+    }, 420);
+  }, { passive: true });
+  document.addEventListener('pointermove', event => {
+    if (touchHold?.pointer === event.pointerId && Math.hypot(event.clientX - touchHold.x, event.clientY - touchHold.y) > 10) clearRowPreview();
+  }, { passive: true });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => document.addEventListener(type, event => {
+    if (touchHold?.pointer === event.pointerId) clearRowPreview();
+    if (heldClickPointer === event.pointerId) heldClickUntil = performance.now() + 800;
+  }, { passive: true }));
+  // A completed hold must not turn into a selection or play when the finger lifts.
+  document.addEventListener('click', event => {
+    if (performance.now() < heldClickUntil && (event.detail > 0 || event.pointerType === 'touch')) {
+      heldClickUntil = 0; heldClickPointer = null; event.preventDefault(); event.stopImmediatePropagation();
+    }
+  }, true);
+  document.addEventListener('contextmenu', event => {
+    if ((touchHold || performance.now() < heldClickUntil) && event.target.closest('.board-card,.hand-card,.weather-card')) event.preventDefault();
+  });
+  window.addEventListener('scroll', () => { if (touchHold) clearRowPreview(); }, { capture: true, passive: true });
   document.addEventListener('keydown', event => {
     if (event.key === 'Tab') keyboardNavigation = true;
     if (event.key === 'Escape' && !document.querySelector('dialog[open]')) { resetSelection(); render(); }
   });
-  window.addEventListener('blur', clearRowPreview);
+  window.addEventListener('blur', () => clearRowPreview());
+  document.addEventListener('visibilitychange', () => { if (document.hidden) clearRowPreview(); });
   if (typeof ResizeObserver !== 'undefined') {
     const resize = new ResizeObserver(layoutCards); resize.observe($('hand')); resize.observe($('battlefield')); resize.observe($('rival-hand')); resize.observe(document.querySelector('.sidebar'));
   } else window.addEventListener('resize', layoutCards);
