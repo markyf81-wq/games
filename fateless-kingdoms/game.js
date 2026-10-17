@@ -482,6 +482,9 @@
     ]) {
       if (a[key]?.length) parts.push(`${verb}: ${names(a[key])}.`);
     }
+    if (c.ability === 'deathGaze' && a.kill?.length === 0) parts.push('Death Gaze has no target.');
+    if (c.ability === 'restoration' && a.restore?.length === 0) parts.push('No unit to restore.');
+    if (c.ability === 'infiltration' && !state.deck.length) parts.push('No cards to draw.');
     return (
       parts.join(' ') ||
       (c.effect === 'patience'
@@ -1077,7 +1080,7 @@
       ],
       [
         'Legal plays & targets',
-        'A card cannot be played when its required ability or Spell has no legal target. Mimic needs an enemy Combat unit; Restoration needs a destroyed unit of its row type; Death Gaze needs an unprotected enemy Ranged unit. Decoy needs an eligible friendly unit. Sacrifice needs an unprotected friendly unit and at least one unit already in your destroyed pile. Destruction Spells need at least one card they can destroy. Infiltration needs at least one card in the shared deck. When fewer targets or draws exist than requested, resolve as many as possible. Ordinary units, passive abilities and Omens can still be placed in legal locations before their bonuses or protections are useful; Patience intentionally spends a turn without another effect. Dread prevents cards entering its blocked rows. With cards still in hand, you choose whether to pass even if every card is blocked.'
+        'A unit can enter a legal row even if its when-played ability does nothing. Queen Krath can be played without a Death Gaze target; Restoration units can be played with no matching destroyed unit; Infiltration units can be played with an empty shared deck. If ability targets do exist, you must choose one. Mimic is different: its swap is the required play, so it needs an enemy Combat unit and both Combat rows must allow the swap. Targeted Spells still need valid targets: Decoy needs an eligible friendly unit; Sacrifice needs a unit to destroy and at least one previously destroyed unit to recover; destruction Spells need at least one card they can destroy. Resolve fewer targets or draws when fewer are available. Omens and passive abilities can be placed before their effects are useful, and Patience intentionally spends a turn. Dread still blocks row entry. Nonempty blocked hands do not automatically pass.'
       ],
       [
         'Controls & saving',

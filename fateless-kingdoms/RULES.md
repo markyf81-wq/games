@@ -106,7 +106,7 @@ You do not draw cards between rounds.
 
 Some cards may let you draw from the deck.
 
-Infiltration cannot be played when the shared deck is empty. If only one card remains, draw that card instead of two.
+Infiltration units may be played when the shared deck is empty; draw nothing. If only one card remains, draw that card instead of two.
 
 ### **Omen Effects**
 
@@ -122,11 +122,11 @@ If a card says to affect a certain number of cards, but there are not enough car
 
 ### **No Target**
 
-You cannot play a card when a required ability or Spell has no legal target. The card stays in your hand and your turn does not end. This applies to both players.
+Distinguish a legal unit placement from the extra effect of a when-played ability. A unit may enter its matching row even when that extra effect has no target. Queen Krath may be played without a Death Gaze target, Restoration units may be played with no matching unit in your destroyed pile, and Infiltration units may be played with an empty shared deck. The unit enters normally and the unavailable effect does nothing. If eligible ability targets exist, choosing a target is still required.
 
-Convert needs an enemy Combat unit and both Combat rows must allow the swap. Restoration needs a unit of its row type in your destroyed pile. Death Gaze needs an unprotected enemy Ranged unit. Decoy needs an eligible friendly unit. Sacrifice needs both an unprotected friendly unit to destroy and at least one unit already in your destroyed pile to recover. Pridefall, Weakest Link and Catastrophe need at least one card they can destroy; Purge needs an Omen in play. A destruction Spell can still be played when only one side has eligible targets.
+Mimic is an exception: its Convert swap is the required play, so it needs an enemy Combat unit and both Combat rows must allow the swap. It cannot simply enter your field without swapping. Targeted Spells also need a valid play: Decoy needs an eligible friendly unit. Sacrifice needs both an unprotected friendly unit to destroy and at least one unit already in your destroyed pile to recover. Pridefall, Weakest Link and Catastrophe need at least one card they can destroy; Purge needs an Omen in play. A destruction Spell can still be played when only one side has eligible targets.
 
-Ordinary units and passive abilities can be played in a legal row even if their bonus or protection is not currently useful. Omens can be placed in legal rows or the shared weather area before units arrive, because their effects remain in play. Patience is always a valid play on your turn: spending the turn without passing is its effect.
+These rules apply equally to both players. Dread still prevents unit entry into a blocked row, even if the unit’s extra ability has no target. Ordinary units and passive abilities can be played in a legal row even if their bonus or protection is not currently useful. Omens can be placed in legal rows or the shared weather area before units arrive, because their effects remain in play. Patience is always a valid play on your turn: spending the turn without passing is its effect.
 
 If you still have cards in hand but none can be played, choose whether to pass; do not automatically pass.
 

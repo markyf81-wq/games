@@ -261,6 +261,9 @@ window.FKEngine = (() => {
       waiting = { kind: 'choice', key, title, options: opts, count };
       return null;
     }
+    // A unit's when-played ability may have no effect. If targets do exist,
+    // selecting one is still required, even when only one target is available.
+    const pickIfAvailable = (key, opts, count, title) => (opts.length ? pick(key, opts, count, title) : []);
     if (
       ['pridefall', 'weakest-link', 'catastrophe', 'purge'].includes(c.effect) &&
       !destructionTargets(state, c.effect).length
@@ -277,28 +280,24 @@ window.FKEngine = (() => {
       const dest = c.ability === 'infiltration' ? other(actor) : actor;
       if (blocked(state, dest, c.row))
         return { kind: 'blocked', message: `Dread blocks the ${c.row} row this unit must enter.` };
-      if (c.ability === 'infiltration' && (state.deckCount ?? state.deck.length) === 0)
-        return { kind: 'blocked', message: 'The shared deck is empty. Infiltration has no cards to draw.' };
       const temp = clone(state);
       temp.players[actor].hand = temp.players[actor].hand.filter((id) => id !== cardId);
       onRow(temp, dest, c.row).push(cardId);
       if (c.ability === 'restoration') {
-        a.restore = pick(
+        a.restore = pickIfAvailable(
           'restore',
           temp.players[actor].grave.filter((id) => unit(id) && C[id].row === c.row).map(option),
           1,
-          `Return a ${c.row} unit to your hand`,
-          `Your destroyed pile has no ${c.row} units to return.`
+          `Return a ${c.row} unit to your hand`
         );
       } else if (c.ability === 'deathGaze') {
         const targets = rowUnits(temp, other(actor), 'ranged').filter((id) => !protectedFrom(temp, id));
         const highest = Math.max(...targets.map((id) => power(temp, id)));
-        a.kill = pick(
+        a.kill = pickIfAvailable(
           'kill',
           targets.filter((id) => power(temp, id) === highest).map(option),
           1,
-          'Choose a highest-power enemy Ranged unit',
-          'There are no unprotected enemy Ranged units for Death Gaze to destroy.'
+          'Choose a highest-power enemy Ranged unit'
         );
       } else if (c.ability === 'convert') {
         if (blocked(temp, other(actor), 'combat'))

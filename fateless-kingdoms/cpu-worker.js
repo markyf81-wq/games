@@ -1,6 +1,6 @@
 'use strict';
 self.window = self;
-importScripts('cards.js?v=refactor45', 'engine.js?v=refactor45', 'cpu.js?v=kids46');
+importScripts('cards.js?v=refactor45', 'engine.js?v=unit-abilities48', 'cpu.js?v=kids46');
 self.onmessage = async (event) => {
   try {
     const result = await self.FKCPU.choose(event.data.view, event.data.level);
