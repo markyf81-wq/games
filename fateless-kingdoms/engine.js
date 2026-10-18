@@ -52,11 +52,11 @@ window.FKEngine = (() => {
   }
   const rowScore = (s, p, row) => rowUnits(s, p, row).reduce((n, id) => n + power(s, id), 0);
   const score = (s, p) => ROWS.reduce((n, row) => n + rowScore(s, p, row), 0);
-  function protectedFrom(s, id, spell = false) {
+  function protectedFrom(s, id, spell = false, effect = null) {
     const loc = locate(s, id);
     if (!loc || !unit(id)) return false;
     return (
-      (loc.row === 'siege' && has(s, loc.p, 'siege', 'siege-0')) ||
+      (effect !== 'sacrifice' && loc.row === 'siege' && has(s, loc.p, 'siege', 'siege-0')) ||
       (spell && has(s, loc.p, loc.row, 'omen-sanctuary'))
     );
   }
@@ -144,9 +144,9 @@ window.FKEngine = (() => {
     if (loc) s.players[loc.p].rows[loc.row] = onRow(s, loc.p, loc.row).filter((x) => x !== id);
     return loc;
   }
-  function destroy(s, targets, spell) {
+  function destroy(s, targets, spell, effect = null) {
     // Determine protection for the whole event before removing any protection sources.
-    const victims = [...new Set(targets)].filter((id) => !protectedFrom(s, id, spell));
+    const victims = [...new Set(targets)].filter((id) => !protectedFrom(s, id, spell, effect));
     for (const id of victims) {
       const loc = removeField(s, id);
       if (loc) s.players[loc.p].grave.push(id);
@@ -351,11 +351,11 @@ window.FKEngine = (() => {
       a.sacrifice = pick(
         'sacrifice',
         units(state, actor)
-          .filter((id) => !protectedFrom(state, id, true))
+          .filter((id) => !protectedFrom(state, id, true, c.effect))
           .map(option),
         1,
         'Step 1: Choose a friendly unit to destroy',
-        'There are no unprotected friendly units to sacrifice.'
+        'Sacrifice needs a friendly unit outside Sanctuary.'
       );
       if (waiting) return waiting;
       a.recover = pick(
@@ -471,7 +471,8 @@ window.FKEngine = (() => {
         log(s, actor === 0 ? `${C[id].name} returns to your hand.` : 'The CPU returns 1 unit to its hand.');
       }
       if (c.effect === 'sacrifice') {
-        victims = destroy(s, a.sacrifice, true);
+        // A voluntary sacrifice bypasses Shielded, but Sanctuary still applies.
+        victims = destroy(s, a.sacrifice, true, c.effect);
         for (const id of a.recover) {
           s.players[actor].grave = s.players[actor].grave.filter((x) => x !== id);
           s.players[actor].hand.push(id);

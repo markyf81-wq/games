@@ -1077,7 +1077,7 @@
       ],
       [
         'Card abilities',
-        'Target counts every friendly Ranged unit, including itself. Stone Wall protects all friendly Siege units, including itself. Sacrifice destroys one friendly unit and returns up to two units already in your destroyed pile to your hand. The unit sacrificed in this play cannot be returned by the same Sacrifice. It does not swap a unit into play or trigger its ability. Dread blocks cards entering its row, including moves through Convert.'
+        'Target counts every friendly Ranged unit, including itself. Stone Wall protects all friendly Siege units, including itself. Sacrifice destroys one friendly unit, ignoring Shielded even on Stone Wall itself; Sanctuary still blocks it. It returns up to two units already in your destroyed pile to your hand. The unit sacrificed in this play cannot be returned by the same Sacrifice. It does not swap a unit into play or trigger its ability. Dread blocks cards entering its row, including moves through Convert.'
       ],
       [
         'Legal plays & targets',

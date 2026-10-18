@@ -77,7 +77,7 @@ window.FKCards = (() => {
     accuracy:
       'Gain +1 power for every friendly Ranged unit, including Target itself. Recalculate after each turn.',
     shielded:
-      'Friendly Siege units, including Stone Wall itself, cannot be destroyed while Stone Wall is in play. Round cleanup still clears the row.',
+      'Friendly Siege units, including Stone Wall itself, cannot be destroyed while Stone Wall is in play, except by your own Sacrifice. Round cleanup still clears the row.',
     bloodRage: 'Gain +1 power for every enemy Combat unit in play. Recalculate after each turn.',
     fortified: 'Gain +1 power for every other friendly Siege unit. Recalculate after each turn.',
     deathGaze: 'When played, destroy 1 highest-power enemy Ranged unit. Choose one if tied.'
@@ -124,7 +124,7 @@ window.FKCards = (() => {
     [
       'sacrifice',
       'Sacrifice',
-      'Destroy 1 friendly unit, then bring up to 2 units already in your destroyed pile into your hand. You cannot return the unit sacrificed in this play. Returned units are not played and their abilities do not trigger.'
+      'Destroy 1 friendly unit, ignoring Shielded. Sanctuary still blocks this Spell. Then bring up to 2 units already in your destroyed pile into your hand. You cannot return the unit sacrificed in this play. Returned units are not played and their abilities do not trigger.'
     ],
     [
       'catastrophe',
