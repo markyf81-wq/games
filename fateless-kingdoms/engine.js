@@ -367,23 +367,37 @@ window.FKEngine = (() => {
       if (waiting) return waiting;
     } else if (c.effect === 'weakest-link') {
       a.weakest = [];
-      for (let p = 0; p < 2; p++) {
-        const targets = units(state, p)
+      const sides = [0, 1].map((p) =>
+        units(state, p)
           .filter((id) => !protectedFrom(state, id, true))
-          .sort((x, y) => power(state, x) - power(state, y));
-        const count = Math.min(3, targets.length);
+          .sort((x, y) => power(state, x) - power(state, y))
+      );
+      const total = (p) => Math.min(3, sides[p].length);
+      for (let p = 0; p < 2; p++) {
+        const targets = sides[p];
+        const count = total(p);
         if (!count) continue;
         const cutoff = power(state, targets[count - 1]);
         const fixed = targets.filter((id) => power(state, id) < cutoff);
         const tied = targets.filter((id) => power(state, id) === cutoff);
+        const contested = tied.length > count - fixed.length;
+        // Show every victim when there is no cutoff tie to resolve, rather
+        // than silently including the weaker units and asking only for the last.
+        const choices = contested ? tied : [...fixed, ...tied];
+        const chooseCount = contested ? count - fixed.length : count;
         const picked = pick(
           `weakest${p}`,
-          tied.map(option),
-          count - fixed.length,
-          `Choose ${count - fixed.length} ${p === actor ? 'friendly' : 'enemy'} unit${count - fixed.length === 1 ? '' : 's'} to destroy`
+          choices.map(option),
+          chooseCount,
+          `Choose ${chooseCount} ${p === actor ? 'friendly' : 'enemy'} unit${chooseCount === 1 ? '' : 's'} to destroy${contested ? ' from the tied units' : ''}`
         );
-        if (waiting) return waiting;
-        a.weakest.push(...fixed, ...picked);
+        if (waiting) {
+          waiting.note = `Total to destroy: ${total(actor)} friendly and ${total(other(actor))} enemy units.`;
+          if (contested && fixed.length)
+            waiting.note += ` Also destroyed: ${fixed.map((id) => C[id].name).join(', ')}.`;
+          return waiting;
+        }
+        a.weakest.push(...(contested ? fixed : []), ...picked);
       }
     }
     return { kind: 'ready', action: a };

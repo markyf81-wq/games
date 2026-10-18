@@ -537,6 +537,7 @@
     );
     heading.tabIndex = -1;
     body.append(heading);
+    if (q.note) body.append(node('p', 'choice-help', q.note));
     if (choosing) {
       if (q.count > 1)
         body.append(node('p', 'choice-help', `Select ${q.count} cards. ${picked.length} selected.`));

@@ -1,6 +1,6 @@
 /* One owner for worker/fallback search, delayed turns and cancellation. */
 window.FKCPUController = class CPUController {
-  constructor({ choose, workerUrl = 'cpu-worker.js?v=unit-abilities48', delay = 350 }) {
+  constructor({ choose, workerUrl = 'cpu-worker.js?v=weakest-link51', delay = 350 }) {
     this.choose = choose;
     this.workerUrl = workerUrl;
     this.delay = delay;
