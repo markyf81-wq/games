@@ -11,7 +11,7 @@ window.FKEngine = (() => {
   const rowUnits = (s, p, row) => onRow(s, p, row).filter(unit);
   const units = (s, p) => ROWS.flatMap((row) => rowUnits(s, p, row));
   const has = (s, p, row, id) => onRow(s, p, row).includes(id);
-  const blocked = (s, p, row) => has(s, p, row, 'omen-dread');
+  const blocked = (s, p, row) => has(s, p, row, 'omen-dread') && !has(s, p, row, 'omen-ironward');
   const locate = (s, id) => {
     for (let p = 0; p < 2; p++) for (const row of ROWS) if (onRow(s, p, row).includes(id)) return { p, row };
     return null;
@@ -319,13 +319,12 @@ window.FKEngine = (() => {
       a.destination = dest;
     } else if (c.type === 'omen' && !c.weather) {
       const dest = c.effect === 'dread' ? other(actor) : actor;
-      const opts = ROWS.filter((row) => !blocked(state, dest, row)).map((row) => ({
+      const opts = ROWS.map((row) => ({
         value: `${dest}:${row}`,
         row,
         side: dest,
         label: `${dest === actor ? 'Friendly' : 'Enemy'} ${row} row`
       }));
-      if (!opts.length) return { kind: 'blocked', message: 'Dread blocks every row this Omen could enter.' };
       a.row = pick('row', opts, 1, `Choose ${c.effect === 'dread' ? 'an enemy' : 'a friendly'} row`);
       if (waiting) return waiting;
     } else if (c.effect === 'decoy') {

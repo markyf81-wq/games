@@ -505,7 +505,7 @@ window.FKEffects = (() => {
             420 + i * 100
           )
         );
-    const cue = destroyed ? 'burn' : card?.effect || card?.ability || 'land';
+    const cue = card?.effect || card?.ability || (card?.row ? `land-${card.row}` : 'land');
     if (card) {
       const effect = card.effect || card.ability;
       if (effect && !reduced()) {
@@ -534,6 +534,7 @@ window.FKEffects = (() => {
         if (token === session.generation) {
           cuePlayed = true;
           window.FKAudio.play(cue);
+          if (destroyed && cue !== 'catastrophe' && cue !== 'sacrifice') window.FKAudio.play('burn');
           if (newHand.length || cpuGains) window.FKAudio.play('draw');
         }
       },
@@ -547,6 +548,7 @@ window.FKEffects = (() => {
       if (token === session.generation) {
         if (!cuePlayed) {
           window.FKAudio.play(cue);
+          if (destroyed && cue !== 'catastrophe' && cue !== 'sacrifice') window.FKAudio.play('burn');
           if (newHand.length || cpuGains) window.FKAudio.play('draw');
         }
         clearEffects();

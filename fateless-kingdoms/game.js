@@ -289,7 +289,7 @@
         .filter((w) => C[w.id].weather === row)
         .forEach((w) => effects.append(node('span', `row-effect effect-${C[w.id].effect}`)));
     ['dread', 'war-chant', 'ironward', 'sanctuary'].forEach((effect) => {
-      if (rowCards.includes(`omen-${effect}`) && !(warded && effect === 'war-chant'))
+      if (rowCards.includes(`omen-${effect}`) && !(warded && ['war-chant', 'dread'].includes(effect)))
         effects.append(node('span', `row-effect effect-${effect}`));
     });
     if (rowCards.includes('siege-0')) effects.append(node('span', 'row-effect effect-shielded'));
@@ -1077,11 +1077,11 @@
       ],
       [
         'Card abilities',
-        'Target counts every friendly Ranged unit, including itself. Stone Wall protects all friendly Siege units, including itself. Sacrifice destroys one friendly unit, ignoring Shielded even on Stone Wall itself; Sanctuary still blocks it. It returns up to two units already in your destroyed pile to your hand. The unit sacrificed in this play cannot be returned by the same Sacrifice. It does not swap a unit into play or trigger its ability. Dread blocks cards entering its row, including moves through Convert.'
+        'Target counts every friendly Ranged unit, including itself. Stone Wall protects all friendly Siege units, including itself. Sacrifice destroys one friendly unit, ignoring Shielded even on Stone Wall itself; Sanctuary still blocks it. It returns up to two units already in your destroyed pile to your hand. The unit sacrificed in this play cannot be returned by the same Sacrifice. It does not swap a unit into play or trigger its ability. Dread blocks new units entering its row, including moves through Convert. Omens can still enter, and Ironward suppresses Dread while it remains on that row.'
       ],
       [
         'Legal plays & targets',
-        'A unit can enter a legal row even if its when-played ability does nothing. Queen Krath can be played without a Death Gaze target; Restoration units can be played with no matching destroyed unit; Infiltration units can be played with an empty shared deck. If ability targets do exist, you must choose one. Mimic is different: its swap is the required play, so it needs an enemy Combat unit and both Combat rows must allow the swap. Targeted Spells still need valid targets: Decoy needs an eligible friendly unit; Sacrifice needs a unit to destroy and at least one previously destroyed unit to recover; destruction Spells need at least one card they can destroy. Resolve fewer targets or draws when fewer are available. Omens and passive abilities can be placed before their effects are useful, and Patience intentionally spends a turn. Dread still blocks row entry. Nonempty blocked hands do not automatically pass.'
+        'A unit can enter a legal row even if its when-played ability does nothing. Queen Krath can be played without a Death Gaze target; Restoration units can be played with no matching destroyed unit; Infiltration units can be played with an empty shared deck. If ability targets do exist, you must choose one. Mimic is different: its swap is the required play, so it needs an enemy Combat unit and both Combat rows must allow the swap. Targeted Spells still need valid targets: Decoy needs an eligible friendly unit; Sacrifice needs a unit to destroy and at least one previously destroyed unit to recover; destruction Spells need at least one card they can destroy. Resolve fewer targets or draws when fewer are available. Omens and passive abilities can be placed before their effects are useful, and Patience intentionally spends a turn. Dread still blocks unit entry unless Ironward suppresses it; it never blocks Omen placement. Nonempty blocked hands do not automatically pass.'
       ],
       [
         'Controls & saving',

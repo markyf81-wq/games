@@ -126,7 +126,7 @@ Distinguish a legal unit placement from the extra effect of a when-played abilit
 
 Mimic is an exception: its Convert swap is the required play, so it needs an enemy Combat unit and both Combat rows must allow the swap. It cannot simply enter your field without swapping. Targeted Spells also need a valid play: Decoy needs an eligible friendly unit. Sacrifice needs both a friendly unit outside Sanctuary to destroy and at least one unit already in your destroyed pile to recover. Sacrifice ignores Shielded, including on Stone Wall itself. Pridefall, Weakest Link and Catastrophe need at least one card they can destroy; Purge needs an Omen in play. A destruction Spell can still be played when only one side has eligible targets.
 
-These rules apply equally to both players. Dread still prevents unit entry into a blocked row, even if the unit’s extra ability has no target. Ordinary units and passive abilities can be played in a legal row even if their bonus or protection is not currently useful. Omens can be placed in legal rows or the shared weather area before units arrive, because their effects remain in play. Patience is always a valid play on your turn: spending the turn without passing is its effect.
+These rules apply equally to both players. Dread still prevents unit entry into a blocked row unless Ironward suppresses it, even if the unit’s extra ability has no target. Ordinary units and passive abilities can be played in a legal row even if their bonus or protection is not currently useful. Omens can be placed in legal rows or the shared weather area before units arrive, because their effects remain in play. Patience is always a valid play on your turn: spending the turn without passing is its effect.
 
 If you still have cards in hand but none can be played, choose whether to pass; do not automatically pass.
 
@@ -149,11 +149,11 @@ If both players reach 2 round wins at the same time because of a draw, the game 
 ## Omen Cards:
 
 * **War Chant:** Place on any friendly row. Add 2 power to each unit in that row while this card is in play.  
-* **Dread:** Place on any enemy row. No new cards can be added to that row while this card is in play. This also blocks units entering through Convert. Sacrifice returns units to hand, so it does not place units into a row.  
+* **Dread:** Place on any enemy row. No new unit cards can be added to that row while Dread is active. This also blocks units entering through Convert. Omens may still be placed on the row. Ironward suppresses Dread while both are in that row, allowing units to enter again; Dread remains in play and resumes if Ironward is removed. Sacrifice returns units to hand, so it does not place units into a row.  
 * **Blizzard:** Place in the middle of the battlefield. All Combat units on both sides have their power reduced to 1\.  
 * **Thunderstorm:** Place in the middle of the battlefield. All Ranged units on both sides have their power reduced to 1\.  
 * **Flood:** Place in the middle of the battlefield. All Siege units on both sides have their power reduced to 1\.  
-* **Ironward:** Place on any friendly row. Units in that row are unaffected by all Omen cards, including friendly War Chant bonuses and harmful weather.  
+* **Ironward:** Place on any friendly row. Units in that row are unaffected by all Omen cards, including friendly War Chant bonuses and harmful weather. Ironward may be placed on a row containing Dread and suppresses its unit-entry restriction while present.  
 * **Sanctuary:** Place on any friendly row. Units in that row are unaffected by Spell cards.
 
 ## Unit Abilities:

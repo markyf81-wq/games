@@ -16,12 +16,14 @@ The game uses ordinary deferred scripts, relative asset URLs and browser APIs. T
 | `card-preview.js` | Mouse/keyboard previews, touch gestures and click suppression | Playing a card directly |
 | `table-layout.js` | Responsive measurements and resize observation | Match rules or UI selection state |
 | `effects.js` | Card presentation, transient overlays and animation cleanup | Mutating the match or revealing hidden cards |
-| `audio.js` | Soundtrack phases, local playback, sound effects and normalized audio preferences | Turn progression |
+| `audio.js` | Sampled effects, decoding/voice lifecycle and normalized audio preferences | Turn progression or music-deck state |
+| `music-player.js` | Local native music voices, playlist/phase crossfades, results and pause positions | Game rules or saved preferences |
+| `sound-effects.js` | Embedded compressed CC0 sample data for direct-file-safe playback | Playback state |
 | `styles.css` | Presentation, responsive layouts and reduced-motion styles | Game rules |
 
 ## Why classes here
 
-`CardPreviewController` and `TableLayout` own long-lived event listeners/observers and expose cleanup methods. `CPUController` owns a pending job, a delay timer, a worker and cooperative fallback cancellation. `EffectSession`, internal to the effects service, owns transient animations, overlays, hidden destinations and cancellable waits.
+`CardPreviewController` and `TableLayout` own long-lived event listeners/observers and expose cleanup methods. `CPUController` owns a pending job, a delay timer, a worker and cooperative fallback cancellation. `EffectSession`, internal to the effects service, owns transient animations, overlays, hidden destinations and cancellable waits. `MusicPlayer` owns native audio voices and their pending play requests, crossfade timers and cleanup; audio preferences and effect samples remain in the audio service.
 
 These classes encapsulate state with a lifecycle. Card definitions, rules, search evaluation, storage helpers and rendering helpers remain functions where an instance would add no useful ownership.
 
@@ -50,4 +52,4 @@ UI bonus explanations call `engine.powerSources`; `engine.power` and that explan
 
 Keep selectors grouped with their components and preserve media-query order. CSS fallback declarations such as `vh` followed by `dvh` belong together in the final applicable rule. Do not restore removed footer/hint/status-tag components or the old pseudo-element row animations; ongoing effects use the local SVG scenes. Keep hand hit areas stable during hover and touch previews.
 
-When changing script dependencies, update both `index.html` and the worker import/URL versions. Preserve the declaration order: storage/cards, engine, CPU/audio/effects, controllers, then game bootstrap.
+When changing script dependencies, update both `index.html` and the worker import/URL versions. Preserve the declaration order: storage/cards, engine, CPU, sound sample data and MusicPlayer, audio/effects, controllers, then game bootstrap.

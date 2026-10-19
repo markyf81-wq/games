@@ -14,14 +14,16 @@ The distributed copies have been re-encoded from the composer's full-mix MP3 dow
 
 ## Short result cues
 
-The following excerpts use the same composer and CC BY 4.0 licence/source links above. Each is cut from the original full mix, re-encoded at 128 kbps stereo/44.1 kHz, with a 0.15-second fade in and 1.2-second fade out. There are no pitch changes. These are excerpt edits made for the game, not separately released works or endorsements by the composer.
+All three result cues use Scott Buckley recordings under the same CC BY 4.0 licence. These are excerpt edits for the game, not separately released works or endorsements. Source pages for the new victory/defeat cues were retrieved 19 October 2026.
 
-| Local file | Source work | Source interval | Use |
+| Local file | Source work and original download | Source excerpt | Use |
 | --- | --- | --- | --- |
-| `result-victory.mp3` | Legionnaire (2022 Remaster) | 2:54–3:03.5 (9.5 seconds) | Won round or match |
-| `result-defeat.mp3` | Balefire | 5:27–5:36.5 (9.5 seconds) | Lost round or match |
-| `result-draw.mp3` | Chronicle | 3:30–3:37.5 (7.5 seconds) | Drawn round or match |
+| `result-victory-fanfare.mp3` | [Hyperion](https://www.scottbuckley.com.au/library/hyperion/) — [original MP3](https://www.scottbuckley.com.au/library/wp-content/uploads/2024/06/Hyperion.mp3) | Opening 14 seconds after removal of leading silence | Won round or match; opening brass fanfare |
+| `result-defeat-fanfare.mp3` | [Monomyth – The Fall](https://www.scottbuckley.com.au/library/the-fall/) — [original MP3](https://www.scottbuckley.com.au/library/wp-content/uploads/2019/07/sb_monomyth_9_thefall.mp3) | Opening 12 seconds after removal of leading silence | Lost round or match; dark brass opening |
+| `result-draw.mp3` | [Chronicle](https://www.scottbuckley.com.au/library/chronicle/) | 3:30–3:37.5 (7.5 seconds) | Drawn round or match |
 
-The excerpts add about 420 KiB and play once per result. The battle playlist remains paused during results and resumes on Continue; a new game rewinds the playlists.
+The victory and defeat excerpts are level-adjusted to -16 LUFS with a -1.5 dB true-peak target, re-encoded to 128 kbps stereo MP3 at 44.1 kHz, with 0.06-second fade ins and 2.2-second fade outs. Their compositions and pitch are unchanged. The draw excerpt retains its 0.15-second fade in and 1.2-second fade out. The three cues total approximately 540 KiB and play once per result, then remain silent.
 
-Attribution is also available in the game's Settings → Sound & music → Music credits. Keep these credits, the composer/source links and the licence link when redistributing the music with the game. The CC BY licence applies to these music files, not to Mark's card artwork or other game assets.
+Playlist tracks overlap for up to four seconds using equal-power fades. Phase changes use shorter fades; the battle playlist pauses after its result fade and resumes on Continue. A new game starts the playlists again from the beginning.
+
+Attribution is also available in the game's Settings → Sound & music → Audio credits. Keep these credits, the composer/source links and the licence link when redistributing the music with the game. The CC BY licence applies to these music files, not to Mark's card artwork or the separately credited CC0 sound effects.

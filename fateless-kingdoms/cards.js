@@ -147,7 +147,7 @@ window.FKCards = (() => {
       'dread',
       'Dread',
       null,
-      'Place on an enemy row. No new cards can enter that row, including units moved by Convert.'
+      'Place on an enemy row. No new unit cards can enter that row, including units moved by Convert. Omens can still enter. Ironward suppresses this restriction.'
     ],
     [
       'blizzard',
@@ -166,7 +166,7 @@ window.FKCards = (() => {
       'ironward',
       'Ironward',
       null,
-      'Friendly units in this row ignore all Omens, including War Chant bonuses and weather.'
+      'Friendly units in this row ignore all Omens, including War Chant bonuses and weather. Suppress Dread’s restriction so new units can enter this row.'
     ],
     [
       'sanctuary',
@@ -176,7 +176,15 @@ window.FKCards = (() => {
     ]
   ].forEach(([slug, name, weather, text]) => {
     const id = `omen-${slug}`;
-    cards[id] = { id, name, type: 'omen', effect: slug, weather, text, image: `assets/cards/${id}.jpg` };
+    cards[id] = {
+      id,
+      name,
+      type: 'omen',
+      effect: slug,
+      weather,
+      text,
+      image: `assets/cards/${id}.jpg${slug === 'dread' ? '?v=dread54' : ''}`
+    };
   });
   return Object.freeze({
     cards: Object.freeze(cards),
