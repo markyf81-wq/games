@@ -131,7 +131,11 @@ window.FKCards = (() => {
       'Catastrophe',
       'Destroy every card in play on both sides, except protected units. Protection is checked before anything is removed.'
     ],
-    ['purge', 'Purge', 'Destroy all Omens in play, including weather and Omens on rows.']
+    [
+      'purge',
+      'Purge',
+      'Destroy all Omens in play, including weather and Omens on rows. May be played when no Omens are in play.'
+    ]
   ].forEach(([slug, name, text]) => {
     const id = `spell-${slug}`;
     cards[id] = { id, name, type: 'spell', effect: slug, text, image: `assets/cards/${id}.jpg` };

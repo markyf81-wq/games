@@ -31,49 +31,69 @@ window.FKAudio = (() => {
   const decoded = new Map(),
     voices = new Set(),
     lastCues = new Map();
-  const effectsVolume = () => (settings.muted || !settings.effects ? 0 : settings.effectsVolume * 0.55);
-  const layer = (samples, gain = 1, rate = 1, delay = 0) => ({ samples, gain, rate, delay });
+  const effectsVolume = () => (settings.muted || !settings.effects ? 0 : settings.effectsVolume * 0.9);
+  const layer = (samples, gain = 1, rate = 1, delay = 0, variation = 0.02) => ({
+    samples,
+    gain,
+    rate,
+    delay,
+    variation
+  });
+  // Weather retains the recording's pitch; small foley variations avoid identical repeats.
+  const natural = (sample, gain = 1) => layer([sample], gain, 1, 0, 0);
   const cues = {
+    hover: [layer(['page1', 'page2'], 0.3, 1.12)],
     select: [layer(['cloth1', 'cloth2'], 0.28)],
-    fly: [layer(['page1', 'page2'], 0.45, 0.95)],
-    land: [layer(['leather'], 0.75), layer(['wood1', 'wood2'], 0.25, 0.95)],
-    'land-combat': [layer(['metal1', 'metal2'], 0.62, 0.94), layer(['leather'], 0.45)],
-    'land-ranged': [layer(['wood1', 'wood2'], 0.6), layer(['blade1'], 0.3, 0.95, 0.04)],
-    'land-siege': [layer(['stone'], 0.8, 0.82), layer(['wood1', 'wood2'], 0.5, 0.88, 0.07)],
-    burn: [layer(['blade1', 'blade2'], 0.55, 0.88), layer(['fire1', 'fire2'], 0.7, 0.88, 0.06)],
-    catastrophe: [
-      layer(['thunder'], 0.85, 0.82),
-      layer(['fire2'], 0.75, 0.82, 0.12),
-      layer(['stone'], 0.55, 0.75, 0.2)
+    'spell-play': [natural('chime', 0.75)],
+    'omen-play': [layer(['shield'], 0.45), layer(['spell'], 0.4), layer(['drum'], 0.2, 1, 0.08)],
+    'ability-play': [layer(['page2'], 0.3), layer(['spell'], 0.35, 1.04, 0.04)],
+    fly: [layer(['swish'], 0.3)],
+    land: [layer(['leather'], 0.6)],
+    'boss-combat': [layer(['drum'], 0.8), layer(['blade2'], 0.8, 1, 0.08), layer(['dragon'], 0.95, 1, 0.08)],
+    'boss-ranged': [natural('serpent', 0.95), layer(['spell'], 0.4), layer(['blade1'], 0.35, 1, 0.16)],
+    'boss-siege': [
+      layer(['drum'], 0.85, 0.95),
+      layer(['stone'], 0.8, 1, 0.08),
+      layer(['chain'], 0.55, 1, 0.2)
     ],
-    blizzard: [layer(['wind'], 0.8, 0.86)],
-    thunderstorm: [layer(['thunder'], 0.88, 0.94)],
-    flood: [layer(['water'], 0.8, 0.94)],
-    dread: [layer(['chain'], 0.6, 0.78), layer(['roar'], 0.25, 0.7, 0.12)],
-    pass: [layer(['leather'], 0.5, 0.9), layer(['cloth2'], 0.25, 0.88, 0.05)],
-    coin: [layer(['coin1', 'coin2'], 0.6, 0.95)],
-    deathGaze: [layer(['blade2'], 0.65, 0.85), layer(['fire1'], 0.5, 0.75, 0.08)],
-    convert: [layer(['cloth1'], 0.4, 0.85), layer(['spell'], 0.5, 0.78, 0.04)],
+    'result-victory': [layer(['shield'], 0.4), layer(['coin1'], 0.4, 1, 0.12)],
+    'result-defeat': [layer(['drum'], 0.6, 0.9), layer(['chain'], 0.4, 0.96, 0.12)],
+    'result-draw': [layer(['wood1'], 0.45), layer(['shield'], 0.3, 1, 0.08)],
+    burn: [layer(['blade1', 'blade2'], 0.6), layer(['fire1', 'fire2'], 0.8, 1, 0.06)],
+    catastrophe: [natural('thunder', 0.8), layer(['fire2'], 0.8, 1, 0.12), layer(['stone'], 0.7, 1, 0.2)],
+    blizzard: [natural('wind', 0.85), layer(['ice'], 0.45, 1, 0.1, 0)],
+    thunderstorm: [natural('thunder', 0.95)],
+    flood: [natural('water', 0.95)],
+    dread: [
+      natural('ominous', 0.75),
+      layer(['chain'], 0.85, 0.95),
+      layer(['whisper'], 0.7, 0.9, 0.08),
+      layer(['drum'], 0.3, 0.92)
+    ],
+    pass: [layer(['leather'], 0.5), layer(['cloth2'], 0.25, 1, 0.05)],
+    coin: [natural('coinFlip', 0.8)],
+    'coin-land': [natural('coinLand', 0.75)],
+    deathGaze: [layer(['swish'], 0.65), layer(['blade2'], 0.8, 1, 0.08)],
+    convert: [layer(['cloth1'], 0.4), layer(['spell'], 0.65, 1, 0.04)],
     draw: [layer(['page1', 'page2'], 0.55), layer(['cloth1'], 0.25, 1, 0.12)],
-    decoy: [layer(['cloth1', 'cloth2'], 0.5, 0.9)],
-    restoration: [layer(['page2'], 0.5), layer(['spell'], 0.35, 0.8, 0.06)],
-    infiltration: [layer(['cloth2'], 0.5, 0.85), layer(['blade1'], 0.35, 0.92, 0.06)],
-    sacrifice: [layer(['blade2'], 0.65, 0.85), layer(['fire1'], 0.55, 0.85, 0.08)],
-    'war-chant': [
-      layer(['wood1'], 0.8, 0.72),
-      layer(['metal1'], 0.5, 0.8, 0.12),
-      layer(['wood2'], 0.6, 0.8, 0.26)
+    decoy: [natural('vanish', 0.9), layer(['swish'], 0.6, 1, 0.08), layer(['leather'], 0.45, 1, 0.15)],
+    restoration: [natural('revive', 0.95), layer(['vanish'], 0.3), layer(['page2'], 0.35, 1, 0.18)],
+    infiltration: [layer(['cloth1', 'cloth2'], 0.8, 0.95), layer(['swish'], 0.45, 0.9, 0.06)],
+    sacrifice: [layer(['blade2'], 0.8), layer(['fire1'], 0.65, 1, 0.08)],
+    'war-chant': [layer(['drum'], 0.85), layer(['drum'], 0.55, 1.04, 0.28), layer(['blade1'], 0.45, 1, 0.42)],
+    ironward: [layer(['shield'], 0.65), layer(['chain'], 0.4, 1, 0.08)],
+    shielded: [layer(['stone'], 0.5), layer(['shield'], 0.55, 1, 0.05)],
+    sanctuary: [layer(['shield'], 0.4), layer(['spell'], 0.55, 1, 0.08)],
+    accuracy: [layer(['swish'], 0.5), layer(['wood1'], 0.35, 1, 0.07)],
+    purge: [layer(['spell'], 0.65), layer(['shield'], 0.45, 1, 0.08)],
+    pridefall: [layer(['swish'], 0.65), layer(['metal2'], 0.75, 1, 0.1)],
+    'weakest-link': [
+      layer(['blade1'], 0.7),
+      layer(['metal2'], 0.65, 1, 0.08),
+      layer(['blade2'], 0.6, 1.02, 0.19),
+      layer(['metal1'], 0.4, 1, 0.3)
     ],
-    ironward: [layer(['shield'], 0.7, 0.85), layer(['chain'], 0.3, 0.88, 0.08)],
-    shielded: [layer(['stone'], 0.65, 0.8), layer(['shield'], 0.5, 0.88, 0.05)],
-    sanctuary: [layer(['shield'], 0.45, 0.88), layer(['spell'], 0.3, 0.72, 0.08)],
-    accuracy: [layer(['blade1'], 0.45, 0.98)],
-    bloodRage: [layer(['metal1', 'metal2'], 0.65, 0.88)],
-    fortified: [layer(['stone'], 0.65, 0.82), layer(['chain'], 0.4, 0.88, 0.06)],
-    purge: [layer(['wind'], 0.6, 1.05), layer(['shield'], 0.4, 0.75, 0.08)],
-    pridefall: [layer(['blade2'], 0.7, 0.85), layer(['metal2'], 0.55, 0.8, 0.1)],
-    'weakest-link': [layer(['blade1'], 0.55, 0.9), layer(['metal1'], 0.55, 0.85, 0.08)],
-    patience: [layer(['cloth1'], 0.35, 0.9)]
+    patience: [natural('clock', 0.9), layer(['leather'], 0.3)]
   };
   function decodeSample(name) {
     if (decoded.has(name)) return decoded.get(name);
@@ -113,7 +133,7 @@ window.FKAudio = (() => {
       amp = ctx.createGain();
     const voice = { source, amp };
     source.buffer = buffer;
-    source.playbackRate.value = spec.rate * (0.97 + Math.random() * 0.06);
+    source.playbackRate.value = spec.rate * (1 + (Math.random() * 2 - 1) * spec.variation);
     amp.gain.value = spec.gain;
     source.connect(amp);
     amp.connect(effectsBus);
@@ -158,19 +178,34 @@ window.FKAudio = (() => {
     music.resume();
     return { ...settings };
   }
+  function canPlayEffects() {
+    return (
+      !!ctx &&
+      ctx.state === 'running' &&
+      !document.hidden &&
+      !settings.muted &&
+      settings.effects &&
+      settings.effectsVolume > 0
+    );
+  }
+  function playActivation(card) {
+    if (!card) return;
+    const cue =
+      card.type === 'spell'
+        ? 'spell-play'
+        : card.type === 'omen'
+          ? 'omen-play'
+          : card.ability
+            ? 'ability-play'
+            : 'select';
+    play(cue);
+  }
   function play(name) {
-    if (
-      settings.muted ||
-      !settings.effects ||
-      settings.effectsVolume === 0 ||
-      !ctx ||
-      ctx.state !== 'running' ||
-      document.hidden
-    )
-      return;
+    if (!canPlayEffects()) return;
     const requested = performance.now(),
       generation = effectsGeneration;
-    if (requested - (lastCues.get(name) ?? -Infinity) < (name === 'fly' ? 140 : 70)) return;
+    const cooldown = name === 'fly' ? 140 : name === 'hover' ? 110 : 70;
+    if (requested - (lastCues.get(name) ?? -Infinity) < cooldown) return;
     lastCues.set(name, requested);
     const layers = cues[name] || cues.land;
     const chosen = layers.map((spec) => ({
@@ -179,15 +214,7 @@ window.FKAudio = (() => {
     }));
     Promise.all(chosen.map((part) => part.buffer)).then((buffers) => {
       // Never play a stale decoded cue after mute, a new game or returning to the tab.
-      if (
-        generation !== effectsGeneration ||
-        performance.now() - requested > 300 ||
-        settings.muted ||
-        !settings.effects ||
-        !ctx ||
-        ctx.state !== 'running' ||
-        document.hidden
-      )
+      if (generation !== effectsGeneration || performance.now() - requested > 300 || !canPlayEffects())
         return;
       buffers.forEach((buffer, index) => {
         if (buffer) playSample(buffer, chosen[index].spec);
@@ -216,7 +243,10 @@ window.FKAudio = (() => {
     setScene: (scene) => music.setScene(scene),
     playResult: (outcome) => music.playResult(outcome),
     resetMusic,
+    getTrack: () => music.getTrack(),
+    restoreTrack: (file) => music.restoreTrack(file),
     play,
+    playActivation,
     getSettings: () => ({ ...settings })
   });
 })();

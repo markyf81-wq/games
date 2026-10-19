@@ -80,10 +80,11 @@ window.FKEngine = (() => {
     );
   }
   function matchOptions(options = {}) {
-    const includeOmens = options.includeOmens !== false,
-      includeSpells = options.includeSpells !== false;
+    const debug = options.debug === true;
+    const includeOmens = debug || options.includeOmens !== false,
+      includeSpells = debug || options.includeSpells !== false;
     const pool = cardPool({ includeOmens, includeSpells });
-    const guaranteedStart = options.guaranteedStart === true && (includeOmens || includeSpells);
+    const guaranteedStart = !debug && options.guaranteedStart === true && (includeOmens || includeSpells);
     const minimum = guaranteedStart ? 3 : 1;
     const maximum = guaranteedStart
       ? Math.floor(pool.filter(unit).length / 2) + 3
@@ -95,14 +96,21 @@ window.FKEngine = (() => {
       ),
       includeOmens,
       includeSpells,
-      guaranteedStart
+      guaranteedStart,
+      ...(debug ? { debug: true } : {})
     };
   }
+  const debugHand = () => IDS.filter((id) => !unit(id) || C[id].ability);
   function newMatch(starter = Math.random() < 0.5 ? 0 : 1, settings = {}) {
     const options = matchOptions(settings);
     let deck = shuffle(cardPool(options));
     const players = [0, 1].map(() => ({ hand: [], rows: emptyRows(), grave: [], wins: 0, passed: false }));
-    if (options.guaranteedStart) {
+    if (options.debug) {
+      players[0].hand = shuffle(debugHand());
+      const held = new Set(players[0].hand);
+      deck = deck.filter((id) => !held.has(id));
+      players[1].hand = deck.splice(0, options.handSize);
+    } else if (options.guaranteedStart) {
       const specialCards = deck.filter((id) => !unit(id)),
         unitCards = deck.filter(unit);
       players.forEach((player) => {
@@ -130,7 +138,12 @@ window.FKEngine = (() => {
       log: [],
       lastCard: null
     };
-    log(s, `One shared deck. ${options.handSize} cards each. First to two round wins.`);
+    log(
+      s,
+      options.debug
+        ? `Debug match. You start with all ${players[0].hand.length} Spells, Omens and ability units. The CPU starts with ${players[1].hand.length} cards.`
+        : `One shared deck. ${options.handSize} cards each. First to two round wins.`
+    );
     if (options.guaranteedStart)
       log(
         s,
@@ -265,15 +278,12 @@ window.FKEngine = (() => {
     // selecting one is still required, even when only one target is available.
     const pickIfAvailable = (key, opts, count, title) => (opts.length ? pick(key, opts, count, title) : []);
     if (
-      ['pridefall', 'weakest-link', 'catastrophe', 'purge'].includes(c.effect) &&
+      ['pridefall', 'weakest-link', 'catastrophe'].includes(c.effect) &&
       !destructionTargets(state, c.effect).length
     ) {
       return {
         kind: 'blocked',
-        message:
-          c.effect === 'purge'
-            ? 'There are no Omens in play to destroy.'
-            : `There are no unprotected targets for ${c.name} to destroy.`
+        message: `There are no unprotected targets for ${c.name} to destroy.`
       };
     }
     if (c.type === 'unit') {
@@ -572,6 +582,13 @@ window.FKEngine = (() => {
     )
       return false;
     if (
+      s.options?.debug !== undefined &&
+      (typeof s.options.debug !== 'boolean' ||
+        (s.options.debug &&
+          (!s.options.includeOmens || !s.options.includeSpells || s.options.guaranteedStart)))
+    )
+      return false;
+    if (
       s.options?.guaranteedStart !== undefined &&
       (typeof s.options.guaranteedStart !== 'boolean' ||
         s.options.guaranteedStart !== matchOptions(s.options).guaranteedStart ||
@@ -673,6 +690,7 @@ window.FKEngine = (() => {
     clone,
     cardPool,
     matchOptions,
+    debugHand,
     newMatch,
     nextRound,
     autoPassEmptyHands,

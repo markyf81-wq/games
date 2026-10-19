@@ -2,7 +2,7 @@
 window.FKMusicPlayer = class MusicPlayer {
   constructor(getSettings) {
     this.getSettings = getSettings;
-    this.scene = 'lobby';
+    this.scene = 'background';
     this.activated = false;
     const channel = (files, finished = false) => ({
       files,
@@ -15,10 +15,23 @@ window.FKMusicPlayer = class MusicPlayer {
       blocked: false
     });
     this.channels = {
-      battle: channel(['balefire.mp3', 'legionnaire.mp3']),
-      lobby: channel(['chronicle.mp3']),
+      background: channel(['balefire.mp3', 'legionnaire.mp3', 'juggernaut.mp3']),
       result: channel([], true)
     };
+    this.chooseTrack();
+  }
+  chooseTrack() {
+    const channel = this.channels.background;
+    channel.index = Math.floor(Math.random() * channel.files.length);
+  }
+  getTrack() {
+    const channel = this.channels.background;
+    return channel.files[channel.index];
+  }
+  restoreTrack(file) {
+    const channel = this.channels.background;
+    const index = channel.files.indexOf(file);
+    if (index >= 0 && !channel.current) channel.index = index;
   }
   get active() {
     return this.channels[this.scene];
@@ -82,7 +95,7 @@ window.FKMusicPlayer = class MusicPlayer {
     audio.addEventListener('timeupdate', () => {
       if (channel.current !== voice || channel === this.channels.result || !this.eligible(channel)) return;
       const remaining = audio.duration - audio.currentTime;
-      // Only buffer the next track near the end, rather than loading the library.
+      // Prepare a second voice near the end for a smooth loop of this game's track.
       if (Number.isFinite(remaining) && remaining <= 10) this.prepareNext(channel);
       if (Number.isFinite(remaining) && remaining <= 4) this.playNext(channel);
     });
@@ -107,9 +120,9 @@ window.FKMusicPlayer = class MusicPlayer {
   prepareNext(channel) {
     if (channel.next || channel.blocked || channel.failed.size >= channel.files.length) return;
     let index = channel.index;
-    do {
+    while (channel.failed.has(index)) {
       index = (index + 1) % channel.files.length;
-    } while (channel.failed.has(index));
+    }
     channel.next = this.createVoice(channel, index);
     channel.next.audio.preload = 'auto';
     channel.next.audio.load();
@@ -188,7 +201,7 @@ window.FKMusicPlayer = class MusicPlayer {
     this.resume();
   }
   setScene(scene) {
-    const next = scene === 'battle' || scene === 'result' ? scene : 'lobby';
+    const next = scene === 'result' ? 'result' : 'background';
     if (next === this.scene) return;
     this.scene = next;
     // Fade into the result pause; the fanfare starts with the result dialog.
@@ -217,7 +230,8 @@ window.FKMusicPlayer = class MusicPlayer {
       channel.failed.clear();
     }
     this.channels.result.finished = true;
-    this.scene = 'lobby';
+    this.chooseTrack();
+    this.scene = 'background';
     this.resume();
   }
 };

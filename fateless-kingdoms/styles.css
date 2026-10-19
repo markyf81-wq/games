@@ -1642,6 +1642,19 @@ dialog::backdrop {
 .fx-hidden {
   visibility: hidden !important;
 }
+.fx-cinematic {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-cinematic {
+    display: none;
+  }
+}
 .fx-card {
   position: fixed;
   z-index: 1000;
@@ -3477,7 +3490,7 @@ body {
   animation: none !important;
 }
 .effect-blizzard {
-  background-image: url('assets/effects/blizzard.svg');
+  background-image: url('assets/effects/blizzard.svg?v=snow73');
 }
 .effect-thunderstorm {
   background-image: url('assets/effects/thunderstorm.svg');

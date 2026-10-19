@@ -1,10 +1,11 @@
 /* Owns mouse/focus previews, touch dragging and compatibility-click suppression. */
 window.FKCardPreview = class CardPreviewController {
-  constructor({ hand, isAnimating, onSelect, onGesture }) {
+  constructor({ hand, isAnimating, onSelect, onGesture, onPreview = () => {} }) {
     this.hand = hand;
     this.isAnimating = isAnimating;
     this.onSelect = onSelect;
     this.onGesture = onGesture;
+    this.onPreview = onPreview;
     this.preview = null;
     this.source = null;
     this.hold = null;
@@ -231,6 +232,7 @@ window.FKCardPreview = class CardPreviewController {
     this.preview = preview;
     this.source = card;
     document.body.append(preview);
+    this.onPreview();
     if (touch && card.classList.contains('hand-card')) card.classList.add('touch-previewed');
   }
   handCardAtPoint(x, y) {

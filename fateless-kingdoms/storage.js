@@ -2,6 +2,7 @@
 window.FKStorage = (() => {
   const keys = Object.freeze({
     match: 'fateless-kingdoms.match.v1',
+    debugMatch: 'fateless-kingdoms.match.debug.v1',
     settings: 'fateless-kingdoms.settings.v1',
     audio: 'fateless-kingdoms.audio.v1'
   });

@@ -4,6 +4,9 @@
     { cards: C, ids: IDS, rows: ROWS } = window.FKCards;
   const $ = (id) => document.getElementById(id);
   const storage = window.FKStorage;
+  const debugMode = new URLSearchParams(window.location.search).get('debug') === '1';
+  const matchKey = debugMode ? 'debugMatch' : 'match';
+  if (debugMode) document.title += ' · Debug';
   const LEVEL_NAMES = {
     kids: 'Kids',
     casual: 'Beginner',
@@ -32,7 +35,8 @@
     hand: $('hand'),
     isAnimating: () => animating,
     onSelect: (id) => selectHandCard(id),
-    onGesture: () => audio.unlock()
+    onGesture: () => audio.unlock(),
+    onPreview: () => audio.play('hover')
   });
   let renderedLog = null;
   const portraitLayout = window.matchMedia('(max-width: 980px) and (orientation: portrait)');
@@ -42,12 +46,17 @@
   const cpu = new window.FKCPUController({ choose: window.FKCPU.choose });
   const preferences = storage.read('settings');
   const preferencesLoaded = preferences && typeof preferences === 'object' && !Array.isArray(preferences);
-  let nextOptions = E.matchOptions(preferencesLoaded ? preferences.options || {} : {});
+  let nextOptions = E.matchOptions({
+    ...(preferencesLoaded ? preferences.options || {} : {}),
+    debug: debugMode
+  });
   if (preferencesLoaded && LEVEL_NAMES[preferences.level]) level = preferences.level;
-  const saved = storage.read('match');
-  const loaded = E.validState(saved?.state);
+  const saved = storage.read(matchKey);
+  const loaded = E.validState(saved?.state) && !!saved.state.options?.debug === debugMode;
   if (loaded) {
     state = saved.state;
+    if (debugMode) nextOptions = E.matchOptions(state.options);
+    audio.restoreTrack(saved.musicTrack);
     if (!preferencesLoaded && LEVEL_NAMES[saved.level]) level = saved.level;
   }
   if (!state) state = E.newMatch(0, nextOptions);
@@ -63,7 +72,11 @@
     return n;
   }
   function save() {
-    saveAvailable = storage.write('match', { state: pendingState || state, level });
+    saveAvailable = storage.write(matchKey, {
+      state: pendingState || state,
+      level,
+      musicTrack: audio.getTrack()
+    });
     updateStorageNote();
   }
   function updateStorageNote() {
@@ -414,7 +427,10 @@
       );
       rounds.append(row);
     });
-    if (shownResult !== key) audio.playResult(outcome);
+    if (shownResult !== key) {
+      audio.playResult(outcome);
+      FX.result(outcome, finished);
+    }
     shownResult = key;
     if (!dialog.open) dialog.showModal();
   }
@@ -823,6 +839,8 @@
       snapshot = FX.capture(),
       next = E.play(state, actor, move),
       ticket = ++presentation;
+    // Activation belongs to the button; the card's unique effect follows its visual.
+    if (move.card) audio.playActivation(C[move.card]);
     // Persist the committed move before its reveal, so refresh cannot undo it.
     pendingState = next;
     save();
@@ -898,7 +916,7 @@
     coinStarter = null;
     $('match-result-dialog').close();
     shownResult = null;
-    saveAvailable = storage.remove('match');
+    saveAvailable = storage.remove(matchKey);
     audio.resetMusic();
     state = E.newMatch(0, nextOptions);
     resetSelection();
@@ -916,7 +934,9 @@
     $('welcome-dialog').showModal();
   }
   function syncWelcome() {
-    $('welcome-hand-size').textContent = `${nextOptions.handSize} cards each.`;
+    $('welcome-hand-size').textContent = debugMode
+      ? `Debug: ${E.debugHand().length} effect cards for you.`
+      : `${nextOptions.handSize} cards each.`;
     $('welcome-deck-size').textContent = E.cardPool(nextOptions).length;
   }
   async function flipCoin() {
@@ -943,7 +963,7 @@
         $('coin-result').textContent =
           coinStarter === 0 ? 'Heads. Your kingdom goes first.' : 'Tails. The rival kingdom goes first.';
         $('start-round-button').disabled = false;
-        audio.play('sanctuary');
+        audio.play('coin-land');
       },
       FX.reduced() ? 0 : 2100
     );
@@ -1048,44 +1068,36 @@
     const root = openDialog('How to play');
     const blocks = [
       [
-        'Win the match',
-        'Win two rounds. There are up to three rounds. Highest field power wins a round after both players pass. A tie awards both players a round win; reaching two together draws the match.'
+        'Win two rounds',
+        'When both players pass, the higher total field power wins the round. A tie gives both players a win. First to two wins takes the match; reaching two together draws the match.'
       ],
       [
-        'One deck. One hand.',
-        'The default game uses all 62 unique cards and 15 starting cards per player. Settings lets you change the starting hand size and include or exclude Omens and Spells for your next game. An optional setting, off by default, deals exactly three random cards from the included Spell/Omen types to each player, with units filling the rest of each starting hand. Extra Spells/Omens remain in the shared deck for later draws. Your hand carries across rounds; there is no between-round draw. A coin flip chooses the starting player, then the starter alternates each round.'
+        'The deal',
+        'The default deal is 15 cards each from one shared deck of 62 unique cards. Keep your remaining hand between rounds. There is no automatic draw each turn or between rounds. A coin flip chooses who starts; the starter alternates each round.'
       ],
       [
-        'Play or pass',
-        'Play one card on your turn, or pass. Passing ends your participation for that entire round. An empty hand automatically passes after all draw/recovery effects finish. Keeping any cards prevents an automatic pass, even if those cards cannot currently be played. Your opponent may continue playing until they also pass. Patience spends one turn without passing unless it leaves your hand empty.'
+        'Take turns',
+        'Play one card or pass. Passing ends your plays for the round; your opponent may keep playing until they pass too. An empty hand automatically passes after all card effects finish. Patience uses a turn without passing.'
       ],
       [
-        'Three rows',
-        'Units enter their matching Combat, Ranged or Siege row. Infiltration units enter the enemy’s matching row and draw two cards for the player who played them. This includes Assassin, The Spy and Mechanical Men.'
+        'Cards and rows',
+        'Units add power to their matching Combat, Ranged or Siege row. Infiltration units enter the enemy’s row, add to their score and draw you up to two cards. Spells resolve immediately, then go to the bottom of the shared deck. Omens stay in their row or affect both fields as weather.'
       ],
       [
-        'Spells, Omens & destruction',
-        'Spells resolve immediately and go to the bottom of the shared deck. Omens remain on their chosen row or in the middle as weather. Destroyed cards go to the pile of the field they were on. Middle Omens go to the player who played them. All remaining field cards clear at round end, including protected cards.'
+        'Power and protection',
+        'Recalculate unit abilities after each turn. Weather sets affected units to 1 power, then War Chant adds 2. Ironward makes its row ignore all Omens, including War Chant, weather and Dread. Sanctuary protects its units from both players’ Spells. Stone Wall shields all friendly Siege units, including itself, from destruction.'
       ],
       [
-        'Power & weather',
-        'Recalculate unit abilities after every turn, then apply weather, then War Chant. Weather plus War Chant means 3 power, regardless of play order. Ironward makes units ignore all Omens, including beneficial War Chant. Units use the power printed on their artwork. A top-right marker shows the net power change: green +N for an increase, red −N for a reduction. No marker appears when current and printed power match. Inspect a card to see its current power and active bonus sources.'
+        'Choosing targets',
+        'Use as many eligible targets as available. A unit may be played even if its extra when-played ability has no target. Mimic requires a valid swap, and targeted Spells require valid targets. Purge may be played with no Omens in play. Death Gaze and Mimic choose one target if tied. Pridefall destroys all highest-power unprotected ties on each side. Weakest Link destroys up to three lowest-power unprotected units per side; choose between ties at the cutoff.'
       ],
       [
-        'Ties & protected targets',
-        'Death Gaze and Convert choose one tied target. Weakest Link chooses between ties to destroy at most three unprotected units on each side. Pridefall destroys the highest-power unprotected units on each side, including all ties. Protection is checked before a destruction event removes any cards.'
+        'Sacrifice and Dread',
+        'Sacrifice destroys one friendly unit and returns up to two units already in your destroyed pile to your hand. It ignores Stone Wall’s Shielded protection, but not Sanctuary. The sacrificed unit cannot be returned in the same play. Dread blocks new units entering its row, including Mimic swaps. Omens may still enter.'
       ],
       [
-        'Card abilities',
-        'Target counts every friendly Ranged unit, including itself. Stone Wall protects all friendly Siege units, including itself. Sacrifice destroys one friendly unit, ignoring Shielded even on Stone Wall itself; Sanctuary still blocks it. It returns up to two units already in your destroyed pile to your hand. The unit sacrificed in this play cannot be returned by the same Sacrifice. It does not swap a unit into play or trigger its ability. Dread blocks new units entering its row, including moves through Convert. Omens can still enter, and Ironward suppresses Dread while it remains on that row.'
-      ],
-      [
-        'Legal plays & targets',
-        'A unit can enter a legal row even if its when-played ability does nothing. Queen Krath can be played without a Death Gaze target; Restoration units can be played with no matching destroyed unit; Infiltration units can be played with an empty shared deck. If ability targets do exist, you must choose one. Mimic is different: its swap is the required play, so it needs an enemy Combat unit and both Combat rows must allow the swap. Targeted Spells still need valid targets: Decoy needs an eligible friendly unit; Sacrifice needs a unit to destroy and at least one previously destroyed unit to recover; destruction Spells need at least one card they can destroy. Resolve fewer targets or draws when fewer are available. Omens and passive abilities can be placed before their effects are useful, and Patience intentionally spends a turn. Dread still blocks unit entry unless Ironward suppresses it; it never blocks Omen placement. Nonempty blocked hands do not automatically pass.'
-      ],
-      [
-        'Controls & saving',
-        'Choose Begin game and flip the coin to decide who starts. Refreshing the page restores your saved match automatically, without another coin flip. Reset game clears the saved match after confirmation and returns to Begin game. Hover or focus a card to preview it. On touch screens, press a hand card and slide your thumb across the hand to preview each card. Release over a hand card to open its details and play controls; release outside the hand to cancel. For battlefield and weather cards, hold to preview and release to close. Tap a hand card to open its artwork and details in a modal. Play or Choose targets and Cancel are inside that modal. Required choices stay in the same window until you confirm the play. Cancel or Escape abandons the play before any cards move. Each played card is revealed in the centre before resolving. The rival’s hand stays face down. Round results remain available in the match history. Each completed round opens the result window; Continue starts the next round, or Play again begins a fresh match after the final result. Review board keeps the field visible, and Round result or Match result beside your hand reopens the window. Pass opens a confirmation window. Click your destroyed-card stack to browse your own pile without losing your selection. The rival’s destroyed pile stays face down and shows only its card count. Weather cards appear between the two fields. Settings includes CPU level, starting hand size, card types, music and sound effects. Music is enabled by default, with a battle theme during play. In portrait mode, the header’s Menu, round number and Log buttons open slide-up panels; scores and Pass stay on the table, with card actions in the card modal. Match information includes the rival hand, round history and destroyed piles. The speaker button in the header mutes or unmutes all audio without changing your individual music/effects preferences. Escape closes dialogs or cancels card selection. Matches save automatically when storage is available.'
+        'Destroyed cards',
+        'Destroyed cards go to the destroyed pile of the field they occupied. Shared weather goes to the player who played it. At round end, clear all cards in play, including protected cards. Recovery returns units to your hand without triggering their abilities.'
       ]
     ];
     blocks.forEach(([title, text]) => {
@@ -1187,6 +1199,7 @@
   $('review-match').addEventListener('click', () => $('match-result-dialog').close());
   $('replay-match').addEventListener('click', () => {
     if (state.phase === 'roundEnd') {
+      FX.cancel();
       $('match-result-dialog').close();
       state = E.nextRound(state);
       resetSelection();
@@ -1238,6 +1251,9 @@
     $('include-omens').checked = nextOptions.includeOmens;
     $('include-spells').checked = nextOptions.includeSpells;
     $('guaranteed-start').checked = nextOptions.guaranteedStart;
+    $('starting-hand-size').closest('label').firstChild.textContent = debugMode
+      ? 'CPU starting cards'
+      : 'Starting cards per player';
     $('music-enabled').checked = settings.music;
     $('effects-enabled').checked = settings.effects;
     $('mute-all').checked = settings.muted;
@@ -1257,10 +1273,17 @@
     $('settings-dialog').showModal();
   }
   function syncDeckSettings() {
+    if (debugMode) {
+      $('include-omens').checked = true;
+      $('include-spells').checked = true;
+      $('guaranteed-start').checked = false;
+    }
     const includeOmens = $('include-omens').checked,
       includeSpells = $('include-spells').checked;
     const guarantee = $('guaranteed-start');
-    guarantee.disabled = !includeOmens && !includeSpells;
+    guarantee.disabled = debugMode || (!includeOmens && !includeSpells);
+    $('include-omens').disabled = debugMode;
+    $('include-spells').disabled = debugMode;
     if (guarantee.disabled) guarantee.checked = false;
     const pool = E.cardPool({ includeOmens, includeSpells });
     const minimum = guarantee.checked ? 3 : 1;
@@ -1273,6 +1296,12 @@
     if (input.value !== '' && Number(input.value) < minimum) input.value = minimum;
     if (Number(input.value) > maximum) input.value = maximum;
     const note = $('starting-card-note');
+    if (debugMode) {
+      note.hidden = true;
+      $('deck-settings-note').textContent =
+        `${E.debugHand().length} effect cards for you. CPU uses the remaining units.`;
+      return;
+    }
     note.hidden = !guarantee.checked && !guarantee.disabled;
     note.textContent = guarantee.disabled
       ? 'Include Spells or Omens to enable this option.'
@@ -1303,10 +1332,14 @@
       handSize: Number($('starting-hand-size').value),
       includeOmens: $('include-omens').checked,
       includeSpells: $('include-spells').checked,
-      guaranteedStart: $('guaranteed-start').checked
+      guaranteedStart: $('guaranteed-start').checked,
+      debug: debugMode
     });
     level = $('difficulty').value;
-    storage.write('settings', { options: nextOptions, level });
+    storage.write('settings', {
+      options: debugMode ? (preferencesLoaded ? preferences.options || {} : {}) : nextOptions,
+      level
+    });
     audio.configure({
       music: $('music-enabled').checked,
       effects: $('effects-enabled').checked,
