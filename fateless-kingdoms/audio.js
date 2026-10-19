@@ -42,9 +42,9 @@ window.FKAudio = (() => {
   // Weather retains the recording's pitch; small foley variations avoid identical repeats.
   const natural = (sample, gain = 1) => layer([sample], gain, 1, 0, 0);
   const cues = {
-    hover: [layer(['page1', 'page2'], 0.3, 1.12)],
+    hover: [natural('cardFlick', 0.18)],
     select: [layer(['cloth1', 'cloth2'], 0.28)],
-    'spell-play': [natural('chime', 0.75)],
+    'spell-play': [natural('spellCast', 0.75)],
     'omen-play': [layer(['shield'], 0.45), layer(['spell'], 0.4), layer(['drum'], 0.2, 1, 0.08)],
     'ability-play': [layer(['page2'], 0.3), layer(['spell'], 0.35, 1.04, 0.04)],
     fly: [layer(['swish'], 0.3)],
