@@ -44,7 +44,7 @@ window.FKAudio = (() => {
   const cues = {
     hover: [natural('cardFlick', 0.18)],
     select: [layer(['cloth1', 'cloth2'], 0.28)],
-    'spell-play': [natural('spellCast', 0.75)],
+    'spell-play': [natural('arcane', 0.75)],
     'omen-play': [layer(['shield'], 0.45), layer(['spell'], 0.4), layer(['drum'], 0.2, 1, 0.08)],
     'ability-play': [layer(['page2'], 0.3), layer(['spell'], 0.35, 1.04, 0.04)],
     fly: [layer(['swish'], 0.3)],

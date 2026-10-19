@@ -20,6 +20,7 @@ Selected from Part 1 of the [official free GDC archive](https://sonniss.com/game
 | `drum` | Baxter Audio / IMPACT | `03 Hit Big Drum.wav` |
 | `ominous` | Articulated Sounds / Special Double Bass Fx | `INSTRU STRING Double Bass, Bowed, Harmonic, Low, Slide, Whale Call 01.wav` |
 | `whisper` | Articulated Sounds / Ghosts Return | `CREATURE GHOST Male, Whisper, Breathe, Language, Short, DRY 01.wav` |
+| `arcane` | 3maze / Zwoosh | `glow_med_C_002.wav`, mono excerpt for Spell activation |
 | `vanish` | Articulated Sounds / Magic Elements vol.1 | First 1.4 seconds of `MAGIC AIR Large Whoosh, Swirl, Wind Gust, Foliage 01.wav`, reversed for Decoy’s suction/vanish effect |
 
 ## Field and foley recordings — CC0
@@ -30,7 +31,6 @@ Each linked recording is released under [CC0 1.0](https://creativecommons.org/pu
 | --- | --- | --- |
 | `dragon` | [DRAGON_ROAR.wav — JoelAudio](https://freesound.org/people/JoelAudio/sounds/85568/) | Up to 2.5 seconds; King Ethoroc reveal |
 | `serpent` | [Serpent Spell Sound_1 — lukabea](https://freesound.org/people/lukabea/sounds/660486/) | Up to 2.75 seconds; Queen Krath reveal |
-| `spellCast` | [Magic Spell 01.wav — LilMati / MATRIXXX_](https://freesound.org/people/LilMati/sounds/455206/) | Up to 1.9 seconds; mono Spell activation |
 | `clock` | [Ticking Clock — AntumDeluge](https://freesound.org/people/AntumDeluge/sounds/188033/) | First 1.8 seconds; Patience |
 | `revive` | [Magic Words + Healing Sound Effect — Julie Damsgaard / Spring Spring / Spring Enterprises](https://opengameart.org/content/magic-words-healing-sound-effect) | `health_restore.wav`, up to 3.05 seconds; Restoration |
 | `blade1` | [Sword Clash — loudernoises](https://freesound.org/people/loudernoises/sounds/334169/) | Single clash, up to 0.65 seconds |
@@ -56,12 +56,12 @@ Each linked recording is released under [CC0 1.0](https://creativecommons.org/pu
 
 Most selected clips are trimmed, level-adjusted to -19 LUFS / -2 dBTP, edge-faded and encoded as 128 kbps MP3 at 44.1 kHz. Stereo detail is retained where appropriate; wind is mono as recommended by its creator. Weather cues use their natural pitch without random variation. Blizzard layers wind with a quiet ice/debris accent.
 
-The six character excerpts (dragon, serpent, clock, revive, whisper and vanish) use the original first channel, a -18 LUFS / -2 dBTP target and the same MP3 encoding. Vanish reverses its source excerpt. The Spell activation uses a dedicated mono spell-casting recording, with constant gain to a -6 dBFS peak target and short edge fades. It has no chime layer, dynamic loudness normalization or overlapping whoosh. No high/low-pass filters are baked into these curated clips.
+The six character excerpts (dragon, serpent, clock, revive, whisper and vanish) use the original first channel, a -18 LUFS / -2 dBTP target and the same MP3 encoding. Vanish reverses its source excerpt. Spell activation restores the earlier Sonniss arcane swell recording as a centred mono excerpt with short edge fades. It has no chime or overlapping whoosh layer. No high/low-pass filters are baked into these curated clips.
 
 The new hover flick isolates a 95 ms paper transient, applies 3 ms attack / 40 ms release fades and -8 dBFS peak headroom, then encodes at 128 kbps mono / 44.1 kHz. Its playback gain is deliberately low. The five retained Kenney handling clips keep their previous 64 kbps mono / 32 kHz encoding, filtering, level adjustment and edge fades. Other foley uses small pitch variations; some drum/whisper accents have intentional per-cue pitch changes. Creature sounds are designed recordings, not runtime oscillators.
 
 All 34 compressed samples are embedded in sound-effects.js and decoded once on an enabled audio gesture, supporting HTTP and direct file:// play without external services. Original packs and full-quality sources are not shipped. Unused samples and retired cue definitions are removed rather than decoded unnecessarily.
 
-A valid Play starts a category activation: a short arcane cast for Spells, neutral shield/air/drum pulse for Omens, page/air invocation for ability units, or quiet cloth for ordinary units. Unique card sounds follow their visuals once: boss cries at the centre reveal, major Spell/Omen sounds with their cinematic, and remaining non-boss abilities on field arrival. All rows share one soft leather placement. Destruction/draw sounds follow their own events. Dread alone uses the ominous bowed bass, ghost whisper and stronger chains; Infiltration uses cloak rustle and a short swish with no squeaky footsteps. Coin audio has a separate flick and settling rattle.
+A valid Play starts a category activation: an arcane swell for Spells, neutral shield/air/drum pulse for Omens, page/air invocation for ability units, or quiet cloth for ordinary units. Unique card sounds follow their visuals once: boss cries at the centre reveal, major Spell/Omen sounds with their cinematic, and remaining non-boss abilities on field arrival. All rows share one soft leather placement. Destruction/draw sounds follow their own events. Dread alone uses the ominous bowed bass, ghost whisper and stronger chains; Infiltration uses cloak rustle and a short swish with no squeaky footsteps. Coin audio has a separate flick and settling rattle.
 
 Playback respects saved effects volume/mute, limits simultaneous voices to 12 and retains the output compressor. Music and result fanfares have separate licences and preferences.
