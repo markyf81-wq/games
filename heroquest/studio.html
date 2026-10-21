@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171a19">
+  <title>HeroQuest · The tabletop</title>
+  <link rel="stylesheet" href="heroquest.css">
+  <script defer src="vendor/three-0.186.1.js"></script>
+  <script defer src="src/data/board.js"></script>
+  <script defer src="assets/models/imported/barbarian.js"></script>
+  <script defer src="assets/models/imported/orc-cleaver.js"></script>
+  <script defer src="assets/models/imported/table.js"></script>
+  <script defer src="assets/models/imported/closed-door.js"></script>
+  <script defer src="assets/models/barbarian-paint.js"></script>
+  <script defer src="src/view/stl-models.js"></script>
+  <script defer src="src/view/models.js"></script>
+  <script defer src="src/view/prototype.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back-link" href="../index.html"><span aria-hidden="true">←</span> Games library</a>
+    <a class="back-link" href="index.html">Enter the catacombs →</a><span class="prototype-label"><span aria-hidden="true"></span> Visual prototype</span>
+  </header>
+  <main class="workspace">
+    <aside class="sidebar" aria-label="Tabletop controls">
+      <div class="introduction">
+        <p class="eyebrow">THE ORIGINAL ADVENTURE</p>
+        <h1>Hero<span>Quest</span></h1>
+        <div class="title-rule" aria-hidden="true"><span>◆</span></div>
+        <p class="intro-copy">A dungeon on your tabletop.<br>Take a closer look.</p>
+      </div>
+      <section class="board-summary" aria-labelledby="board-title">
+        <div><p class="eyebrow">THE GAME SYSTEM</p><h2 id="board-title">The original board</h2></div>
+        <p>26 × 19 squares <span aria-hidden="true">·</span> 22 rooms</p>
+        <button class="board-button" id="view-board" type="button">View full board <span aria-hidden="true">↗</span></button>
+        <button class="board-button model-button" id="inspect-barbarian" type="button" aria-pressed="false">Inspect painted barbarian <span aria-hidden="true">◇</span></button>
+      </section>
+      <section class="pieces-section" aria-labelledby="pieces-title">
+        <div class="section-heading"><h2 id="pieces-title">On the table</h2><span>04 PIECES</span></div>
+        <div class="piece-list">
+          <button class="piece-button" data-piece="barbarian" type="button" aria-pressed="false" aria-label="Inspect painted barbarian miniature"><span class="piece-symbol hero-symbol" aria-hidden="true">♟</span><span><strong>Barbarian</strong><small>Painted hero miniature</small></span><span class="piece-arrow" aria-hidden="true">↗</span></button>
+          <button class="piece-button" data-piece="orc" type="button" aria-pressed="false"><span class="piece-symbol orc-symbol" aria-hidden="true">♟</span><span><strong>Orc</strong><small>Monster miniature</small></span><span class="piece-arrow" aria-hidden="true">↗</span></button>
+          <button class="piece-button" data-piece="table" type="button" aria-pressed="false"><span class="piece-symbol furniture-symbol" aria-hidden="true">▤</span><span><strong>Wooden table</strong><small>Furniture · 3 × 2 squares</small></span><span class="piece-arrow" aria-hidden="true">↗</span></button>
+          <button class="piece-button" data-piece="door" type="button" aria-pressed="false"><span class="piece-symbol door-symbol" aria-hidden="true">∩</span><span><strong>Dungeon door</strong><small>Stone frame &amp; timber</small></span><span class="piece-arrow" aria-hidden="true">↗</span></button>
+        </div>
+      </section>
+      <div class="sidebar-foot"><span class="small-diamond" aria-hidden="true">◆</span><p>Static pieces. A shared table.<br>The adventure comes next.</p></div>
+    </aside>
+    <section class="tabletop" aria-label="Interactive 3D HeroQuest board">
+      <div class="scene-topline"><div class="scene-heading"><span class="scene-kicker" id="scene-kicker">NORTH AMERICAN GAME SYSTEM</span><button class="leave-studio" id="leave-studio" type="button" hidden>← Return to board</button></div><div class="view-switch" role="group" aria-label="Camera view"><button id="view-tabletop" type="button" aria-pressed="true">Tabletop</button><button id="view-overhead" type="button" aria-pressed="false">Overhead</button></div></div>
+      <div class="canvas-host" id="canvas-host">
+        <canvas id="board-canvas" tabindex="0" aria-label="3D board. Drag to rotate, scroll to zoom. Use arrow keys to rotate, plus or minus to zoom, and Home to reset. Select a piece from the On the table list to inspect it."></canvas>
+        <div class="loading-message" id="loading-message" role="status">Setting the table…</div>
+        <noscript><p class="error-message">Enable JavaScript to view the tabletop.</p></noscript>
+      </div>
+      <div class="selection-note" id="selection-note" aria-live="polite"><span class="note-marker" aria-hidden="true">◇</span><div><strong id="selection-title">The dungeon awaits</strong><p id="selection-description">Select a piece to inspect its shape and scale.</p></div><button id="clear-selection" type="button" aria-label="Clear selection" hidden>×</button></div>
+      <div class="scene-bottomline"><p><span aria-hidden="true">↔</span> Drag to rotate <span class="hint-separator">/</span> Scroll or pinch to zoom</p><div class="scene-options"><label title="Visual example only; line-of-sight rules are not implemented."><input id="explored-preview" type="checkbox"> Explored view</label><label><input id="show-walls" type="checkbox" checked> Walls</label><label><input id="show-grid" type="checkbox" checked> Grid</label><div class="zoom-buttons" role="group" aria-label="Zoom"><button id="zoom-out" type="button" aria-label="Zoom out">−</button><button id="zoom-in" type="button" aria-label="Zoom in">+</button></div></div></div>
+    </section>
+  </main>
+  <footer class="page-footer"><span>A TABLETOP STUDY</span><p>Sample placements for visual reference · No quest in progress</p><span>01 / THE BOARD</span></footer>
+</body>
+</html>

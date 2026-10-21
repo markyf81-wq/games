@@ -12,6 +12,7 @@ This repository holds independent browser games behind one shared selection page
 - `type-tails/`: the Type & Tails typing game. Read `type-tails/AGENTS.md` before changing it.
 - `bomb-major/`: the Chicken Major chase-and-dodge game. Read `bomb-major/AGENTS.md` before changing it.
 - `fateless-kingdoms/`: Mark's physical card game adapted for a human versus CPU. Read `fateless-kingdoms/AGENTS.md` before changing it.
+- `heroquest/`: original North American HeroQuest combat prototype, references, and implementation plan; movement, discovery, melee combat, CPU turns, animated dice and browser autosave exist; searches/spells/quest completion do not. Read `heroquest/AGENTS.md` before changing it.
 
 All games live in this repository. Do not list an unavailable game as playable or introduce a separate repository for a game without a request.
 

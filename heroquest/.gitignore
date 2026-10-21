@@ -1,0 +1,14 @@
+# Source scans and photos stay available locally without entering game deployment.
+references/original-na/
+references/fan-reference/
+references/modern-comparison/
+references/visual/
+references/*-source.html
+references/downloads.local.json
+references/**/*.part
+tmp/
+__pycache__/
+
+# User-supplied printing sources; browser derivatives are in assets/models/imported.
+references/stl-source/
+references/retired-studies/

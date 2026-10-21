@@ -1,0 +1,2331 @@
+{
+  "suppliedOn": "2026-10-21",
+  "licenceStatus": "Mark supplied from a shared personal drive and states open licence. Creator and exact licence are unknown; archives include no licence text.",
+  "sourceUpAxis": "Z",
+  "runtimeUpAxis": "Y",
+  "simplifier": "fast-simplification 0.2.0; agg=5",
+  "models": [
+    {
+      "id": "alchemists-bench",
+      "sourceFile": "Furniture/AlchemyTable.stl",
+      "encoding": "binary",
+      "sourceSha256": "f26c80dd6111a036e0418e4c779e1b76cfa95fdad9b96ec26735f0d3d63b3fcd",
+      "sourceTriangles": 467000,
+      "triangles": 49635,
+      "vertices": 27607,
+      "sourceBounds": {
+        "min": [
+          -2.596513,
+          -1.601729,
+          0.0
+        ],
+        "max": [
+          2.596513,
+          1.601729,
+          3.8634
+        ],
+        "size": [
+          5.193026,
+          3.203458,
+          3.8634
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -2.47094,
+          -1.476156,
+          0.0
+        ],
+        "max": [
+          2.47094,
+          1.476156,
+          0.134495
+        ],
+        "size": [
+          4.94188,
+          2.952312,
+          0.134495
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -2.596513,
+        0.0,
+        -1.601729
+      ],
+      "extent": [
+        5.193026,
+        3.8643561980827674,
+        3.203458
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/alchemists-bench.js",
+      "bytes": 839697
+    },
+    {
+      "id": "barbarian",
+      "sourceFile": "Minis/BarbarianNewBase.stl",
+      "encoding": "ascii",
+      "sourceSha256": "3e3faa56bb7d29e303828c92a856a95cb87c70b485ae3e8d135f6636e1700fc8",
+      "sourceTriangles": 111341,
+      "triangles": 23999,
+      "vertices": 15900,
+      "sourceBounds": {
+        "min": [
+          -12.876019,
+          8.145199,
+          0.0
+        ],
+        "max": [
+          9.623981,
+          33.5452,
+          48.429016
+        ],
+        "size": [
+          22.5,
+          25.400001,
+          48.429016
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.876019,
+          8.145199,
+          0.0
+        ],
+        "max": [
+          9.623981,
+          33.5452,
+          1.000001
+        ],
+        "size": [
+          22.5,
+          25.400001,
+          1.000001
+        ]
+      },
+      "targetTriangles": 24000,
+      "placementStatus": "Reviewed source orientation",
+      "minimum": [
+        -11.25,
+        0.0,
+        -12.700000500000002
+      ],
+      "extent": [
+        22.5,
+        48.43442409134664,
+        25.400001000000003
+      ],
+      "indexBytes": 2,
+      "geometrySha256": "cb53f56b4763856057578024a19ae5bb07ceeb8cb92d29d75e00a50ac6cf650e",
+      "asset": "assets/models/imported/barbarian.js",
+      "bytes": 447342
+    },
+    {
+      "id": "blocked-1x1",
+      "sourceFile": "Tiles/1x1WallTile_Solid.stl",
+      "encoding": "binary",
+      "sourceSha256": "48d45b65847fc94d1ccf4890f646899f0da12b0aeb5f611989ec09fa77612ec8",
+      "sourceTriangles": 220806,
+      "triangles": 10000,
+      "vertices": 7329,
+      "sourceBounds": {
+        "min": [
+          -12.500004,
+          -12.500002,
+          -0.0
+        ],
+        "max": [
+          12.5,
+          12.500002,
+          4.997794
+        ],
+        "size": [
+          25.000004,
+          25.000004,
+          4.997794
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.474631,
+          -12.475375,
+          -0.0
+        ],
+        "max": [
+          12.5,
+          12.467493,
+          0.146366
+        ],
+        "size": [
+          24.974631,
+          24.942868,
+          0.146366
+        ]
+      },
+      "targetTriangles": 10000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -12.51341995473966,
+        0.0,
+        -12.504505495406686
+      ],
+      "extent": [
+        25.001817639332913,
+        5.005469414630138,
+        25.000689706152176
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/blocked-1x1.js",
+      "bytes": 198208
+    },
+    {
+      "id": "blocked-2x1",
+      "sourceFile": "Tiles/1x2WallTile_Solid.stl",
+      "encoding": "binary",
+      "sourceSha256": "8dc555110489852fdf9b793453ca00887f465b48e5071ebc7e81feeb21865299",
+      "sourceTriangles": 183352,
+      "triangles": 10000,
+      "vertices": 10210,
+      "sourceBounds": {
+        "min": [
+          -12.500003,
+          -13.000002,
+          1e-06
+        ],
+        "max": [
+          37.500004,
+          12.000003,
+          4.988668
+        ],
+        "size": [
+          50.000007,
+          25.000005,
+          4.988667
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.500003,
+          -12.834996,
+          1e-06
+        ],
+        "max": [
+          37.500004,
+          12.000003,
+          0.153957
+        ],
+        "size": [
+          50.000007,
+          24.834999,
+          0.153956
+        ]
+      },
+      "targetTriangles": 10000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -25.000393416403153,
+        0.0,
+        -12.41752473555029
+      ],
+      "extent": [
+        50.0024881469117,
+        4.983221295357891,
+        25.000071088845083
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/blocked-2x1.js",
+      "bytes": 244315
+    },
+    {
+      "id": "bookcase-frame",
+      "sourceFile": "Furniture/Bookcase_NoShelf_Full_Textured.stl",
+      "encoding": "binary",
+      "sourceSha256": "41a4c35527dd0595dd95a200dee4df046126c499045c1f0d7f4807e9dd1a4732",
+      "sourceTriangles": 112128,
+      "triangles": 14000,
+      "vertices": 10100,
+      "sourceBounds": {
+        "min": [
+          -30.952911,
+          -11.681383,
+          -4.6e-05
+        ],
+        "max": [
+          30.953159,
+          11.681316,
+          49.820724
+        ],
+        "size": [
+          61.90607,
+          23.362699,
+          49.82077
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -30.452906,
+          -10.881313,
+          -4.6e-05
+        ],
+        "max": [
+          30.452908,
+          10.881314,
+          1.512114
+        ],
+        "size": [
+          60.905814,
+          21.762627,
+          1.51216
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -30.952912,
+        0.0,
+        -11.6813155
+      ],
+      "extent": [
+        61.90607,
+        49.820769999999996,
+        23.362699
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/bookcase-frame.js",
+      "bytes": 274551
+    },
+    {
+      "id": "bookcase-shelves",
+      "sourceFile": "Furniture/Bookcase_OnlyShelf.stl",
+      "encoding": "binary",
+      "sourceSha256": "bfce9db38d5baa974d269448309c5b7b91991cef82dec3d0882b155052e9bccc",
+      "sourceTriangles": 320926,
+      "triangles": 34278,
+      "vertices": 35943,
+      "sourceBounds": {
+        "min": [
+          -26.829386,
+          -109.00782,
+          0.0
+        ],
+        "max": [
+          26.829386,
+          -15.992164,
+          8.678421
+        ],
+        "size": [
+          53.658772,
+          93.015656,
+          8.678421
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -25.429384,
+          -109.00782,
+          0.0
+        ],
+        "max": [
+          25.429384,
+          -15.992164,
+          0.0
+        ],
+        "size": [
+          50.858768,
+          93.015656,
+          0.0
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -26.829386,
+        0.0,
+        -46.507827999999996
+      ],
+      "extent": [
+        53.658772,
+        8.678421,
+        93.01565599999999
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/bookcase-shelves.js",
+      "bytes": 850245
+    },
+    {
+      "id": "chaos-warlock",
+      "sourceFile": "Minis/ChaosMageNewBase.stl",
+      "encoding": "binary",
+      "sourceSha256": "b874f2cce48a07bee98847d105affb38d094a9ff22f15b33a9816fc693ac4976",
+      "sourceTriangles": 147726,
+      "triangles": 18000,
+      "vertices": 15220,
+      "sourceBounds": {
+        "min": [
+          -16.890659,
+          -11.249999,
+          -0.0
+        ],
+        "max": [
+          18.40081,
+          11.250001,
+          41.755043
+        ],
+        "size": [
+          35.291469,
+          22.5,
+          41.755043
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.7,
+          -11.249999,
+          -0.0
+        ],
+        "max": [
+          12.7,
+          11.250001,
+          1.000001
+        ],
+        "size": [
+          25.4,
+          22.5,
+          1.000001
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -16.90490373899264,
+        0.0,
+        -11.25
+      ],
+      "extent": [
+        35.3228758510582,
+        41.771615073161044,
+        22.5
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/chaos-warlock.js",
+      "bytes": 388426
+    },
+    {
+      "id": "chaos-warrior",
+      "sourceFile": "Minis/ChaosWarriorNewbase.stl",
+      "encoding": "binary",
+      "sourceSha256": "abc417a1cb905fd6649072915dcdf22c1084a6e1bf2566a39a9db6d2e246d618",
+      "sourceTriangles": 191128,
+      "triangles": 18000,
+      "vertices": 18083,
+      "sourceBounds": {
+        "min": [
+          -25.853642,
+          -11.249999,
+          -0.0
+        ],
+        "max": [
+          17.403259,
+          11.250001,
+          37.651489
+        ],
+        "size": [
+          43.256901,
+          22.5,
+          37.651489
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.7,
+          -11.249999,
+          -0.0
+        ],
+        "max": [
+          12.7,
+          11.250001,
+          1.000001
+        ],
+        "size": [
+          25.4,
+          22.5,
+          1.000001
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -25.86104032745892,
+        0.0,
+        -11.25
+      ],
+      "extent": [
+        43.26435286661777,
+        37.66739927019919,
+        22.5
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/chaos-warrior.js",
+      "bytes": 434238
+    },
+    {
+      "id": "chest",
+      "sourceFile": "Furniture/Chest_forFDM.stl",
+      "encoding": "binary",
+      "sourceSha256": "bec972a81af68b0a0799f6d814e60afe9617c5020b6dad36b07755a7a56516a3",
+      "sourceTriangles": 325232,
+      "triangles": 14000,
+      "vertices": 11282,
+      "sourceBounds": {
+        "min": [
+          -3.29546,
+          -8.186876,
+          0.00263
+        ],
+        "max": [
+          21.695442,
+          8.96026,
+          19.851011
+        ],
+        "size": [
+          24.990902,
+          17.147136,
+          19.848381
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -3.190009,
+          -8.137194,
+          0.00263
+        ],
+        "max": [
+          21.589962,
+          8.137557,
+          0.696851
+        ],
+        "size": [
+          24.779971,
+          16.274751,
+          0.694221
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -12.496206890869018,
+        0.0,
+        -8.977417967166328
+      ],
+      "extent": [
+        25.002322739247127,
+        19.85248868026383,
+        17.16747367621111
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/chest.js",
+      "bytes": 293453
+    },
+    {
+      "id": "closed-door",
+      "sourceFile": "Furniture/HeroQuest_closed-door.stl",
+      "encoding": "binary",
+      "sourceSha256": "6ac75e72a6cd64967f2d17de519ebf489054a95459dc85f62642b795db42725d",
+      "sourceTriangles": 44462,
+      "triangles": 14000,
+      "vertices": 16452,
+      "sourceBounds": {
+        "min": [
+          -15.000001,
+          -7.643309,
+          0.0
+        ],
+        "max": [
+          14.998,
+          7.642691,
+          49.538002
+        ],
+        "size": [
+          29.998001,
+          15.286,
+          49.538002
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -15.000001,
+          -7.643309,
+          0.0
+        ],
+        "max": [
+          14.998,
+          7.642691,
+          1.73
+        ],
+        "size": [
+          29.998001,
+          15.286,
+          1.73
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Reviewed source orientation",
+      "minimum": [
+        -15.001523806908232,
+        0.0,
+        -7.649632757208446
+      ],
+      "extent": [
+        30.000524306908233,
+        49.54428424298088,
+        15.298658250539669
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/closed-door.js",
+      "bytes": 376133
+    },
+    {
+      "id": "combat-die",
+      "sourceFile": "Dice/HQdice.STL",
+      "encoding": "binary",
+      "sourceSha256": "af06af0e9a43de30f676acd37fe5f11fe8b762e2ab77397f0a85370906fee97c",
+      "sourceTriangles": 56752,
+      "triangles": 10000,
+      "vertices": 9027,
+      "sourceBounds": {
+        "min": [
+          2.703452,
+          0.0,
+          2.703452
+        ],
+        "max": [
+          16.853451,
+          14.150001,
+          16.853451
+        ],
+        "size": [
+          14.149999,
+          14.150001,
+          14.149999
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          2.705344,
+          0.001892,
+          2.703452
+        ],
+        "max": [
+          16.851559,
+          14.148108,
+          3.198035
+        ],
+        "size": [
+          14.146215,
+          14.146216,
+          0.494583
+        ]
+      },
+      "targetTriangles": 10000,
+      "placementStatus": "Six face symbols/orientations reviewed in authoring views; used in the dice tray",
+      "minimum": [
+        -7.074999500000124,
+        0.0,
+        -7.075041710079936
+      ],
+      "extent": [
+        14.149999001585009,
+        14.149999014683543,
+        14.150041711920617
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/combat-die.js",
+      "bytes": 225452,
+      "geometrySha256": "f6aac70ce764c004aba909ef1fd9e636182bd14aefbe9f89ed247ba99884e021"
+    },
+    {
+      "id": "cupboard",
+      "sourceFile": "Furniture/Buffet_ForFDM.stl",
+      "encoding": "binary",
+      "sourceSha256": "901821b8b04a733868c9d06bf09ec65755c149a731568524a7387b0fb1b16aa6",
+      "sourceTriangles": 300806,
+      "triangles": 14000,
+      "vertices": 15252,
+      "sourceBounds": {
+        "min": [
+          -28.041309,
+          -5.077435,
+          -21.670258
+        ],
+        "max": [
+          32.841309,
+          18.374117,
+          27.261938
+        ],
+        "size": [
+          60.882618,
+          23.451552,
+          48.932196
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -27.559429,
+          -3.850624,
+          -21.670258
+        ],
+        "max": [
+          32.356346,
+          17.602381,
+          -19.963989
+        ],
+        "size": [
+          59.915775,
+          21.453005,
+          1.706269
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -30.440141222366726,
+        0.0,
+        -11.498238499999998
+      ],
+      "extent": [
+        60.88311121848611,
+        48.93534398306143,
+        23.47129682734392
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/cupboard.js",
+      "bytes": 356994
+    },
+    {
+      "id": "dwarf",
+      "sourceFile": "Minis/DwarfNewBase.stl",
+      "encoding": "ascii",
+      "sourceSha256": "d98626b44b48f7d465fae4a4ecbfb82145598c94c101809d915a8e8533ce6c16",
+      "sourceTriangles": 100352,
+      "triangles": 24000,
+      "vertices": 16986,
+      "sourceBounds": {
+        "min": [
+          -10.123172,
+          -15.402121,
+          0.0
+        ],
+        "max": [
+          12.405433,
+          15.307008,
+          22.29376
+        ],
+        "size": [
+          22.528605,
+          30.709129,
+          22.29376
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -10.123172,
+          -15.402121,
+          0.0
+        ],
+        "max": [
+          12.405433,
+          10.022202,
+          0.777647
+        ],
+        "size": [
+          22.528605,
+          25.424323,
+          0.777647
+        ]
+      },
+      "targetTriangles": 24000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -11.2643025,
+        0.0,
+        -18.00232546287529
+      ],
+      "extent": [
+        22.528605,
+        22.291676489732296,
+        30.71448696287529
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/dwarf.js",
+      "bytes": 464694
+    },
+    {
+      "id": "elf",
+      "sourceFile": "Minis/ElfNewBase.stl",
+      "encoding": "ascii",
+      "sourceSha256": "d7170106a755c77cc11deddc5a1a60130c67e3ceee4a85185aecd29de13abdc6",
+      "sourceTriangles": 112732,
+      "triangles": 24000,
+      "vertices": 18088,
+      "sourceBounds": {
+        "min": [
+          -8.893639,
+          -15.740346,
+          0.0
+        ],
+        "max": [
+          13.606363,
+          15.826903,
+          38.002274
+        ],
+        "size": [
+          22.500002,
+          31.567249,
+          38.002274
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -8.893639,
+          -11.466324,
+          0.0
+        ],
+        "max": [
+          13.606363,
+          13.933675,
+          1.0
+        ],
+        "size": [
+          22.500002,
+          25.399999,
+          1.0
+        ]
+      },
+      "targetTriangles": 24000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -11.250001000000001,
+        0.0,
+        -14.594746306661957
+      ],
+      "extent": [
+        22.500002000000002,
+        38.0147793558021,
+        31.56918057192107
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/elf.js",
+      "bytes": 482326
+    },
+    {
+      "id": "fimir",
+      "sourceFile": "Minis/FimirNewBase.stl",
+      "encoding": "binary",
+      "sourceSha256": "dd3084f2137b0b55ad44c46758862c4b7a8cc21f0471f9aedffd19887ea1c39b",
+      "sourceTriangles": 192364,
+      "triangles": 18000,
+      "vertices": 16077,
+      "sourceBounds": {
+        "min": [
+          -22.292427,
+          -11.249999,
+          -0.0
+        ],
+        "max": [
+          15.50598,
+          11.250001,
+          47.611824
+        ],
+        "size": [
+          37.798407,
+          22.5,
+          47.611824
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.7,
+          -11.249999,
+          -0.0
+        ],
+        "max": [
+          12.7,
+          11.250001,
+          1.665726
+        ],
+        "size": [
+          25.4,
+          22.5,
+          1.665726
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -22.289891113190517,
+        0.0,
+        -11.25
+      ],
+      "extent": [
+        37.80200563354761,
+        47.62875672949173,
+        22.5
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/fimir.js",
+      "bytes": 402119
+    },
+    {
+      "id": "fireplace",
+      "sourceFile": "Furniture/Fireplace_forFDM.stl",
+      "encoding": "binary",
+      "sourceSha256": "746b8c5ab715917a01a66c3dc04f800b48feb57c57f397d1370d511b60c0c499",
+      "sourceTriangles": 194216,
+      "triangles": 14000,
+      "vertices": 16279,
+      "sourceBounds": {
+        "min": [
+          -31.296272,
+          -7.720119,
+          -34.015587
+        ],
+        "max": [
+          33.94614,
+          14.010789,
+          32.312508
+        ],
+        "size": [
+          65.242412,
+          21.730908,
+          66.328095
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -31.296272,
+          -7.720119,
+          -34.015587
+        ],
+        "max": [
+          33.94614,
+          14.001214,
+          -31.696386
+        ],
+        "size": [
+          65.242412,
+          21.721333,
+          2.319201
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -32.64186241966638,
+        0.0,
+        -10.8881260830413
+      ],
+      "extent": [
+        65.25135185292629,
+        66.31652397873448,
+        21.7730577309833
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/fireplace.js",
+      "bytes": 373425
+    },
+    {
+      "id": "gargoyle",
+      "sourceFile": "Minis/GargoyleNewBase.stl",
+      "encoding": "ascii",
+      "sourceSha256": "d48e616cf235e76c11edb0a62239f0b43e9fa124581c12d9c30a05e96f1c7568",
+      "sourceTriangles": 297308,
+      "triangles": 28000,
+      "vertices": 28573,
+      "sourceBounds": {
+        "min": [
+          -13.830575,
+          -5.131534,
+          0.0
+        ],
+        "max": [
+          10.638745,
+          46.120705,
+          60.060818
+        ],
+        "size": [
+          24.46932,
+          51.252239,
+          60.060818
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.368472,
+          7.798027,
+          0.0
+        ],
+        "max": [
+          10.14818,
+          33.212189,
+          2.101704
+        ],
+        "size": [
+          22.516652,
+          25.414162,
+          2.101704
+        ]
+      },
+      "targetTriangles": 28000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -12.711309013435674,
+        0.0,
+        -25.613595407618448
+      ],
+      "extent": [
+        24.460690412270203,
+        60.08052843878441,
+        51.25880141663656
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/gargoyle.js",
+      "bytes": 682109
+    },
+    {
+      "id": "gargoyle-wings",
+      "sourceFile": "Minis/GargoyleWings.stl",
+      "encoding": "binary",
+      "sourceSha256": "5c0b8ba4367416b34f16b529fead9fc50449eb528d06e4eace40d5a4e35e886f",
+      "sourceTriangles": 133740,
+      "triangles": 18000,
+      "vertices": 11247,
+      "sourceBounds": {
+        "min": [
+          -10.022777,
+          -18.656054,
+          2.571792
+        ],
+        "max": [
+          5.509017,
+          34.170391,
+          40.620125
+        ],
+        "size": [
+          15.531794,
+          52.826445,
+          38.048333
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -4.481333,
+          -18.656054,
+          2.571792
+        ],
+        "max": [
+          -1.145036,
+          34.170391,
+          3.90336
+        ],
+        "size": [
+          3.336297,
+          52.826445,
+          1.331568
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -7.216033771484932,
+        0.0,
+        -26.418808148270863
+      ],
+      "extent": [
+        15.536738726233898,
+        38.03767966139162,
+        52.83341000319673
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/gargoyle-wings.js",
+      "bytes": 324914
+    },
+    {
+      "id": "goblin-axe",
+      "sourceFile": "Minis/GoblinAxeNewBase.stl",
+      "encoding": "ascii",
+      "sourceSha256": "ab5ddcce9f08be98f01fba2262db459462c8446e9ecbb224b6ac60e4cdcfc94b",
+      "sourceTriangles": 91201,
+      "triangles": 18000,
+      "vertices": 13077,
+      "sourceBounds": {
+        "min": [
+          -13.507088,
+          5.060721,
+          -0.0
+        ],
+        "max": [
+          15.083236,
+          27.560722,
+          34.366917
+        ],
+        "size": [
+          28.590324,
+          22.500001,
+          34.366917
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.7,
+          5.060721,
+          -0.0
+        ],
+        "max": [
+          12.7,
+          27.560722,
+          1.000001
+        ],
+        "size": [
+          25.4,
+          22.500001,
+          1.000001
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -13.510951491916398,
+        0.0,
+        -11.250000499999999
+      ],
+      "extent": [
+        28.60455478458132,
+        34.36939609430958,
+        22.500000999999997
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/goblin-axe.js",
+      "bytes": 354165
+    },
+    {
+      "id": "goblin-dagger",
+      "sourceFile": "Minis/GoblinDaggerNewBase.stl",
+      "encoding": "ascii",
+      "sourceSha256": "9672a0e9778d3d5d3456bc1b127913aa99509e21d1c1fe69f27b801f18396f8a",
+      "sourceTriangles": 108617,
+      "triangles": 18000,
+      "vertices": 13073,
+      "sourceBounds": {
+        "min": [
+          -13.963585,
+          2.435752,
+          0.0
+        ],
+        "max": [
+          14.909991,
+          24.935753,
+          34.054955
+        ],
+        "size": [
+          28.873576,
+          22.500001,
+          34.054955
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.7,
+          2.435752,
+          0.0
+        ],
+        "max": [
+          12.7,
+          24.935753,
+          1.000001
+        ],
+        "size": [
+          25.4,
+          22.500001,
+          1.000001
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -13.962205810405028,
+        0.0,
+        -11.250000499999999
+      ],
+      "extent": [
+        28.876912681322416,
+        34.05747723237211,
+        22.500000999999997
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/goblin-dagger.js",
+      "bytes": 354110
+    },
+    {
+      "id": "goblin-sword",
+      "sourceFile": "Minis/GoblinSwordNewBase.stl",
+      "encoding": "ascii",
+      "sourceSha256": "489a6949a6c00d2e16a65035c0fd07d0e36b31446ae39dd681ef6d5d5c616e3c",
+      "sourceTriangles": 96351,
+      "triangles": 18000,
+      "vertices": 13506,
+      "sourceBounds": {
+        "min": [
+          -13.963585,
+          2.435752,
+          0.0
+        ],
+        "max": [
+          15.150805,
+          24.935753,
+          35.191654
+        ],
+        "size": [
+          29.11439,
+          22.500001,
+          35.191654
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.7,
+          2.435752,
+          0.0
+        ],
+        "max": [
+          12.7,
+          24.935753,
+          1.000001
+        ],
+        "size": [
+          25.4,
+          22.500001,
+          1.000001
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -13.962205810405028,
+        0.0,
+        -11.250000499999999
+      ],
+      "extent": [
+        29.12108895756348,
+        35.19764692176014,
+        22.500000999999997
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/goblin-sword.js",
+      "bytes": 361032
+    },
+    {
+      "id": "mummy",
+      "sourceFile": "Minis/MummyNewBase.stl",
+      "encoding": "binary",
+      "sourceSha256": "8bc5408a5d01da7216bde1856a75b351891111739201224aab367b657b53bb6d",
+      "sourceTriangles": 124426,
+      "triangles": 18000,
+      "vertices": 16013,
+      "sourceBounds": {
+        "min": [
+          -11.250001,
+          9.057252,
+          0.0
+        ],
+        "max": [
+          11.25,
+          37.841476,
+          35.100002
+        ],
+        "size": [
+          22.500001,
+          28.784224,
+          35.100002
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -11.250001,
+          12.441478,
+          0.0
+        ],
+        "max": [
+          11.25,
+          37.841476,
+          1.000001
+        ],
+        "size": [
+          22.500001,
+          25.399998,
+          1.000001
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -11.250000499999999,
+        0.0,
+        -12.699998999999998
+      ],
+      "extent": [
+        22.500000999999997,
+        35.1047395261573,
+        28.76979565025374
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/mummy.js",
+      "bytes": 401134
+    },
+    {
+      "id": "open-door",
+      "sourceFile": "Furniture/HeroQuest_open-door.stl",
+      "encoding": "binary",
+      "sourceSha256": "ed4049d36ecf84f30ecbf813e0bd34311e0c670a02997aa5615887a878b12ff4",
+      "sourceTriangles": 56668,
+      "triangles": 14000,
+      "vertices": 12212,
+      "sourceBounds": {
+        "min": [
+          -15.098685,
+          -7.650001,
+          0.0
+        ],
+        "max": [
+          15.097316,
+          7.648,
+          49.498001
+        ],
+        "size": [
+          30.196001,
+          15.298001,
+          49.498001
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -15.098685,
+          -7.650001,
+          0.0
+        ],
+        "max": [
+          15.097316,
+          7.648,
+          1.49
+        ],
+        "size": [
+          30.196001,
+          15.298001,
+          1.49
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -15.117293987404947,
+        0.0,
+        -7.6490005
+      ],
+      "extent": [
+        30.27237646517601,
+        49.50049358308928,
+        15.298001
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/open-door.js",
+      "bytes": 308312
+    },
+    {
+      "id": "orc-cleaver",
+      "sourceFile": "Minis/OrcCleaverNewBase.stl",
+      "encoding": "ascii",
+      "sourceSha256": "b8c1fe287105d24857be54288c97a57759448330528467f79ee630be7c6f5be5",
+      "sourceTriangles": 134765,
+      "triangles": 17999,
+      "vertices": 16067,
+      "sourceBounds": {
+        "min": [
+          -14.076674,
+          13.586515,
+          -1e-06
+        ],
+        "max": [
+          12.7,
+          36.086517,
+          41.306648
+        ],
+        "size": [
+          26.776674,
+          22.500002,
+          41.306649
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.7,
+          13.586515,
+          -1e-06
+        ],
+        "max": [
+          12.7,
+          36.086517,
+          1.000001
+        ],
+        "size": [
+          25.4,
+          22.500002,
+          1.000002
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Reviewed source orientation",
+      "minimum": [
+        -14.079039008516494,
+        0.0,
+        -11.250001000000001
+      ],
+      "extent": [
+        26.77903900851649,
+        41.30746514542332,
+        22.500002000000002
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/orc-cleaver.js",
+      "bytes": 401965
+    },
+    {
+      "id": "orc-mace",
+      "sourceFile": "Minis/OrcMaceNewBase.stl",
+      "encoding": "ascii",
+      "sourceSha256": "229c504be8168759ff489a786ee441d5a06c3f9d810062312f81f0686408e7d1",
+      "sourceTriangles": 135246,
+      "triangles": 18000,
+      "vertices": 17542,
+      "sourceBounds": {
+        "min": [
+          -14.565656,
+          10.081778,
+          -1e-06
+        ],
+        "max": [
+          12.699997,
+          32.581779,
+          37.082607
+        ],
+        "size": [
+          27.265653,
+          22.500001,
+          37.082608
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.699998,
+          10.081778,
+          -1e-06
+        ],
+        "max": [
+          12.699997,
+          32.581779,
+          1.297223
+        ],
+        "size": [
+          25.399995,
+          22.500001,
+          1.297224
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -14.569241673299537,
+        0.0,
+        -11.250000499999999
+      ],
+      "extent": [
+        27.26923917329954,
+        37.088139887833535,
+        22.500000999999997
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/orc-mace.js",
+      "bytes": 425622
+    },
+    {
+      "id": "orc-sword",
+      "sourceFile": "Minis/OrcSwordNewBase.stl",
+      "encoding": "ascii",
+      "sourceSha256": "6eab837e17a5c1848367f2e36d6998bdfaf0c032546680925e5587d6e9ba44e9",
+      "sourceTriangles": 134192,
+      "triangles": 18000,
+      "vertices": 16457,
+      "sourceBounds": {
+        "min": [
+          -17.229265,
+          3.622893,
+          -0.0
+        ],
+        "max": [
+          12.7,
+          26.122892,
+          39.638653
+        ],
+        "size": [
+          29.929265,
+          22.499999,
+          39.638653
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.7,
+          3.622893,
+          -0.0
+        ],
+        "max": [
+          12.7,
+          26.122892,
+          1.000001
+        ],
+        "size": [
+          25.4,
+          22.499999,
+          1.000001
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -17.23751738295742,
+        0.0,
+        -11.2499995
+      ],
+      "extent": [
+        29.93751738295742,
+        39.61767985562746,
+        22.499999000000003
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/orc-sword.js",
+      "bytes": 408229
+    },
+    {
+      "id": "pit-trap",
+      "sourceFile": "Tiles/PitTrap2.stl",
+      "encoding": "binary",
+      "sourceSha256": "096c03350039d46fff0457a8965cbaec04f0a1207ae0ea398a912c2b45beb80c",
+      "sourceTriangles": 183270,
+      "triangles": 10000,
+      "vertices": 6236,
+      "sourceBounds": {
+        "min": [
+          -1e-06,
+          -1e-06,
+          1e-06
+        ],
+        "max": [
+          25.000004,
+          25.000004,
+          3.496686
+        ],
+        "size": [
+          25.000005,
+          25.000005,
+          3.496685
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          0.0133,
+          0.033044,
+          1e-06
+        ],
+        "max": [
+          24.98749,
+          24.974997,
+          0.120428
+        ],
+        "size": [
+          24.97419,
+          24.941953,
+          0.120427
+        ]
+      },
+      "targetTriangles": 10000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -12.50054462312587,
+        0.0,
+        -12.496077709961082
+      ],
+      "extent": [
+        25.000243283181355,
+        3.497059641894733,
+        25.000403526592223
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/pit-trap.js",
+      "bytes": 180701
+    },
+    {
+      "id": "skeleton",
+      "sourceFile": "Minis/SkeletonNewBase.stl",
+      "encoding": "binary",
+      "sourceSha256": "daea0d7325fc7e300a420772095dc6ec8c92a56ee52d9d9b8933e774163fab90",
+      "sourceTriangles": 121248,
+      "triangles": 18000,
+      "vertices": 15958,
+      "sourceBounds": {
+        "min": [
+          -10.25,
+          -14.700001,
+          -0.0
+        ],
+        "max": [
+          12.250002,
+          14.874601,
+          40.826466
+        ],
+        "size": [
+          22.500002,
+          29.574602,
+          40.826466
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -10.25,
+          -14.700001,
+          -0.0
+        ],
+        "max": [
+          12.250002,
+          10.7,
+          1.000001
+        ],
+        "size": [
+          22.500002,
+          25.400001,
+          1.000001
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -11.250001000000001,
+        0.0,
+        -16.88035703335035
+      ],
+      "extent": [
+        22.500002000000002,
+        40.824409516904886,
+        29.58035753335035
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/skeleton.js",
+      "bytes": 400264
+    },
+    {
+      "id": "sorcerers-table",
+      "sourceFile": "Furniture/SorcererTable_FDM.stl",
+      "encoding": "binary",
+      "sourceSha256": "75f49e9e7628149505548392a636cff5ab45dfb709ec3ad7766a0d0edb9edb42",
+      "sourceTriangles": 145264,
+      "triangles": 14000,
+      "vertices": 11782,
+      "sourceBounds": {
+        "min": [
+          -21.762161,
+          -14.058911,
+          -25.145496
+        ],
+        "max": [
+          31.460354,
+          19.038132,
+          21.987862
+        ],
+        "size": [
+          53.222515,
+          33.097043,
+          47.133358
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -21.751856,
+          -14.058911,
+          -25.145496
+        ],
+        "max": [
+          31.460354,
+          18.994085,
+          -23.49629
+        ],
+        "size": [
+          53.21221,
+          33.052996,
+          1.649206
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -26.60755465618979,
+        0.0,
+        -16.572666926478338
+      ],
+      "extent": [
+        53.214828173244996,
+        47.12442463251868,
+        33.093287301652275
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/sorcerers-table.js",
+      "bytes": 301493
+    },
+    {
+      "id": "spike-pit-trap",
+      "sourceFile": "Tiles/SpikePitTrap2.stl",
+      "encoding": "binary",
+      "sourceSha256": "c6146705b33121397395b0a80a417783df168359018ae4c808a6a66c20a0b072",
+      "sourceTriangles": 208020,
+      "triangles": 10000,
+      "vertices": 7123,
+      "sourceBounds": {
+        "min": [
+          -1e-06,
+          -1e-06,
+          1e-06
+        ],
+        "max": [
+          25.000004,
+          25.000004,
+          4.953546
+        ],
+        "size": [
+          25.000005,
+          25.000005,
+          4.953545
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          0.0,
+          0.0,
+          1e-06
+        ],
+        "max": [
+          25.000002,
+          24.974997,
+          0.168703
+        ],
+        "size": [
+          25.000002,
+          24.974997,
+          0.168702
+        ]
+      },
+      "targetTriangles": 10000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -12.500973488449333,
+        0.0,
+        -12.512733556553526
+      ],
+      "extent": [
+        25.001085535456376,
+        4.959187197401778,
+        25.001712591126363
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/spike-pit-trap.js",
+      "bytes": 194905
+    },
+    {
+      "id": "spiral-stair",
+      "sourceFile": "Furniture/Spiral_Stair.stl",
+      "encoding": "binary",
+      "sourceSha256": "719337eb8fe8a320b3a83eb02b757a3470f36357e98c46653202c9733094bc45",
+      "sourceTriangles": 308496,
+      "triangles": 122117,
+      "vertices": 162418,
+      "sourceBounds": {
+        "min": [
+          -25.639498,
+          -0.0,
+          6.0
+        ],
+        "max": [
+          25.400003,
+          50.821304,
+          36.151947
+        ],
+        "size": [
+          51.039501,
+          50.821304,
+          30.151947
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -25.4,
+          -0.0,
+          6.0
+        ],
+        "max": [
+          25.400003,
+          50.799999,
+          7.0
+        ],
+        "size": [
+          50.800003,
+          50.799999,
+          1.0
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -25.567203610057973,
+        0.0,
+        -25.468935333161177
+      ],
+      "extent": [
+        50.967205110057975,
+        22.325762398145308,
+        50.88630514190514
+      ],
+      "indexBytes": 4,
+      "asset": "assets/models/imported/spiral-stair.js",
+      "bytes": 4553492
+    },
+    {
+      "id": "table",
+      "sourceFile": "Furniture/Just_Table.stl",
+      "encoding": "binary",
+      "sourceSha256": "a34583dd6a88a91aab05fefd794c5d0a243c769d2e50e70a49da8a752fe000ff",
+      "sourceTriangles": 21968,
+      "triangles": 8000,
+      "vertices": 6831,
+      "sourceBounds": {
+        "min": [
+          -9.002018,
+          -23.0,
+          -13.0
+        ],
+        "max": [
+          9.00005,
+          23.0,
+          2.000055
+        ],
+        "size": [
+          18.002068,
+          46.0,
+          15.000055
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -9.0,
+          -18.0,
+          -13.0
+        ],
+        "max": [
+          9.0,
+          18.0,
+          -12.5
+        ],
+        "size": [
+          18.0,
+          36.0,
+          0.5
+        ]
+      },
+      "targetTriangles": 8000,
+      "placementStatus": "Reviewed source orientation",
+      "minimum": [
+        -9.00272668688916,
+        0.0,
+        -23.000498625194425
+      ],
+      "extent": [
+        18.00545337377832,
+        15.002658197499617,
+        46.00093138372425
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/table.js",
+      "bytes": 174138
+    },
+    {
+      "id": "throne",
+      "sourceFile": "Furniture/Throne_HeroQuest.stl",
+      "encoding": "binary",
+      "sourceSha256": "8fd529a342252d42a0052b27d45d7f3cba3b3f5f1e3d5665398d0398eafff22b",
+      "sourceTriangles": 185526,
+      "triangles": 29004,
+      "vertices": 19079,
+      "sourceBounds": {
+        "min": [
+          30.978214,
+          -6.350447,
+          8.352389
+        ],
+        "max": [
+          52.279312,
+          14.935469,
+          38.586174
+        ],
+        "size": [
+          21.301098,
+          21.285916,
+          30.233785
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          31.288809,
+          -4.948542,
+          8.352389
+        ],
+        "max": [
+          51.968548,
+          13.836437,
+          9.407327
+        ],
+        "size": [
+          20.679739,
+          18.784979,
+          1.054938
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -10.6262205470465,
+        0.0,
+        -10.508726840155113
+      ],
+      "extent": [
+        21.307505361789097,
+        30.236094098950694,
+        21.28469717070946
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/throne.js",
+      "bytes": 538249
+    },
+    {
+      "id": "tomb-bottom",
+      "sourceFile": "Furniture/Tomb_Bottom.stl",
+      "encoding": "binary",
+      "sourceSha256": "222dc8d279ee19e38c5c8a75c1131e697fd81715b622febdded2bdd35a13cfd5",
+      "sourceTriangles": 301032,
+      "triangles": 17436,
+      "vertices": 14599,
+      "sourceBounds": {
+        "min": [
+          -16.643471,
+          -8.979921,
+          -18.110001
+        ],
+        "max": [
+          16.643471,
+          46.319138,
+          -3.0
+        ],
+        "size": [
+          33.286942,
+          55.299059,
+          15.110001
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -16.591209,
+          -8.890703,
+          -18.110001
+        ],
+        "max": [
+          16.591209,
+          46.229916,
+          -17.805634
+        ],
+        "size": [
+          33.182418,
+          55.120619,
+          0.304367
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -16.606651272406605,
+        0.0,
+        -27.6719377992966
+      ],
+      "extent": [
+        33.15191300449749,
+        15.188895689977588,
+        55.34038393804693
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/tomb-bottom.js",
+      "bytes": 374032
+    },
+    {
+      "id": "tomb-top",
+      "sourceFile": "Furniture/Tomb_Top.stl",
+      "encoding": "binary",
+      "sourceSha256": "d0e28356ff609fd4942a5e2b85e77745fb973a2129df2f312704c7ca29828544",
+      "sourceTriangles": 436050,
+      "triangles": 13999,
+      "vertices": 12244,
+      "sourceBounds": {
+        "min": [
+          -16.203436,
+          -8.212606,
+          -3.0
+        ],
+        "max": [
+          16.20344,
+          45.551819,
+          9.934088
+        ],
+        "size": [
+          32.406876,
+          53.764425,
+          12.934088
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -16.133123,
+          -8.142296,
+          -3.0
+        ],
+        "max": [
+          16.133129,
+          45.481506,
+          -2.578125
+        ],
+        "size": [
+          32.266252,
+          53.623802,
+          0.421875
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -16.203439004629942,
+        0.0,
+        -26.906089107292306
+      ],
+      "extent": [
+        32.40687600926107,
+        12.938923791045834,
+        53.7945761297895
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/tomb-top.js",
+      "bytes": 308838
+    },
+    {
+      "id": "torture-rack",
+      "sourceFile": "Furniture/TotureRack_full.stl",
+      "encoding": "binary",
+      "sourceSha256": "9206db4c3e21fae7855fc5eb93f27b267db92e706f2366bc3a0dcf541cda630c",
+      "sourceTriangles": 783350,
+      "triangles": 14000,
+      "vertices": 18395,
+      "sourceBounds": {
+        "min": [
+          59.255768,
+          41.046764,
+          0.090797
+        ],
+        "max": [
+          127.092903,
+          75.468719,
+          35.235703
+        ],
+        "size": [
+          67.837135,
+          34.421955,
+          35.144906
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          63.665039,
+          45.884216,
+          0.090797
+        ],
+        "max": [
+          116.554504,
+          70.447884,
+          1.320545
+        ],
+        "size": [
+          52.889465,
+          24.563668,
+          1.229748
+        ]
+      },
+      "targetTriangles": 14000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -30.86518783937462,
+        0.0,
+        -17.306826863707116
+      ],
+      "extent": [
+        67.82194013372231,
+        35.128440923683016,
+        34.42875809016607
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/torture-rack.js",
+      "bytes": 407286
+    },
+    {
+      "id": "trapdoor-tile",
+      "sourceFile": "Tiles/TrapDoorTile_solid.stl",
+      "encoding": "binary",
+      "sourceSha256": "8d1997c282945759f2d34b1323e144e473e8ce2e55285057402a16eda5e71218",
+      "sourceTriangles": 204228,
+      "triangles": 10000,
+      "vertices": 7150,
+      "sourceBounds": {
+        "min": [
+          -12.500002,
+          -12.500002,
+          -1e-06
+        ],
+        "max": [
+          12.500002,
+          12.500002,
+          8.468841
+        ],
+        "size": [
+          25.000004,
+          25.000004,
+          8.468842
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.500002,
+          -12.500002,
+          -1e-06
+        ],
+        "max": [
+          12.500002,
+          12.500002,
+          0.237772
+        ],
+        "size": [
+          25.000004,
+          25.000004,
+          0.237773
+        ]
+      },
+      "targetTriangles": 10000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -12.502440768457687,
+        0.0,
+        -12.500489255210155
+      ],
+      "extent": [
+        25.002453574853536,
+        8.46911205177939,
+        25.000719254698367
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/trapdoor-tile.js",
+      "bytes": 195363
+    },
+    {
+      "id": "weak-floor-tile",
+      "sourceFile": "Tiles/WeakFloorTile.stl",
+      "encoding": "binary",
+      "sourceSha256": "c004fc121a554aa747c6dd3e241cf043ab8c34c816274b102cf336355e075dd1",
+      "sourceTriangles": 201002,
+      "triangles": 10000,
+      "vertices": 8376,
+      "sourceBounds": {
+        "min": [
+          -1e-06,
+          -1e-06,
+          1e-06
+        ],
+        "max": [
+          25.000004,
+          25.000004,
+          3.496686
+        ],
+        "size": [
+          25.000005,
+          25.000005,
+          3.496685
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          0.0133,
+          0.033044,
+          1e-06
+        ],
+        "max": [
+          24.98749,
+          24.974997,
+          0.120428
+        ],
+        "size": [
+          24.97419,
+          24.941953,
+          0.120427
+        ]
+      },
+      "targetTriangles": 10000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -12.501367488449334,
+        0.0,
+        -12.496211556553526
+      ],
+      "extent": [
+        25.001085535456376,
+        3.4989643171860934,
+        25.001444361841145
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/weak-floor-tile.js",
+      "bytes": 214962
+    },
+    {
+      "id": "wizard",
+      "sourceFile": "Minis/WizardNewBase.stl",
+      "encoding": "ascii",
+      "sourceSha256": "3c3c67f21c7da78a09ed44d50f3795608cc5449e5a458b6a74679a917664b79f",
+      "sourceTriangles": 114664,
+      "triangles": 23999,
+      "vertices": 16093,
+      "sourceBounds": {
+        "min": [
+          -12.212004,
+          -11.384021,
+          1e-06
+        ],
+        "max": [
+          10.287998,
+          15.909183,
+          36.961658
+        ],
+        "size": [
+          22.500002,
+          27.293204,
+          36.961657
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.212004,
+          -10.169282,
+          1e-06
+        ],
+        "max": [
+          10.287998,
+          15.230718,
+          1.000002
+        ],
+        "size": [
+          22.500002,
+          25.4,
+          1.000001
+        ]
+      },
+      "targetTriangles": 24000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -11.250001000000001,
+        0.0,
+        -13.382989918014335
+      ],
+      "extent": [
+        22.500002000000002,
+        36.96052968381816,
+        27.298157827501946
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/wizard.js",
+      "bytes": 450420
+    },
+    {
+      "id": "zombie",
+      "sourceFile": "Minis/ZombieNewBase.stl",
+      "encoding": "binary",
+      "sourceSha256": "416aac527d9d3467712c680943fc5db0bf5033700824292627028b35e95e6c9f",
+      "sourceTriangles": 107370,
+      "triangles": 18000,
+      "vertices": 13127,
+      "sourceBounds": {
+        "min": [
+          -12.7,
+          -11.249999,
+          -0.0
+        ],
+        "max": [
+          17.284767,
+          11.250001,
+          28.961994
+        ],
+        "size": [
+          29.984767,
+          22.5,
+          28.961994
+        ]
+      },
+      "sourceBaseBounds": {
+        "min": [
+          -12.7,
+          -11.249999,
+          -0.0
+        ],
+        "max": [
+          12.7,
+          11.250001,
+          1.012998
+        ],
+        "size": [
+          25.4,
+          22.5,
+          1.012998
+        ]
+      },
+      "targetTriangles": 18000,
+      "placementStatus": "Unassembled source component; orientation/scale not yet reviewed",
+      "minimum": [
+        -12.7,
+        0.0,
+        -11.25
+      ],
+      "extent": [
+        29.98632389755904,
+        28.95453049164992,
+        22.5
+      ],
+      "indexBytes": 2,
+      "asset": "assets/models/imported/zombie.js",
+      "bytes": 354904
+    }
+  ]
+}

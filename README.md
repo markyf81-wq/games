@@ -20,6 +20,8 @@ For an HTTP preview with background CPU search, run `python3 -m http.server 8787
 
 ## Structure
 
+HeroQuest has a [combat prototype](heroquest/index.html) of the original North American quest The Trial: 1–4 selected shared-device heroes, movement, discovery, melee combat, CPU monster turns and browser autosave/restore. Searches, spells and quest completion remain planned, so it is not listed in the game catalog. See its [implementation plan](heroquest/docs/PLAN.md).
+
 ```text
 Games/
   index.html           Game selection page
@@ -31,6 +33,7 @@ Games/
   type-tails/          Type & Tails code and its own agent guide
   bomb-major/          Chicken Major code and its own agent guide
   fateless-kingdoms/    Card game, original card exports, rules and CPU
+  heroquest/           The Trial combat prototype, models and references
 ```
 
 ## Add another game
