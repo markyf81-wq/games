@@ -4,7 +4,11 @@
   if(!HQ||!T)return;
   const geometries=new Map(),surfaces=new Map();
   const definitions=Object.freeze({
+    "wall-one":{asset:"wall-one",width:1,rotation:0,colour:0xffffff},
+    "wall-two":{asset:"wall-two",width:2,rotation:0,colour:0xffffff},
+    "wall-join":{asset:"wall-join",width:.11,rotation:0,colour:0xffffff},
     "combat-die":{asset:"combat-die",width:1.5,rotation:0,colour:0xf0e7d2},
+    "movement-die-body":{asset:"movement-die-body",width:1.5,rotation:0,colour:0xba1827,roughness:.3,metalness:.04},
     barbarian:{asset:"barbarian",baseWidth:.82,rotation:Math.PI/2,colour:0x9b2924},
     dwarf:{asset:"dwarf",baseWidth:.82,rotation:-Math.PI/2,colour:0x9e4134},
     elf:{asset:"elf",baseWidth:.82,rotation:Math.PI/2,colour:0xa74b3b},
@@ -20,6 +24,7 @@
     "alchemists-bench":{asset:"alchemists-bench",width:2.86,rotation:0,colour:0x695240},
     "torture-rack":{asset:"torture-rack",width:2.86,rotation:0,colour:0x664630},
     "sorcerers-table":{asset:"sorcerers-table",width:2.86,rotation:0,colour:0x745444},
+    "weapons-rack":{asset:"weapons-rack",width:2.86,rotation:Math.PI,colour:0x765438},
     fireplace:{asset:"fireplace",width:2.86,rotation:0,colour:0x817966},
     chest:{asset:"chest",width:.88,rotation:0,colour:0x795234},
     throne:{asset:"throne",width:.88,rotation:0,colour:0x805b40},
@@ -29,6 +34,8 @@
     table:{asset:"table",width:2.86,rotation:Math.PI/2,colour:0x75482e},
     door:{asset:"closed-door",width:1.23,rotation:0,colour:0x8b8777}
   });
+  const miniatureAssets=new Set(Object.values(definitions).filter(definition=>definition.baseWidth).map(definition=>definition.asset));
+  const baseColour=0x35383b;
   function buffer(encoded) {
     const binary=atob(encoded),bytes=new Uint8Array(binary.length);
     for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
@@ -44,31 +51,50 @@
   }
   function geometry(asset) {
     if(geometries.has(asset.id))return geometries.get(asset.id);
-    const packed=buffer(asset.positions),normalData=buffer(asset.normals),indexData=buffer(asset.indices);
-    const count=asset.vertices,positions=new Float32Array(count*3),normals=new Float32Array(count*3);
+    const paint=paintFor(asset),surface=paint?.geometry||asset;
+    const packed=buffer(surface.positions),normalData=buffer(surface.normals),indexData=buffer(surface.indices);
+    const count=surface.vertices,positions=new Float32Array(count*3),normals=new Float32Array(count*3);
     for(let i=0;i<count*3;i++) {
-      positions[i]=packed.getUint16(i*2,true)/65535*asset.extent[i%3]+asset.minimum[i%3];
+      positions[i]=packed.getUint16(i*2,true)/65535*surface.extent[i%3]+surface.minimum[i%3];
       normals[i]=normalData.getInt16(i*2,true)/32767;
     }
-    const indices=asset.indexBytes===2?new Uint16Array(asset.triangles*3):new Uint32Array(asset.triangles*3);
-    for(let i=0;i<indices.length;i++)indices[i]=asset.indexBytes===2?indexData.getUint16(i*2,true):indexData.getUint32(i*4,true);
+    const indices=surface.indexBytes===2?new Uint16Array(surface.triangles*3):new Uint32Array(surface.triangles*3);
+    for(let i=0;i<indices.length;i++)indices[i]=surface.indexBytes===2?indexData.getUint16(i*2,true):indexData.getUint32(i*4,true);
     const result=new T.BufferGeometry();
     result.setAttribute("position",new T.BufferAttribute(positions,3));
     result.setAttribute("normal",new T.BufferAttribute(normals,3));
-    const paint=paintFor(asset);
+    if(asset.colours) {
+      const data=buffer(asset.colours),colours=new Float32Array(count*3),colour=new T.Color();
+      if(data.byteLength!==count*3)throw new Error("Incomplete vertex colours for "+asset.id+".");
+      for(let i=0;i<count;i++){colour.setRGB(data.getUint8(i*3)/255,data.getUint8(i*3+1)/255,data.getUint8(i*3+2)/255,T.SRGBColorSpace);colours.set(colour.toArray(),i*3);}
+      result.setAttribute("color",new T.BufferAttribute(colours,3));
+    }
     if(paint) {
       const labels=buffer(paint.faceMaterials);
-      if(labels.byteLength!==asset.triangles)
+      if(labels.byteLength!==surface.triangles)
         throw new Error("The "+asset.id+" colour data is incomplete.");
       // Batch by material rather than adding a draw call for every paint patch.
       const sorted=new indices.constructor(indices.length);let cursor=0;
       for(let m=0;m<paint.materials.length;m++) {
         const start=cursor;
-        for(let f=0;f<asset.triangles;f++)if(labels.getUint8(f)===m)
+        for(let f=0;f<surface.triangles;f++)if(labels.getUint8(f)===m)
           for(let j=0;j<3;j++)sorted[cursor++]=indices[f*3+j];
         if(cursor>start)result.addGroup(start,cursor-start,m);
       }
       if(cursor!==indices.length)throw new Error("The "+asset.id+" colours contain an unknown material.");
+      result.setIndex(new T.BufferAttribute(sorted,1));
+    } else if(miniatureAssets.has(asset.id)) {
+      // Every supplied hero/monster uses the same two-unit replacement base.
+      // Separate its complete top and rim from the sculpt's coloured material.
+      const sorted=new indices.constructor(indices.length),baseFaces=[];let cursor=0;
+      for(let f=0;f<surface.triangles;f++) {
+        const start=f*3;
+        if([0,1,2].every(j=>positions[indices[start+j]*3+1]<=2.025))baseFaces.push(start);
+        else for(let j=0;j<3;j++)sorted[cursor++]=indices[start+j];
+      }
+      result.addGroup(0,cursor,0);const baseStart=cursor;
+      for(const start of baseFaces)for(let j=0;j<3;j++)sorted[cursor++]=indices[start+j];
+      if(cursor>baseStart)result.addGroup(baseStart,cursor-baseStart,1);
       result.setIndex(new T.BufferAttribute(sorted,1));
     } else result.setIndex(new T.BufferAttribute(indices,1));
     result.computeBoundingBox();result.computeBoundingSphere();
@@ -77,12 +103,15 @@
   function material(definition,asset) {
     if(!surfaces.has(definition.asset)) {
       const paint=paintFor(asset);
-      surfaces.set(definition.asset,paint
+      const materials=paint
         ? paint.materials.map(surface=>new T.MeshStandardMaterial({
           name:surface.name,color:surface.colour,roughness:surface.roughness,
           metalness:surface.metalness
         }))
-        : new T.MeshStandardMaterial({color:definition.colour,roughness:.86,metalness:0}));
+        : new T.MeshStandardMaterial({color:definition.colour,roughness:definition.roughness??.86,metalness:definition.metalness??0,vertexColors:Boolean(asset.colours)});
+      surfaces.set(definition.asset,!paint&&definition.baseWidth
+        ? [materials,new T.MeshStandardMaterial({name:"base",color:baseColour,roughness:.88})]
+        : materials);
     }
     return surfaces.get(definition.asset);
   }
@@ -116,7 +145,7 @@
     group.name=kind+" · supplied miniature";
     if(Array.isArray(model.material))group.userData.paintedMaterials=model.material;
     group.userData.modelSource=asset.sourceFile;
-    group.userData.modelTriangles=asset.triangles;
+    group.userData.modelTriangles=paintFor(asset)?.geometry?.triangles??asset.triangles;
     return group;
   }});
 })();

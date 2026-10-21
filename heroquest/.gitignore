@@ -12,3 +12,4 @@ __pycache__/
 # User-supplied printing sources; browser derivatives are in assets/models/imported.
 references/stl-source/
 references/retired-studies/
+references/wall-source/

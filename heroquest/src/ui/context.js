@@ -20,9 +20,10 @@
       if(!open)return;open=false;panel.hidden=true;panel.style.visibility="";anchor=null;onClose();
       if(restoreFocus)canvas.focus({preventScroll:true});
     }
-    function show({name,kind,description:copy,details:info,actions:options},point) {
+    function show({name,kind,description:copy,details:info,actions:options,figure},point) {
       document.getElementById("context-kicker").textContent=kind;heading.textContent=name;description.textContent=copy;details.textContent=info||"";details.hidden=!info;
       actions.replaceChildren();
+      HQ.portraits.set(document.getElementById("context-portrait"),figure?[figure]:[]);
       for(const option of options) {
         const row=document.createElement("div"),button=document.createElement("button"),hint=document.createElement("small");
         row.className="context-action";button.type="button";button.className="hq-button"+(option.primary?" hq-button--primary":"");button.textContent=option.label;button.disabled=Boolean(option.disabled);

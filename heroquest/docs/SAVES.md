@@ -35,10 +35,41 @@ version-1 envelopes without `dice` load with null and show their recorded summar
 See DICE.md for the complete presentation flow.
 
 The renderer’s plain-data `view` snapshot contains camera yaw/elevation/zoom/target,
-follow mode, grid/wall toggles and actor facing angles. Restoring it rebuilds the
+follow mode, grid preference, wall mode and actor facing angles. Restoring it rebuilds the
 scene from the engine projection, with bounded numeric camera values. Sight mode
 belongs to engine settings. Camera changes are captured on page hide/visibility
-loss and the next game action; grid/wall changes save immediately.
+loss and the next game action; grid/wall-mode changes save immediately.
+
+`view.torchLightingEnabled` additionally stores the Dynamic lighting preference;
+its main-view On/Off button saves immediately. On means gloomy torch lighting with faint global illumination;
+off means full tabletop lighting. Older snapshots omit it and use the enabled
+default. Flicker phase, lights, meshes and shadow maps are never persisted. This
+additive preference has source review only; the prior dice refresh pass did not
+verify it.
+
+`view.ambientLightLevel` optionally stores the Background light slider percentage,
+clamped to an integer from 0 to 100. Missing values default to 26. It updates the
+view live and saves on slider change/release (also on page hide or a game action).
+The setting is shown only when dynamic lighting is enabled; disabling lighting
+retains the percentage for the next enable. Particle phases are cosmetic and
+are not saved. This addition has source review only, with no new refresh check.
+
+Torch positions are generated deterministically from static quest/board layout,
+not saved or drawn from gameplay RNG. Reloading or replaying the same quest
+recreates the same mounts; discovery filters when each appears. Updating the
+placement algorithm can reposition decorative torches in existing saves without
+changing their engine data.
+
+`view.wallMode` optionally stores `full`, `cutaway` or `low`. The main-view button
+saves changes immediately. Missing/invalid values default to automatic cutaway;
+old `wallsEnabled: false` snapshots map to low walls. Wall meshes/clip planes,
+heights, animation and route previews are not persisted. See WALLS.md; this later
+preference has source review only.
+
+The retired wall-pack comparison's `view.wallStyle` field is ignored if present
+and no longer saved. All saves use original tall walls; decorative variation is
+regenerated deterministically from the quest and wall coordinates. No engine or
+envelope schema change is needed. The removal has source review only.
 
 ## Timing and recovery
 
@@ -68,3 +99,5 @@ The engine checks preserved full state/RNG/queue through save round trips and
 loaded legacy v1 envelopes lacking dice-stage data. This was not a broad save
 regression: mid-hop refresh, storage failures/corruption, every view setting and
 new-game replacement still have source review rather than separate browser checks.
+
+Combat lunge/removal effects are transient view data, not new save fields. CPU outcomes remain saved before movement/lunge; a restored pending report can display its defeated figure until acknowledgement without replaying attacks. ACK_REPORT saves before the visual removal; reload during its fade restores the acknowledged state with the piece removed and the recorded queue position. Hero pre-roll lunges do not commit an attack. Facing is retained in the existing view snapshot. Source review only for these new presentation paths; no new save checks.

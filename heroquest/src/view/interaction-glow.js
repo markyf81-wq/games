@@ -27,12 +27,15 @@
         }`});
     const overlay=new T.Mesh(new T.PlaneGeometry(2,2),overlayMaterial);overlay.frustumCulled=false;overlayScene.add(overlay);
     function setTargets(targets) {
+      for(const {proxy} of links)if(proxy.userData.ownsMaterial)proxy.material.dispose();
       maskScene.clear();links.length=0;
       for(const target of targets) {
         const material=target.reachable?reachableMaterial:unavailableMaterial;
         if(target.model)target.model.traverse(source=>{
-          if(!source.isMesh)return;
-          const proxy=new T.Mesh(source.geometry,material);proxy.matrixAutoUpdate=false;proxy.frustumCulled=false;
+          if(!source.isMesh||source.userData.visualEffect)return;
+          const clipped=source.material.clippingPlanes?.length,maskMaterial=clipped?material.clone():material;
+          if(clipped)maskMaterial.clippingPlanes=source.material.clippingPlanes;
+          const proxy=new T.Mesh(source.geometry,maskMaterial);proxy.userData.ownsMaterial=Boolean(clipped);proxy.matrixAutoUpdate=false;proxy.frustumCulled=false;
           links.push({source,proxy});maskScene.add(proxy);
         });
         else if(target.point){const tile=new T.Mesh(tileGeometry,material);tile.rotation.x=-Math.PI/2;tile.position.copy(target.point);maskScene.add(tile);}
@@ -43,7 +46,7 @@
       renderer.getDrawingBufferSize(size);
       if(maskTarget.width!==size.x||maskTarget.height!==size.y)maskTarget.setSize(size.x,size.y);
       overlayMaterial.uniforms.texel.value.set(1/size.x,1/size.y);overlayMaterial.uniforms.pixelRatio.value=renderer.getPixelRatio();
-      for(const {source,proxy} of links){source.updateWorldMatrix(true,false);proxy.matrix.copy(source.matrixWorld);}
+      for(const {source,proxy} of links){proxy.visible=source.visible;source.updateWorldMatrix(true,false);proxy.matrix.copy(source.matrixWorld);}
       const previousTarget=renderer.getRenderTarget(),autoClear=renderer.autoClear,alpha=renderer.getClearAlpha();renderer.getClearColor(clearColour);
       renderer.setRenderTarget(maskTarget);renderer.setClearColor(0x000000,0);renderer.autoClear=true;renderer.render(maskScene,camera);
       renderer.setRenderTarget(previousTarget);renderer.setClearColor(clearColour,alpha);renderer.autoClear=false;renderer.render(overlayScene,overlayCamera);renderer.autoClear=autoClear;

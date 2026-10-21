@@ -58,7 +58,7 @@ Plan routes using the actor's current known board. Resolve movement cell by cell
 
 Opening a room, looking along a corridor, targeting a spell, and searching an area need their own source-linked visibility/reveal rules. A generic circular fog radius would change the game.
 
-The digital exploration presentation deliberately extends the physical board: undiscovered rooms and corridors are not rendered, and no full-board frame or outline should disclose the map's bounds. Maintain separate discovered-cell and currently-visible-cell sets. Once discovered, terrain and static furniture persist; out-of-sight portions may be dimmed. This visual adaptation must not change the original rules for searching, targeting, or quest triggers.
+The digital exploration presentation deliberately extends the physical board: undiscovered rooms and corridors are not rendered, and no full-board frame or outline should disclose the map's bounds. Maintain separate discovered-cell and currently-visible-cell sets. Once discovered, terrain and static furniture persist; scene lighting alone controls terrain brightness. This visual adaptation must not change the original rules for searching, targeting, or quest triggers.
 
 The optional checkbox is labelled **Use realistic line of sight**, off by default. When enabled, movable pieces such as monsters render only while within the combined current line of sight of the heroes. Discovered rooms, corridors, and furniture remain, possibly dimmed. When disabled, discovered movable pieces stay on the board as in the physical version. Filtering changes presentation, not authoritative entity existence or AI state. Keep the visibility setting separate from discovery memory. These behaviors and the checkbox now exist in the exploration entry. Its Explored map control fits discovered terrain. The separate studio retains a fixed visual demonstration.
 
@@ -108,3 +108,7 @@ For each stage, propose only the focused checks that would materially establish 
 - Preserve the local classic-script renderer, packed STL derivatives and procedural board assets, or explicitly agree any new model pipeline that would require HTTP.
 
 Online multiplayer, expansions, custom quest editors, house rules, and animated miniatures are outside the initial scope.
+
+## Next session — 22 October 2026
+
+Mark requested a full code cleanup before continuing textures, models and gameplay. Start by reviewing the accumulated presentation/controller code, consolidating repeated renderer/material and dialog handling, and updating stale documentation while preserving existing behaviour, direct-file support and saved games. Then continue the asset audit/painting and authentic gameplay milestones above. Agree focused verification scope before running checks; recent lighting, portrait, restart and animation work has mostly source/offline geometry review, not a full browser pass. No cleanup is part of this checkpoint commit.

@@ -9,8 +9,9 @@ when needed, then the existing combat summary. Zero skulls skip the defence roll
 Movement/attack prompts can be cancelled before rolling without consuming RNG,
 movement or an action. Committed rolls cannot be dismissed with Escape.
 
-Movement dice are rounded red cubes with white pip geometry and traditional
-opposite faces summing to seven. Combat dice use the supplied `Dice/HQdice.STL`
+Movement dice use a blank convex hull of the supplied combat die, preserving its
+rounded silhouette with a red body, white pip geometry and traditional opposite
+faces summing to seven. Combat dice use the supplied `Dice/HQdice.STL`
 browser derivative, with ivory body and ink on the recessed symbols. Six
 orthographic authoring views established the mesh's face mapping:
 
@@ -87,3 +88,32 @@ in the visual pass was corrected and the affected flow rechecked.
 
 This was not a broad regression, mobile, reduced-motion or direct-file pass.
 Screenshots are local ignored authoring evidence under `tmp/dice-*-chrome.png`.
+
+## Later UI polish — source review only
+
+`src/ui/die-faces.js` shares red/white pip faces in the sidebar and sculpt-derived
+skull/shield icons across the roll result and combat summary. PNG symbols are
+prepared offline by `scripts/prepare_die_icons.py` from guarded supplied geometry
+and paint labels, rather than approximated SVG symbols. The 3D meshes and outcome
+mapping are unchanged. Accessible names identify every face.
+
+The dice dialog reserves header, description, result and action heights throughout
+ready/rolling/settled stages, including 3D fallback. A hidden result retains its
+layout space. Short windows scroll normally. Redundant “recorded”/button instruction
+text was removed. This later UI revision has not received a browser check; the
+approved check above describes the earlier version.
+
+The model-viewer addition shares `src/view/dice-models.js` between tray and viewer.
+The later movement-die revision replaces its generated cube with
+`assets/models/movement-die-body.js`: a 2,366-triangle convex outer hull of the
+combat sculpt, filling the recessed symbols while retaining its rounded shape.
+`scripts/prepare_movement_die.py` prepares it offline using numpy and Three's
+MIT-licensed QuickHull helper from the locally archived 0.186.1 npm package.
+Run it with `--node /path/to/node` when Node is outside PATH; the archive is
+`tmp/three-0.186.1.tgz`. The source STL/geometry hashes are retained in the asset.
+The runtime caches the decoded hull and samples pip surface positions once with
+raycasts. Face values/orientation, animation and engine outcomes are unchanged.
+This revision has source/diff and offline asset preparation only; no new
+dice/browser checks were run. The approved checks above predate this geometry.
+
+Roll dialogs now include cached portraits from the actual miniature factories: the moving hero or both combatants with Attack/Defence labels. Portrait dimensions reserve space before their images arrive and remain constant across roll stages. This presentation adds no RNG/state/save fields. Source review only for this addition.

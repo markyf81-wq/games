@@ -36,9 +36,10 @@
   function occupiedHero(state,id,except) {return state.heroes.some(h=>h.body>0&&h.id!==except&&(key(h.x,h.row)===id||stairs.has(id)&&stairs.has(key(h.x,h.row))));}
   function monsterAt(state,id,knownOnly=false,except=null) {return (knownOnly?Object.values(state.monsterMemory):state.monsters.filter(m=>m.body>0)).find(m=>m.id!==except&&key(m.x,m.row)===id);}
   function canStop(state,id,actorId) {return !furniture.has(id)&&!blocked.has(id)&&(!occupiedHero(state,id,actorId)||stairs.has(id));}
-  function routes(state,actor) {
+  // UI previews may look farther along known terrain; command callers retain
+  // the current rolled budget by default and still validate the chosen move.
+  function routes(state,actor,{budget=state.movement.rolled?state.movement.remaining:0}={}) {
     const start=key(actor.x,actor.row),known=new Set(state.discoveredCells),paths=new Map([[start,[]]]),costs=new Map([[start,0]]),queue=[{id:start,cost:0,steps:0}];
-    const budget=state.movement.rolled?state.movement.remaining:0;
     while(queue.length) {
       queue.sort((a,b)=>a.cost-b.cost||a.steps-b.steps);
       const entry=queue.shift(),here=entry.id,path=paths.get(here);if(entry.cost!==costs.get(here)||entry.steps!==path.length)continue;

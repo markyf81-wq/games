@@ -1,5 +1,9 @@
 # Supplied HeroQuest models
 
+The later [tall stone wall pack by ldid69](walls/README.md) has separate known
+provenance. Its licence does not resolve the original shared-drive collection's
+unknown attribution below.
+
 Mark supplied four ZIP archives on 2026-10-21 from a shared personal drive. They
 contain 40 STL files: 18 miniature components, 15 furniture components, six tile
 models and one combat die. Some files are parts of a piece, rather than a complete
@@ -28,8 +32,7 @@ licence or claiming one was independently verified. No Free3D model was used.
   0.82 board squares. Furniture is uniformly fitted inside its quest footprint; the door fits
   1.23 squares. Decorative overhang does not alter grid occupancy.
 
-The studio’s four loaded models use 63,998 triangles in total; exploration loads
-additional derivatives and creates instances as discovered. The barbarian has a separate
+Exploration and studio decode/cache the local meshes and create instances as needed; the barbarian uses the separate prepared paint surface described below. The barbarian has a separate
 paint scheme (see below); the orc, table and door retain simple green, brown and
 neutral stone materials. STL has no painted textures or material regions, so the
 paint is an authored presentation layer. Geometry, colour and orientation remain
@@ -68,34 +71,41 @@ from disk continues to need no server, installation or application build.
 
 ## Barbarian paint
 
-`barbarian-paint.js` stores authored per-face material assignments, adding about
-33 KB. It leaves the supplied 23,999 triangles and their positions/normals intact.
-The renderer batches indices into 10 material groups: natural skin, dark chestnut
-hair, brown leather, red cloth, ivory fur, steel, bronze, stone, charcoal base and
-soft brown facial definition. Each region has a uniform base colour, with no
-baked cavity wash, pigment variation or vertex colours. The old grip mask crossed
-the bare hand and has been removed. Scene lighting provides the shading; material
-roughness distinguishes skin, fabric, leather and metal. Metallic surfaces use a
-generated local softbox reflection environment, without a downloaded HDR file.
+`barbarian-paint.js` contains eight uniform material regions and a prepared
+surface with triangles cut at the material seams. Hairline/crown, clothing,
+boot-cuff and sword-fitting contours are authored in canonical facing coordinates.
+Cuts stay on the original triangle surfaces and interpolate normals; no body
+proportions, silhouette, pose or footprint are changed. The original imported
+23,999-triangle sculpt stays intact. The paint's guard fields match that original
+mesh; its nested `geometry` contains the runtime surface and its own fingerprint.
+The renderer decodes it once and batches by material, with no runtime cutting.
 
-The recipe is `../../scripts/paint_barbarian.py`. Hand-placed polygon/volume masks
-follow sculpt landmarks in canonical front-facing coordinates. Recreate the paint
-when reconverting the barbarian: its geometry SHA-256, triangle count and vertex
-count must match. A mismatch produces an explicit load error instead of painting
-the wrong faces. These are clean, natural material colours, not a claim of an
-official painted colour scheme.
+Skin, chestnut hair, leather, red cloth, ivory fur, steel and bronze retain distinct
+roughness/metalness. The entire base top/rim is dark grey (#35383b). The same base
+colour applies to all other heroes and monsters, whose shared two-unit-high base
+faces are grouped separately from their body material. Furniture/doors are not
+miniature bases. No baked wash, pigment variation or painted facial patches are
+used; scene lighting supplies the shading. Metals retain the generated local
+softbox reflections.
+
+The recipe is `../../scripts/paint_barbarian.py`, with authored contours in
+`../../scripts/barbarian-paint-seams.json`. A traced 3D hair seam follows the long
+locks; connected-surface cleanup removes stray islands/pinholes. Garment profiles
+follow the front/back sculpt, with red cloth around both sides. Gold accents align
+with the five raised belt studs. Regenerate after reconverting
+the source sculpt. Its geometry SHA, source triangle count and vertex count must
+match, or loading stops with an explicit error.
 
 ```sh
 python3 heroquest/scripts/paint_barbarian.py
 python3 heroquest/scripts/paint_barbarian.py --preview
 ```
 
-Use a Python environment with numpy; the optional authoring preview also needs
-Pillow. `../previews/barbarian-painted.png` is the front/three-quarter/back offline
-colour-layout image, not a browser screenshot. Authoring views were inspected to
-place colour boundaries and to remove the hand spill and baked wash. The approved
-exploration Chrome pass showed the earlier painted hero on the board; the clean
-colour revision has no new browser check.
+Authoring needs numpy; optional previews also use Pillow. The front,
+three-quarter, back and elevated views in `../previews/barbarian-painted.png`
+are offline authoring renders, not browser screenshots. They were inspected
+while refining the seams. Enlarged front, side and rear views of the final refinement
+were also inspected in Chrome; no gameplay regression checks were run.
 
 ## Exploration placement and assembly
 
@@ -107,7 +117,33 @@ packed geometry are decoded once and cached across repeated instances.
 
 The tomb top/bottom retain their shared source coordinate frame after accounting
 for importer recentering. The gargoyle currently uses its body without separate
-wings. Bookcases, weapons rack and stairway use simplified generated geometry
-rather than the supplied partial components or expensive spiral stair. These are
-presentation approximations; grid occupancy remains the source-linked quest data.
+wings. Bookcases still use generated placeholder geometry. The separately supplied
+[weapons rack by xbeaker](weapons-rack/README.md) replaces the generated rack
+and retains its own known attribution/non-commercial/share-alike notice.
+The stairway now uses the original tile-sheet artwork on a thin 2x2 tile rather
+than generated steps or the unrelated spiral-stair STL. See `../../docs/ASSET-AUDIT.md`.
+Grid occupancy remains the source-linked quest data.
 See `../../docs/EXPLORATION.md` for the limited approved browser/model coverage.
+
+## Flat combat-die icons
+
+`../../scripts/prepare_die_icons.py` projects the ink-labelled triangles of the
+supplied combat die to transparent `../ui/dice/*.png` icons. It requires numpy and
+Pillow, and checks the geometry fingerprint against the paint data. The black
+shield is oriented helmet-up for the UI. No source mesh or paint labels change.
+These icons share the supplied model's user-reported provenance; the exact
+creator/licence is still unknown. This is offline asset preparation only.
+
+## Rounded movement die
+
+`movement-die-body.js` is a blank convex hull of the supplied combat die, filling
+the recessed symbols and preserving the rounded outer shape. It has 2,366
+triangles and 1,185 vertices, is centred and uniformly fitted to 1.5 units, and
+records its source STL/geometry hashes. The shared runtime die factory adds red
+material and white pips; the original combat mesh and paint are unchanged.
+Its provenance is the same user-supplied collection with unknown creator/licence.
+
+`../../scripts/prepare_movement_die.py` uses numpy and Node with Three's
+MIT-licensed QuickHull helper from the existing local
+`../../tmp/three-0.186.1.tgz` authoring archive. No helper, archive, raw STL or
+Python dependency is loaded during gameplay. See `../../docs/DICE.md`.

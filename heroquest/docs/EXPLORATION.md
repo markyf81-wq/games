@@ -38,7 +38,7 @@ Movement previews use known terrain and remembered monster positions. They do no
 ## Discovery and digital interpretations
 
 - Opening a room reveals all its terrain and contents, including furniture/monsters away from the narrow ray through the doorway. Corridor visibility follows open grid sight. Blocked rock can be seen but never traversed or seen through.
-- Explored terrain and static scenery remain. Terrain dims outside current terrain sight. The outer rectangle and unused board are never rendered; **Explored map** fits discovered cells only.
+- Explored terrain and static scenery remain. Scene lighting alone controls explored terrain brightness. The outer rectangle and unused board are never rendered; **Explored map** fits discovered cells only.
 - Terrain sight ignores figures so a companion does not erase the room floor. Movable-piece sight uses walls, closed doors and intervening figures, from every hero’s centre. Furniture blocks movement but is not added as a SEE blocker here.
 - Exact corner crossings permit either open orthogonal route but block a corner sealed by two walls. This is an explicit digital grid interpretation to avoid diagonal room leaks. Future attack/spell targeting must revisit corner/edge rulings against the full relevant rules.
 - **Use realistic line of sight** defaults off. Off retains discovered movable pieces as on the physical board; on shows only pieces currently seen by at least one hero. Discovery/state are retained in both modes. This combined-party rendering option is Mark’s requested adaptation, not a printed rule.
@@ -54,11 +54,11 @@ Native modal dialogs make the underlying scene inert and contain keyboard focus.
 
 ## Graphics limits
 
-Hero movement now has a 180 ms eased hop per traversed square, with a small 0.12-square lift of the whole miniature. The engine resolves the command once and returns transient route metadata separately from state; it includes only steps actually taken before a discovery interruption. The controller holds the previous projection during playback, then shows the resolved position, budget and discoveries on arrival. Movement, doors, end-turn and menu input are locked during playback, while camera controls remain usable. The active ring and following camera track the piece. Reduced-motion preferences skip playback; hiding the page or losing the graphics context finishes presentation immediately. No rules or dice resolve in animation callbacks.
+Hero movement now has a 300 ms eased hop per traversed square, with a small 0.12-square lift of the whole miniature. The engine resolves the command once and returns transient route metadata separately from state; it includes only steps actually taken before a discovery interruption. The controller holds the previous projection during playback, then shows the resolved position, budget and discoveries on arrival. Movement, doors, end-turn and menu input are locked during playback, while camera controls remain usable. The active ring and following camera track the piece. Reduced-motion preferences skip playback; hiding the page or losing the graphics context finishes presentation immediately. No rules or dice resolve in animation callbacks.
 
 This animation update received focused source review only; the earlier approved checks below predate it. No new tests or browser animation checks have been run.
 
-The runtime loads prepared STL derivatives for the four heroes, eight monster types, doors, blocked tiles and most furniture. Only the barbarian has detailed authored paint; other pieces use matte colours. The tomb is assembled from its source halves. Gargoyle wings remain unassembled, and bookcases, weapons rack and stairs use simplified generated geometry. These approximations do not change quest occupancy. Source orientation was reviewed independently for each hero/monster; appearance of every late-quest object has not received a browser review.
+The runtime loads prepared STL derivatives for the four heroes, eight monster types, doors, blocked tiles and most furniture. Only the barbarian has detailed authored paint; other pieces use matte colours, with separate dark grey bases on every hero and monster. The tomb is assembled from its source halves. Gargoyle wings remain unassembled; bookcases use a generated placeholder; the weapons rack uses the separately supplied xbeaker STL. Stairs now show original tile-sheet artwork on a thin 2x2 tile. These presentation choices do not change quest occupancy. Source orientation was reviewed independently for each hero/monster; appearance of every late-quest object has not received a browser review.
 
 The earlier visual study lives in `studio.html` with its separate full-board/fixed-mask controls. It must not be used as evidence of actual discovery behavior.
 
@@ -71,3 +71,12 @@ Twelve focused engine scenarios passed: initial discovery; map/door/entity consi
 Chrome at the normal desktop viewport verified setup/player assignment, original briefing, initial hidden terrain, 2d6 display and roll locking, accessible movement, free opening of the first two doors, corridor reveal pause/budget retention, full next-room discovery, all four handoffs/round wrap, and realistic sight hiding both room monsters after stepping away while retaining scenery. A canvas click also moved the hero to a reachable cell. No runtime errors were captured. A deprecated PCFSoft shadow setting was replaced with PCFShadow, and faint reachable markers were made clearer; the changed highlights were rechecked after reload. Browser diagnostics retained the one historical warning from before that correction.
 
 No broad regression, mobile/responsive sweep, separate direct-file run, complete quest traversal, all-model render audit, combat/AI checks or persistence checks were performed. The temporary localhost server was used only for this approved check. No commit, push or publication was requested.
+
+## Later wall and route presentation
+
+The main entry now uses Mark's first supplied tall wall set and a persistent
+Full walls / Automatic cutaway / Low walls button. Known boundary edges leave
+door gaps and use prepared one/two-space stone sections. Selected destinations
+show a blue/yellow known-route ribbon. See WALLS.md for preparation, source credit,
+fit, clipping-aware interactions, saved preference and source-only review status.
+These changes do not alter the quest, command legality or discovery rules.

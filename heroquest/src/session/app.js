@@ -3,9 +3,10 @@
   const HQ=window.HeroQuest,E=HQ.exploration,T=HQ.topology,Q=HQ.trial,D=HQ.dialogs,S=HQ.sessionStorage;
   if(new URLSearchParams(window.location.search).get("inspect")==="barbarian") {window.location.replace("studio.html?inspect=barbarian");return;}
   const $=id=>document.getElementById(id);let state=null,projection=null,view=null,moving=false,screen=null,saveError="",diceProgress=null,dicePrompt=null,animateDice=false;
+  let selectedRoute=null,previewPaths=null,restartMode="new";
   const title=kind=>({"alchemists-bench":"Alchemist’s bench","sorcerers-table":"Sorcerer’s table","torture-rack":"Torture rack","weapons-rack":"Weapons rack",bookcase:"Bookcase",stairs:"Stairway",table:"Wooden table",chest:"Treasure chest",throne:"Throne",fireplace:"Fireplace",tomb:"Fellmarg’s Tomb",blocked:"Blocked square"}[kind]||kind);
   const message=(text,error=false)=>{$("adventure-message").textContent=text;$("adventure-message").classList.toggle("is-error",error);};
-  const context=HQ.createContextPanel({onClose(){view?.setSelection(null);}});
+  const context=HQ.createContextPanel({onClose(){selectedRoute=null;view?.setSelection(null);}});
   const diceTray=HQ.createDiceTray({onRoll:rollDice,onContinue:continueDice,onCancel(){dicePrompt=null;render();}});
   function saveStatus() {
     $("session-footer").textContent="The Trial · "+(saveError||"Autosaved in this browser");
@@ -15,38 +16,62 @@
     if(!state)return;
     saveError=S.save({state,screen,dice:diceProgress,view:view?.snapshot()||null});saveStatus();
   }
+  function defeatedFigure() {
+    return state.pending?.type==="report"&&state.lastReport?.type==="combat"&&state.lastReport.defeated
+      ? [...state.heroes,...state.monsters].find(figure=>figure.id===state.lastReport.defenderId):null;
+  }
+  function updateBoard() {
+    projection=E.project(state);
+    const report=state.pending?.type==="report"&&state.lastReport?.type==="combat"?state.lastReport:null;
+    const cutawayHero=report?.attackerSide==="monster"?state.heroes.find(hero=>hero.id===report.defenderId):projection.activeHero;
+    view?.setProjection(projection,{defeatedFigure:defeatedFigure(),cutawayHero});
+  }
+  function playPresentation(play,complete) {
+    moving=true;context.close();view?.setInteractive(false);
+    for(const id of ["roll-movement","end-turn","menu-button","model-viewer-button","restart-game"])$(id).disabled=true;
+    $("board-canvas").setAttribute("aria-busy","true");
+    // Presentation failure must not strand a resolved command or lock input.
+    Promise.resolve().then(play).catch(()=>{}).then(()=>{
+      moving=false;$("menu-button").disabled=false;$("model-viewer-button").disabled=false;$("restart-game").disabled=!state;$("board-canvas").setAttribute("aria-busy","false");
+      try{complete();}catch(error){message("The board could not update. "+error.message,true);}
+    });
+  }
   function dispatch(command) {
     if(moving)return false;
-    const previousReport=state?.lastReport?.id,result=E.applyCommand(state,command);
+    const previousReport=state?.lastReport,removal=command.type==="ACK_REPORT"&&previousReport?.type==="combat"&&previousReport.defeated?previousReport:null,result=E.applyCommand(state,command);
     if(!result.ok){message(result.message,true);return false;}
     context.close();
     state=result.state;screen=command.type==="ROLL_MOVEMENT"?"movement":null;dicePrompt=null;
     if(command.type==="ACK_REPORT")diceProgress=null;
-    if(state.pending?.type==="report"&&state.lastReport.type==="combat"&&state.lastReport.id!==previousReport)
+    const newCombat=state.pending?.type==="report"&&state.lastReport.type==="combat"&&state.lastReport.id!==previousReport?.id;
+    if(newCombat)
       diceProgress={reportId:state.lastReport.id,stage:"attack",rolled:command.type==="ATTACK"};
     // Persist resolved outcomes before any animation or result dialog. Refreshing
     // during presentation must never replay a move, activation, damage or roll.
     persist();
-    if(result.motion?.path.length&&view) {
-      moving=true;view.setInteractive(false);
-      for(const id of ["roll-movement","end-turn","menu-button"])$(id).disabled=true;
-      $("board-canvas").setAttribute("aria-busy","true");
-      message([...state.heroes,...state.monsters].find(actor=>actor.id===result.motion.actorId).name+" is moving…");
-      // The engine has resolved the move. Keep the old projection until the
-      // piece arrives so new discoveries do not appear ahead of the miniature.
-      // If presentation cannot animate, restore the resolved projection and
-      // controls rather than leaving the turn locked behind a visual effect.
-      Promise.resolve().then(()=>view.animateMovement(result.motion)).catch(()=>{}).then(()=>{
-        moving=false;$("menu-button").disabled=false;$("board-canvas").setAttribute("aria-busy","false");
-        try{render();persist();}catch(error){message("The board could not update. "+error.message,true);}
-      });
+    const complete=()=>{
+      render();persist();
+      // ACK_REPORT has already advanced the authoritative queue/turn, if due.
+      // Resume its next activation only after the acknowledged piece is removed.
+      if(command.type==="ACK_REPORT"&&state.phase==="monster-turn"&&!state.pending)dispatch({type:"RESOLVE_MONSTER"});
+    };
+    const cpuAttack=newCombat&&command.type==="RESOLVE_MONSTER";
+    if(view&&(result.motion?.path.length||cpuAttack||removal)) {
+      if(result.motion?.path.length)message([...state.heroes,...state.monsters].find(actor=>actor.id===result.motion.actorId).name+" is moving…");
+      else if(removal)message(removal.defenderName+" is defeated.");
+      playPresentation(async()=>{
+        // Keep the old discoveries until the movement reaches its endpoint.
+        if(result.motion?.path.length)await view.animateMovement(result.motion);
+        if(cpuAttack){updateBoard();await view.animateAttack(state.lastReport.attackerId,state.lastReport.defenderId);}
+        if(removal)await view.animateDefeat(removal.defenderId,removal.attackerId);
+      },complete);
       return true;
     }
-    try{render();}catch(error){message("The board could not update. "+error.message,true);return false;}
+    try{complete();}catch(error){message("The board could not update. "+error.message,true);return false;}
     return true;
   }
   const descriptions={
-    stairs:"The stairway connects these catacombs to the world above.",bookcase:"A tall wooden bookcase stands against the dungeon wall.",
+    stairs:"The stairway connects these catacombs to the world above.",torch:"An iron wall sconce holds a torch that casts warm light into the room.",bookcase:"A tall wooden bookcase stands against the dungeon wall.",
     "weapons-rack":"Weapons hang from this wooden rack.","alchemists-bench":"Bottles and instruments cover this alchemist’s workbench.",
     "sorcerers-table":"A sorcerer’s table holds the tools of arcane study.","torture-rack":"A heavy wooden rack occupies this part of the dungeon.",
     table:"A sturdy wooden table takes up several floor squares.",chest:"A closed treasure chest rests on the dungeon floor.",
@@ -73,7 +98,7 @@
     return "";
   }
   function moveOption(id,label="Move here") {
-    const reason=movementReason(id);return {label,primary:true,disabled:Boolean(reason),reason,run:()=>dispatch({type:"MOVE",to:id})};
+    const reason=movementReason(id);return {label,destination:id,primary:true,disabled:Boolean(reason),reason,run:()=>dispatch({type:"MOVE",to:id})};
   }
   function modelMoveOption(item) {
     const hero=projection.activeHero;
@@ -92,14 +117,19 @@
     return {label:"Move here",primary:true,disabled:true,reason};
   }
   function requestAttack(item) {
+    if(moving||!projection.attackTargets.some(target=>target.id===item.id))return;
     const hero=projection.activeHero,weapon=HQ.combatData.weapons[hero.weapon].name;
-    context.close();dicePrompt={type:"attack",targetId:item.id};
-    diceTray.show({id:"attack-ready-"+item.id,kind:"combat",count:hero.attack,title:hero.name+" attacks "+item.name,kicker:hero.owner+" · ATTACK",automatic:false,rolled:false,cancellable:true,
-      description:weapon+" · "+hero.attack+" combat dice. Skulls hit. "+(state.movement.started?"This attack ends your remaining movement.":"You may move after attacking.")});
+    const show=()=>{
+      render();persist();dicePrompt={type:"attack",targetId:item.id};
+      diceTray.show({id:"attack-ready-"+item.id,kind:"combat",count:hero.attack,title:hero.name+" attacks "+item.name,kicker:hero.owner+" · ATTACK",automatic:false,rolled:false,cancellable:true,
+        figures:[{...hero,role:"Attack"},{...item,role:"Defence"}],description:weapon+" · "+hero.attack+" dice · Skulls hit"+(state.movement.started?". Ends movement.":"")});
+    };
+    message(hero.name+" attacks "+item.name+".");
+    playPresentation(()=>view?.animateAttack(hero.id,item.id),show);
   }
   function requestMovementRoll() {
     context.close();dicePrompt={type:"movement"};
-    diceTray.show({id:"movement-ready",kind:"movement",count:2,title:"Roll for movement",kicker:projection.activeHero.owner+" · "+projection.activeHero.name,description:"Roll two red dice to find how far you can move.",automatic:false,rolled:false,cancellable:true});
+    diceTray.show({id:"movement-ready",kind:"movement",count:2,title:"Movement",kicker:projection.activeHero.owner+" · "+projection.activeHero.name,figures:[{...projection.activeHero,role:"Movement"}],description:"2 red dice",automatic:false,rolled:false,cancellable:true});
   }
   function rollDice() {
     if(dicePrompt){animateDice=true;return dispatch(dicePrompt.type==="movement"?{type:"ROLL_MOVEMENT"}:{type:"ATTACK",targetId:dicePrompt.targetId});}
@@ -111,12 +141,13 @@
   function presentDice() {
     const animate=animateDice;animateDice=false;
     if(screen==="movement") {
-      diceTray.show({id:"movement-"+state.round+"-"+state.turnIndex,kind:"movement",count:2,title:"Your movement roll",kicker:projection.activeHero.name+" · MOVEMENT",description:"Two red dice determine your movement.",automatic:false,rolled:true,results:state.movement.dice,animate,continueLabel:"Choose a destination →"});return;
+      diceTray.show({id:"movement-"+state.round+"-"+state.turnIndex,kind:"movement",count:2,title:"Movement",kicker:projection.activeHero.owner+" · "+projection.activeHero.name,figures:[{...projection.activeHero,role:"Movement"}],description:"2 red dice",automatic:false,rolled:true,results:state.movement.dice,animate,continueLabel:"Continue →"});return;
     }
     const report=state.lastReport,attack=diceProgress.stage==="attack",actor=attack?report.attackerName:report.defenderName;
     const automatic=attack?report.attackerSide==="monster":report.attackerSide==="hero",results=attack?report.attackDice:report.defendDice;
+    const actors=[...state.heroes,...state.monsters],figures=[[report.attackerId,"Attack"],[report.defenderId,"Defence"]].map(([id,role])=>{const figure=actors.find(f=>f.id===id);return figure?{...figure,role}:null;}).filter(Boolean);
     diceTray.show({id:"combat-"+report.id+"-"+diceProgress.stage,kind:"combat",count:results.length,title:actor+" · "+(attack?"Attack":"Defence"),kicker:automatic?"ZARGON’S ROLL":"HERO’S ROLL",automatic,rolled:diceProgress.rolled,results,animate,
-      description:results.length+" combat dice. "+(attack?"Skulls hit "+report.defenderName+".":(report.shield==="white-shield"?"White":"Black")+" shields block "+report.skulls+" skull"+(report.skulls===1?"":"s")+"."),
+      figures,description:results.length+" dice · "+(attack?"Skulls hit":(report.shield==="white-shield"?"White":"Black")+" shields block "+report.skulls+" hit"+(report.skulls===1?"":"s")),
       continueLabel:attack&&report.defendDice.length?"Defence roll →":"View outcome →"});
   }
   function continueDice() {
@@ -130,9 +161,18 @@
     if(T.stairs.has(id)){const stairs=projection.furniture.find(f=>f.kind==="stairs");if(stairs){openPiece({...stairs,type:"furniture"});return;}}
     const [x,row]=T.parse(id),point=view.setSelection({type:"cell",id});
     context.show({name:"Column "+(x+1)+", row "+(row+1),kind:"DUNGEON SQUARE",description:T.blocked.has(id)?descriptions.blocked:"A square of explored dungeon floor.",actions:[moveOption(id)]},point);
+    previewRoute(id,true);
+  }
+  function previewRoute(id,select=false) {
+    if(select)selectedRoute=id;
+    if(!id||!state||moving||state.phase!=="hero-turn"||state.pending||!projection.discoveredCells.includes(id)){view?.setRoutePreview(null);return;}
+    const hero=projection.activeHero;
+    if(!previewPaths)previewPaths=T.routes(state,hero,{budget:HQ.board.columns*HQ.board.rows});
+    const path=previewPaths.get(id);
+    view?.setRoutePreview(path?{cells:[T.key(hero.x,hero.row),...path],reachable:projection.reachable.includes(id)}:null);
   }
   function openPiece(item) {
-    if(!state||state.pending||moving)return;
+    if(!state||state.pending||moving||item.type==="wall")return;
     const point=view.setSelection({type:"piece",id:item.id}),actions=[];let details="";
     if(item.type==="monster") {
       details="Body "+item.body+" / "+item.maxBody+" · Attack "+item.attack+" · Defend "+item.defend+" · Move "+item.movement;
@@ -148,9 +188,11 @@
     actions.push(modelMoveOption(item));
     actions.push({label:"Centre view",run:()=>view.focusPiece(item.id)});
     context.show({name:item.type==="door"?(item.open?"Open door":"Closed door"):item.name||title(item.kind),kind:item.type==="hero"?"HERO":item.type==="monster"?"MONSTER":"DUNGEON SCENERY",
-      description:item.type==="door"?"A stone-framed doorway connects two areas of the dungeon.":descriptions[item.kind]||"A revealed piece of dungeon scenery.",details,actions},point);
+      figure:item.type==="hero"||item.type==="monster"?item:null,description:item.type==="door"?"A stone-framed doorway connects two areas of the dungeon.":descriptions[item.kind]||"A revealed piece of dungeon scenery.",details,actions},point);
+    const destination=actions.find(action=>action.label==="Move here")?.destination;
+    if(destination)previewRoute(destination,true);else selectedRoute=null;
   }
-  try {view=HQ.createTabletop({onCell:openCell,onPiece:openPiece,onDismiss:()=>context.close(),onAnchor:point=>context.position(point)});}
+  try {view=HQ.createTabletop({onCell:openCell,onPiece:openPiece,onDismiss:()=>context.close(),onAnchor:point=>context.position(point),onHover:ref=>previewRoute(ref?.type==="cell"?ref.id:selectedRoute)});}
   catch(error) {
     const p=document.createElement("p");p.className="hq-callout";p.setAttribute("role","alert");p.textContent="The 3D board could not start. A browser with WebGL 2 is required. "+error.message;$("setup-form").prepend(p);$("start-adventure").disabled=true;
     $("loading-message").textContent="The 3D board could not start.";
@@ -173,17 +215,18 @@
     input.addEventListener("input",updateSetupPlayers);
     label.append(text,input);$("player-fields").append(label);
     const heroLabel=document.createElement("label");heroLabel.className="hq-field";
-    const heroText=document.createElement("span"),select=document.createElement("select");select.id="player-hero-"+(i+1);select.name=select.id;
+    const heroText=document.createElement("span"),select=document.createElement("select"),portrait=document.createElement("span");portrait.className="setup-hero-portrait";select.id="player-hero-"+(i+1);select.name=select.id;
     for(const hero of HQ.heroes) {
       const option=document.createElement("option");option.value=hero.id;option.textContent=hero.name;select.append(option);
     }
-    select.value=HQ.heroes[i].id;heroLabel.append(heroText,select);$("hero-fields").append(heroLabel);
-    const field={label,input,heroLabel,heroText,select,heroId:select.value};playerFields.push(field);
+    select.value=HQ.heroes[i].id;portrait.append(HQ.portraits.image(select.value,HQ.heroes[i].name));heroLabel.classList.add("hero-choice");heroLabel.append(heroText,portrait,select);$("hero-fields").append(heroLabel);
+    const field={label,input,heroLabel,heroText,select,portrait,heroId:select.value};playerFields.push(field);
     select.addEventListener("change",()=>{
       // Swap an existing choice rather than ever duplicating a character.
       const other=playerFields.find(p=>p!==field&&p.heroId===select.value);
       if(other){other.select.value=field.heroId;other.heroId=field.heroId;}
       field.heroId=select.value;
+      for(const choice of [field,other].filter(Boolean))choice.portrait.replaceChildren(HQ.portraits.image(choice.heroId,E.heroNames.get(choice.heroId)));
     });
   }
   $("player-count").addEventListener("change",updateSetupPlayers);
@@ -198,22 +241,25 @@
       const n=document.createElement("span");n.className="turn-number";n.textContent=String(i+1);
       const copy=document.createElement("span"),name=document.createElement("strong"),owner=document.createElement("small");name.textContent=E.heroNames.get(h.id);owner.textContent=h.owner||"Choose a player";copy.append(name,owner);
       if(state){const health=document.createElement("small");health.className="hero-health";health.textContent=h.body>0?"Body "+h.body+" / "+h.maxBody:"Fallen";copy.append(health);}
-      const mark=document.createElement("span");mark.className="active-mark";mark.textContent=isActive?"◆":"";mark.setAttribute("aria-hidden","true");button.append(n,copy,mark);
+      const mark=document.createElement("span");mark.className="active-mark";mark.textContent=isActive?"◆":"";mark.setAttribute("aria-hidden","true");button.append(n,HQ.portraits.image(h.kind||h.id,E.heroNames.get(h.id)),copy,mark);
       button.disabled=!state||h.body===0;button.addEventListener("click",()=>view?.focusHero(h.id));$("party-list").append(button);
     }
   }
   function render() {
-    context.close();projection=E.project(state);view?.setProjection(projection);view?.setInteractive(state.phase==="hero-turn"&&!state.pending&&!moving);
+    $("restart-game").disabled=moving;
+    selectedRoute=null;previewPaths=null;
+    context.close();updateBoard();view?.setInteractive(state.phase==="hero-turn"&&!state.pending&&!moving);
     const hero=projection.activeHero,name=E.heroNames.get(hero.id),pending=Boolean(state.pending);
     const heroTurn=state.phase==="hero-turn";
+    HQ.portraits.set($("active-portrait"),heroTurn?[hero]:[]);
     $("active-name").textContent=heroTurn?name:state.phase==="defeat"?"Party defeated":"Zargon";$("active-owner").textContent=heroTurn?hero.owner:"COMPUTER";$("round-label").textContent="ROUND "+state.round;
-    $("die-one").textContent=state.movement.dice[0]||"—";$("die-two").textContent=state.movement.dice[1]||"—";
+    HQ.dieFaces.numbered($("die-one"),state.movement.dice[0]);HQ.dieFaces.numbered($("die-two"),state.movement.dice[1]);
     $("movement-remaining").textContent=!heroTurn?"Heroes are waiting":state.movement.closed?"Movement finished":state.movement.rolled?state.movement.remaining+" remaining":"Ready to roll";
-    $("dice-description").textContent=state.movement.rolled?"Rolled "+state.movement.dice.join(" + "):"Two movement dice";
+    $("dice-description").textContent=state.movement.rolled?state.movement.dice.join(" + "):"";
     $("roll-movement").disabled=pending||!heroTurn||state.movement.rolled||state.movement.closed;$("end-turn").disabled=pending||!heroTurn;
     $("hero-combat-stats").replaceChildren();$("hero-combat-stats").hidden=!heroTurn;
     if(heroTurn){for(const text of ["Body "+hero.body+" / "+hero.maxBody,"Mind "+hero.mind,"Attack "+hero.attack+" dice","Defend "+hero.defend+" dice"]){const span=document.createElement("span");span.textContent=text;$("hero-combat-stats").append(span);}const weapon=document.createElement("span");weapon.className="weapon-name";weapon.textContent=HQ.combatData.weapons[hero.weapon].name+" · Melee";$("hero-combat-stats").append(weapon);}
-    $("action-status").textContent=!heroTurn?"Revealed monsters act once each":state.actionUsed?(state.movement.closed?"Attack used · remaining movement ended":"Attack used · you may still move"):"One attack available · before or after movement";
+    $("action-status").textContent=!heroTurn?"":state.actionUsed?"Attack used":"Attack available";
     $("setting-realistic-los").checked=state.settings.realisticLOS;
     $("discovery-label").textContent=projection.discoveredRooms+" room"+(projection.discoveredRooms===1?"":"s")+" explored";
     // Do not display the hidden map's room/monster counts as a progress target.
@@ -225,25 +271,30 @@
     else if(state.phase==="defeat")D.show("defeat-dialog");
     else if(state.pending?.type==="handoff") {
       $("handoff-heading").textContent="Your turn, "+hero.owner;
-      $("handoff-description").textContent="Take control of the "+name+". Discuss your route with the party, then roll for movement.";
+      $("handoff-description").textContent=name;
+      HQ.portraits.set($("handoff-portrait"),[hero]);
       $("handoff-round").textContent="ROUND "+state.round+" · "+name.toUpperCase();D.show("handoff-dialog");
     }
   }
-  $("setup-form").addEventListener("submit",event=>{
-    event.preventDefault();if(!view)return;
+  function startAdventure(config) {
+    if(!view||moving)return;
     const values=new Uint32Array(1);window.crypto.getRandomValues(values);
-    const players=playerFields.slice(0,playerCount()),heroIds=players.map(p=>p.select.value);
-    const owners=Object.fromEntries(players.map((p,i)=>[p.select.value,playerName(i)]));
-    state=E.createSession({heroIds,owners,realisticLOS:$("setup-realistic-los").checked},values[0]);
-    screen="briefing";diceProgress=null;dicePrompt=null;view.resetFacing();persist();
+    state=E.createSession(config,values[0]);
+    screen="briefing";diceProgress=null;dicePrompt=null;animateDice=false;view.resetFacing();persist();
     try {render();view.centre();persist();D.close("setup-dialog");D.show("briefing-dialog");}
     catch(error){message("The adventure could not start. "+error.message,true);const p=document.createElement("p");p.className="hq-callout";p.textContent=error.message;$("setup-form").append(p);}
+  }
+  $("setup-form").addEventListener("submit",event=>{
+    event.preventDefault();
+    const players=playerFields.slice(0,playerCount()),heroIds=players.map(p=>p.select.value);
+    const owners=Object.fromEntries(players.map((p,i)=>[p.select.value,playerName(i)]));
+    startAdventure({heroIds,owners,realisticLOS:$("setup-realistic-los").checked});
   });
   $("begin-turn").addEventListener("click",()=>{screen=null;persist();D.close("briefing-dialog");message("Roll movement for the "+E.heroNames.get(E.active(state).id)+", then click a square to see its actions.");});
   $("continue-combat").addEventListener("click",()=>{
     if(moving)return;const intro=state.pending?.type==="monster-intro";D.close("combat-dialog");
     if(intro)dispatch({type:"RESOLVE_MONSTER"});
-    else if(dispatch({type:"ACK_REPORT"})&&state.phase==="monster-turn"&&!state.pending)dispatch({type:"RESOLVE_MONSTER"});
+    else dispatch({type:"ACK_REPORT"});
   });
   $("retry-adventure").addEventListener("click",()=>{D.close("defeat-dialog");D.show("setup-dialog");});
   $("roll-movement").addEventListener("click",requestMovementRoll);
@@ -251,11 +302,25 @@
   $("ready-hero").addEventListener("click",()=>{D.close("handoff-dialog");dispatch({type:"ACK_HANDOFF"});view?.centre();});
   $("menu-button").addEventListener("click",()=>{if(state)D.show("menu-dialog");else D.show("setup-dialog");});
   $("open-help").addEventListener("click",()=>{D.close("menu-dialog");D.show("help-dialog");});
-  $("restart-adventure").addEventListener("click",()=>{D.close("menu-dialog");D.show("confirm-dialog");});
-  $("confirm-restart").addEventListener("click",()=>{D.close("confirm-dialog");$("setup-realistic-los").checked=state.settings.realisticLOS;D.show("setup-dialog");});
+  function requestRestart(mode) {
+    if(!state||moving)return;
+    restartMode=mode;context.close();D.close("menu-dialog");
+    $("confirm-heading").textContent=mode==="restart"?"Restart The Trial?":"Gather a new party?";
+    $("confirm-restart").textContent=mode==="restart"?"Restart":"New adventure";D.show("confirm-dialog");
+  }
+  $("restart-game").addEventListener("click",()=>requestRestart("restart"));
+  $("restart-adventure").addEventListener("click",()=>requestRestart("new"));
+  $("confirm-restart").addEventListener("click",()=>{
+    D.close("confirm-dialog");
+    if(restartMode==="restart")startAdventure({heroIds:state.heroes.map(hero=>hero.id),owners:Object.fromEntries(state.heroes.map(hero=>[hero.id,hero.owner])),realisticLOS:state.settings.realisticLOS});
+    else {$("setup-realistic-los").checked=state.settings.realisticLOS;D.show("setup-dialog");}
+  });
   $("setting-realistic-los").addEventListener("change",event=>dispatch({type:"SET_REALISTIC_LOS",enabled:event.target.checked}));
   $("setting-grid").addEventListener("change",event=>{view?.setGrid(event.target.checked);persist();});
-  $("setting-walls").addEventListener("change",event=>{view?.setWalls(event.target.checked);persist();});
+  $("wall-mode").addEventListener("click",()=>{view?.cycleWallMode();persist();});
+  $("dynamic-lighting").addEventListener("click",()=>{if(view){view.setTorchLighting(!view.snapshot().torchLightingEnabled);persist();}});
+  $("setting-light-level").addEventListener("input",event=>view?.setAmbientLightLevel(event.target.valueAsNumber));
+  $("setting-light-level").addEventListener("change",persist);
   $("centre-hero").addEventListener("click",()=>view?.centre());$("view-explored").addEventListener("click",()=>view?.explored());
   $("zoom-in").addEventListener("click",()=>view?.zoom(1.2));$("zoom-out").addEventListener("click",()=>view?.zoom(1/1.2));
   $("view-tabletop").addEventListener("click",()=>view?.view(false));$("view-overhead").addEventListener("click",()=>view?.view(true));
@@ -273,7 +338,7 @@
     updateSetupPlayers();
     try {
       render();view.restore(saved.snapshot.view);
-      const settings=view.snapshot();$("setting-grid").checked=settings.gridEnabled;$("setting-walls").checked=settings.wallsEnabled;
+      const settings=view.snapshot();$("setting-grid").checked=settings.gridEnabled;
       if(screen==="briefing")D.show("briefing-dialog");
       // A refresh can land between acknowledging one result and resolving the
       // next activation. Continue that recorded queue without replaying a turn.

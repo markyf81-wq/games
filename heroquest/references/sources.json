@@ -205,8 +205,8 @@
       "authority": "primary-scan",
       "local_path": "original-na/system-tiles.pdf",
       "file_type": "pdf",
-      "review_status": "not-transcribed",
-      "notes": "Original scan. Preserve printed wording and verify before transcription.",
+      "review_status": "stairway-artwork-visually-reviewed-and-cropped",
+      "notes": "Original scan retained unchanged. PDF p1 lower-right upper stair tile visually reviewed/cropped for runtime artwork; p2 scanner/copyright notice recorded in asset README. Other tile content is not marked transcribed or implemented.",
       "pdf_pages": 2
     },
     {
@@ -617,6 +617,39 @@
       "file_type": "gif",
       "review_status": "not-reviewed",
       "notes": "Base Game System picture; shape and colour reference, not a rules authority or approved runtime asset."
+    },
+    {
+      "id": "visual-original-board-photo",
+      "title": "Original HeroQuest board photograph",
+      "url": "https://2.bp.blogspot.com/-xxhpqZ7m1Ko/Uj4-e2-xWzI/AAAAAAAAECI/IlPt04IYbqs/s1600/Tablero%2BHQ.JPG",
+      "index_url": "https://tablerosparajuegos.blogspot.com/p/hq.html",
+      "edition": "original-board-visual",
+      "authority": "visual-reference",
+      "local_path": "visual/original-board-reference.jpg",
+      "file_type": "jpeg",
+      "review_status": "visually-reviewed-room-palettes-patterns",
+      "notes": "Photograph inspected for the 22 room palettes/paving families. Reference only; not deployed or copied as a runtime texture. Floors are authored procedural recreations; printed debris/crack details are not traced. Board topology remains the original NA quest-book trace."
+    },
+    {
+      "id": "visual-user-board-image",
+      "title": "User-supplied HeroQuest board image",
+      "edition": "visual-artwork-unverified",
+      "authority": "user-supplied-visual-reference",
+      "local_path": "visual/user-board-scan.jpg",
+      "file_type": "jpeg",
+      "review_status": "source-and-grid-crop-visually-reviewed",
+      "notes": "Mark supplied ~/Downloads/ww7sy558ez381.jpg on 2026-10-21 (2048x1536). Creator and official/recreation status are unknown. Crop [74,74,1972,1461] matches existing 26x19 board data; WebP atlas deployed via local packed data URI. Artwork only, not rules/topology authority. No new browser alignment check."
+    },
+    {
+      "id": "model-weapons-rack-xbeaker-4271138",
+      "title": "Heroquest Weapons rack",
+      "url": "https://www.thingiverse.com/thing:4271138",
+      "edition": "scenery-model",
+      "authority": "user-supplied-model-and-notices",
+      "local_path": "stl-source/weapons-rack-4271138/",
+      "file_type": "stl-and-notices",
+      "review_status": "source-read-and-derivative-prepared",
+      "notes": "Mark supplied ZIP on 2026-10-21. xbeaker; supplied CC Attribution Non-Commercial Share Alike notice has no version. Author describes a remix with incomplete upstream credits; preserve original README/LICENSE. .04mm weld/face cleanup then simplification yields 26559 triangles/18992 vertices; uniformly fitted to existing 1x3 footprint. Plain base colour, detailed paint pending. Source/offline authoring review only; no new browser check."
     }
   ]
 }
