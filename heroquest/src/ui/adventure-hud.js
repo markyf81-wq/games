@@ -19,7 +19,7 @@
     $("roll-movement").disabled=pending||!heroTurn||state.movement.rolled||state.movement.closed;$("end-turn").disabled=pending||!heroTurn;
     $("open-spellbook").hidden=!heroTurn||!HQ.spells.isCaster(hero);$("open-spellbook").disabled=pending||!heroTurn;
     $("hero-combat-stats").replaceChildren();$("hero-combat-stats").hidden=!heroTurn;
-    if(heroTurn){for(const text of ["Body "+hero.body+" / "+hero.maxBody,"Mind "+hero.mind,"Attack "+HQ.combat.attack(hero)+" dice"+(hero.effects.courage?" · Courage":""),"Defend "+HQ.combat.defence(hero)+" dice"+(hero.effects.rockSkin?" · Rock Skin":"")]){const span=document.createElement("span");span.textContent=text;$("hero-combat-stats").append(span);}const weapon=document.createElement("span");weapon.className="weapon-name";weapon.textContent=HQ.combatData.weapons[hero.weapon].name+" · Melee";$("hero-combat-stats").append(weapon);}
+    if(heroTurn){$("hero-combat-stats").append(HQ.health.body(hero.body,hero.maxBody));for(const text of ["Mind "+hero.mind,"Attack "+HQ.combat.attack(hero)+" dice"+(hero.effects.courage?" · Courage":""),"Defend "+HQ.combat.defence(hero)+" dice"+(hero.effects.rockSkin?" · Rock Skin":"")]){const span=document.createElement("span");span.textContent=text;$("hero-combat-stats").append(span);}const weapon=document.createElement("span");weapon.className="weapon-name";weapon.textContent=HQ.combatData.weapons[hero.weapon].name+" · Melee";$("hero-combat-stats").append(weapon);}
     $("action-status").textContent=!heroTurn?"":state.actionUsed?"Action used":"Action available";
     $("setting-realistic-los").checked=state.settings.realisticLOS;
     $("discovery-label").textContent=projection.discoveredRooms+" room"+(projection.discoveredRooms===1?"":"s")+" explored";

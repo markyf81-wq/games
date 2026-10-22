@@ -146,8 +146,7 @@ all objects, including furniture and units, within the quest’s playable footpr
 Mark subsequently excluded unused/off-board space from hover, selection and new
 routes; playable black squares still do not reveal furniture or units.
 A hero may pause in an unsafe square while moves remain; consuming the last move
-there, or ending the turn there, is fatal. The shared stairway remains a shared
-space. Reach a free playable square before attacking/casting/interacting. This
+there, or ending the turn there, is fatal. Stair squares retain their printed per-square sharing exception. Reach a free playable square before attacking/casting/interacting. This
 broader object/last-step treatment is an approved ruling, not additional wording
 on the original card. Veil of Mist's ordinary monster-transit restriction stays
 separate. No extra spell/item/card or expansion content was introduced.
@@ -192,12 +191,13 @@ explicit one-attack implementation ruling remains documented above.
 Target choices now use the shared src/ui/board-choice.js modal/board round trip,
 not a target dropdown. Choose target (or Change target) temporarily hides the
 spellbook. All legal, revealed targets glow blue, with camera controls retained.
-Click one, or cycle [ / ] and Enter, to restore the same card/mode and review the
-selected target before Cast. Cancel selection/Escape returns without spending
+Click one, or cycle [ / ] and Enter, to cast the selected spell immediately.
+Cancel selection/Escape returns without spending
 anything. Genie door mode offers only revealed closed doors; monster and hero
 modes keep caster-specific sight and every existing rule restriction. No hidden
-map hints, automatic movement, card consumption, RNG or saves arise from picking.
-Normal turn actions are disabled until the modal returns. The generic chooser
+map hints or automatic movement arise from picking. The spellbook rechecks the
+target and dispatches the ordinary saved CAST_SPELL command after selection.
+Normal turn actions are disabled until the picker finishes. The generic chooser
 also supports cell refs for future board-target dialogs; Pass Through Rock uses ordinary board movement, including unseen squares.
 This picker has source review only; Mark chose manual verification.
 
@@ -224,29 +224,56 @@ Sleep activation checks are not new casts and do not replay the casting effect.
 
 | Spell | Cosmetic effect |
 | --- | --- |
-| Ball of Flame | Orange projectile with ember trail and target burst |
-| Fire of Wrath | Descending fire sparks and rising target flare |
-| Heal Body | Green/gold rising spiral |
-| Water of Healing | Turquoise droplets and ripple aura |
-| Rock Skin | Ochre stone shards circling the recipient |
-| Tempest | Tapered rotating wind column |
-| Courage | Red/gold rising sparks and aura |
-| Swift Wind | Fast pale wind streams |
-| Pass Through Rock | Earth-coloured phasing dust |
-| Veil of Mist | Soft blue-green drifting mist |
-| Sleep | Descending violet sparkles |
-| Genie | Cyan travelling wisp and target vortex, including door mode |
+| Ball of Flame | Orange projectile, spherical outward explosion and falling embers |
+| Fire of Wrath | Compact red-orange motes rise in a narrow target-centred flame column |
+| Heal Body | Green motes rise and converge from the feet into the chest |
+| Water of Healing | Falling turquoise rain with repeated expanding floor ripples |
+| Rock Skin | Irregular angular stone fragments settle around the body |
+| Tempest | Fast upward flow through a widening wind funnel |
+| Courage | Small gold sparks pulse outwards around the body |
+| Swift Wind | Low horizontal pale air streams pass around the hero |
+| Pass Through Rock | Fine stone-coloured dust sweeps across the body |
+| Veil of Mist | A broad, low blue-green fog bank billows outwards |
+| Sleep | Small violet stars hover and drift near the head |
+| Genie | Curved incoming cyan wisps become three strands orbiting the upper body; intensity varies for door/attack mode |
 
-A reused 160-particle buffer, core mesh and ring keep allocation bounded. Effects
-are unlit/additive and shadow-free; they add no point lights/shader light-count
-changes. They use only displayed participants and never query hidden objects,
+A reused 160-particle capacity, with 48–120 active motes per recipe, a core mesh
+and ring keep allocation bounded. Effects use normal alpha blending, retain
+colour when overlapping, and fit their height to the target sculpt. They are
+unlit and shadow-free. One permanent non-shadow point-light slot emits the
+recipe colour, follows a travelling projectile, and fades with the effect; its
+intensity returns to zero on finish/interruption. The pool keeps shader light
+counts stable. Dungeon light barriers also mask this light against walls/doors. They use only displayed participants and never query hidden objects,
 roll dice or change RNG. The camera glides to the known participants first;
 automatic cutaway also protects the known effect focus. Full/low wall preferences
-remain respected. Effects finish in roughly 1.6–1.95 seconds after framing.
+remain respected. Effects finish in roughly 1.5–1.85 seconds after framing.
 
 Reduced motion skips effects; hidden/context loss/page exit finishes outstanding
 waits. A bounded watchdog resolves an abandoned effect so input cannot remain
-locked. Global turn controls stay locked until the sequence completes. This
-revision has source/diff review only, no browser/engine/save/performance checks.
-Manual sandbox coverage should include a fire resistance roll, Genie attack and
-remote door modes, self healing, a lethal target, refresh, and tab interruption.
+locked. Global turn controls stay locked until the sequence completes.
+
+Focused Chrome review, 22 October: baseline authoring renders reproduced washed
+out additive strands and flat spirit/sword/moon glyphs that collapsed at side
+angles. These were replaced with softer, target-fitted volumetric recipes.
+All twelve revised effects were rendered with production model/effect factories;
+additional early/late Genie/Tempest side views and Sleep/Courage side views,
+Water/Pass Through Rock overhead views were inspected without reported JS or
+shader errors. Actual sandbox Genie and Tempest casts kept modals closed during
+presentation, then opened their recorded dice/result stage. Refreshing the Genie
+dice stage preserved the saved state and released the presentation lock.
+
+This was a focused visual/sequencing check, not a rules, performance or full save
+regression pass. Remote Genie doors, lethal casts, interruption/reduced motion
+and every spell's gameplay branches still need manual coverage. No rule, RNG or
+save format changes were made by this refinement.
+
+## Fewer clicks and coloured light — 22 October 2026
+
+Picking a legal board target now casts immediately, without reopening the book
+for a second Cast click. Cancel still restores the same card/mode. A preselected
+context target can still be cast directly from the book. Legality is rechecked
+before dispatch; rejected commands preserve cards/RNG. Particles now span orange,
+crimson, emerald/lime, cobalt/cyan, limestone, ice blue, gold, mint, bronze, teal,
+violet/pink and indigo palettes, with matching local illumination. This later
+revision has source/diff review only for spell UI, colours and timing; earlier
+Chrome spell checks predate it.

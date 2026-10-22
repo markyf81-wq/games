@@ -34,7 +34,7 @@ compatibility, local assets and the Games library return link.
 | --- | --- |
 | index.html, heroquest.css, ui.css | Entry, base styling, common UI tokens, native dialogs and anchored board panels |
 | src/data/board.js, trial.js | 26×19 board/rooms, source-linked original Trial placements/narrative/stats |
-| src/data/pieces.js | Public names/descriptions and 32-type model catalog; no hidden quest placements |
+| src/data/pieces.js | Public names/descriptions and 36-type model catalog; no hidden quest placements |
 | src/data/combat.js, spells.js | Source-linked canonical stats/weapons and twelve original spell cards/descriptions |
 | src/rules/topology.js | Pure routes, occupancy, weighted stairs, sight and rock phasing |
 | src/rules/combat.js, spells.js, quest.js | Legal actions, recorded resolution and quest/exit queries |
@@ -48,21 +48,26 @@ compatibility, local assets and the Games library return link.
 | src/ui/context.js, board-choice.js | Anchored actions and cancellable modal→board→modal target selection |
 | src/ui/spells.js | Illustrated inertial card carousel, full description and target/cast decisions |
 | src/ui/combat.js, portraits.js | Result UI, original Zargon portrait and cached miniature busts |
-| src/ui/dice.js, die-faces.js | Recorded 3D dice presentation and authentic symbol/pip icons |
-| src/ui/model-viewer.js, view/test-room.js | Independent cached model inspection and invented 32-piece showroom |
+| src/ui/dice.js, die-faces.js | Compact recorded 3D dice tray with stable result/action footer and authentic symbol/pip icons |
+| src/ui/health.js | Shared red/full and black/empty Body hearts with numeric accessible labels |
+| src/ui/model-viewer.js, view/test-room.js | Independent cached model inspection and invented 36-piece showroom |
 | src/view/tabletop.js | Scene orchestration, interaction, entities, framing goals and bounded rendering |
 | src/view/board-camera.js | Displayed camera springs, lens updates and bounded arrival waits |
 | src/view/board-terrain.js | Discovery-keyed instanced floor/grid updates and picking meshes |
 | src/view/figure-motion.js | 300ms hops, facing and 700ms defeated-piece tip/sink/fade |
+| src/view/blood-pools.js | Cached, lit floor stains derived from discovered saved casualties |
 | src/view/combat-camera.js | Transient attacker-eye approach/hold/return; ordinary board camera stays saved |
 | src/view/spell-effects.js | Pooled finite particles/projectiles for all twelve spells; no outcomes/RNG |
 | src/view/walls.js | Cached discovered wall runs, stone variation, joins and ray-based cutaway |
+| src/view/light-barriers.js | Cached per-light dungeon occlusion masks independent of visual cutaway |
+| src/view/blocked-scenery.js | Wall-height solid blocked-square assembly from cached wall/rubble sculpts |
 | src/view/torches.js, torch-placement.js | Deterministic clear room mounts, fire particles and fixed light pool |
 | src/view/models.js, stl-models.js | Shared cached packed geometry/materials, fitting/facing/compound assembly |
 | src/view/model-surfaces.js, furniture-surfaces.js | Renderer-local reflections/clones and cached authored finish textures |
 | src/view/component-textures.js, floors.js | Packed local board/stair art, immutable-size canvases and atlas material |
 | src/view/dice-models.js, interaction-glow.js | Shared rounded dice and non-mutating silhouette overlays |
 | assets/models/, textures/, ui/, previews/ | Prepared runtime assets, provenance and scoped offline authoring previews |
+| model-painter.html, model-painter.css, src/tools/model-painter.js | Separate surface-region authoring tool with independent local drafts/JSON export |
 | scripts/ | Offline asset preparation only; never needed during play |
 | references/ | Source manifests; raw PDFs/STLs/photos and tmp diagnostics are ignored |
 
@@ -75,7 +80,8 @@ EXIT_QUEST, ACK_HANDOFF, RESOLVE_MONSTER, ACK_REPORT and SET_REALISTIC_LOS.
 There is no MOVE_THROUGH_ROCK command or separate rock planner/modal.
 
 Resolve and persist commands, RNG and reports BEFORE animation/dice/modal display.
-Animation completion only releases presentation; never re-resolve damage, movement,
+Movement rolls start on opening and wait for Continue after settling;
+combat/hero-resistance Roll stages remain explicit. Animation completion only releases presentation; never re-resolve damage, movement,
 card use or CPU activation. Save pending reports, queue/cursor/resumeId and dice
 stages; refreshing goes straight to the recorded stage without replaying effects.
 
@@ -101,11 +107,13 @@ and looking are free; doors stay open. Heroes pass heroes and monsters pass
 monsters; opponents/furniture block ordinary movement and normal endpoints must
 be free. See RULES-TURN-ORDER.md for exact source and friendly-monster inference.
 
-Mark's 2×2 stairs form one larger shared space: internal moves cost zero, entering
-or leaving costs one. spaceCells supplies its footprint for sight/melee/CPU reach.
-Weighted routes minimize cost then step count; prefer empty display anchors. Free
-stair repositioning neither starts movement nor consumes a pending movement buff.
-This shared space is an approved digital choice, not a printed-rule claim.
+Mark's 2×2 stairs contain four actual squares for reach/sight/CPU/occupancy.
+Internal steps cost zero; entering/leaving costs one. Every step requires a roll
+and positive movement remaining, including zero-cost internal steps. No reach
+from an unoccupied stair square. Clicking the art chooses individual squares;
+they retain the printed per-square hero-sharing exception. Internal free steps
+neither start paid movement nor consume a pending movement buff. This discount
+is an approved digital choice, not a printed-rule claim.
 
 Plan routes using discovered terrain and remembered monster positions; resolve
 against actual occupancy step by step. Pause when new ground is revealed. Never
@@ -127,7 +135,7 @@ pieces outside combined hero sight without deleting them or deactivating AI.
 Spell sight instead uses the individual caster and figure obstruction. Never
 use combined display sight or remembered positions for spell legality.
 
-Context panels cover every displayed model except walls. Show all relevant
+Context panels cover every displayed model except walls and blocked stone. Show all relevant
 actions; disable unavailable ones with reasons. Reach/selection colours are blue
 or yellow only. Move here, Open door and Attack belong in the context; global
 Roll movement and End turn stay in the sidebar. Walk-then-act uses the shortest
@@ -136,7 +144,9 @@ same hero/endpoint/action; reveal interruptions stop the queued interaction.
 
 Board-choice callers supply already-filtered public refs. Cancel/Escape returns
 to the same modal/card/mode without spending anything. Lock turn actions but
-retain camera controls and [ / ]/Enter. No picker layout enters saves. Spell
+retain camera controls and [ / ]/Enter. Picking a spell target immediately casts
+through the command boundary; cancellation restores the book without spending.
+No picker layout enters saves. Spell
 cards leave the visible hand when used; spellsUsed remains authoritative.
 Carousel momentum is bounded, details commit on settle, reduced motion skips it.
 Keep full original wording separate from summaries/rulings. Courage is one +2-die
@@ -158,8 +168,14 @@ before approaching. Cancel an uncommitted attack without action/RNG use.
 Spell casts save once, then glide to known participants, play finite effects,
 then open resistance/combat dice or outcome. Keep the old displayed target/closed
 door until effect completion; ordinary render reveals resolved changes afterwards.
+Every spell has a distinct volumetric motion: Genie's incoming cyan wisps orbit
+the upper body, Tempest rises in a tapered funnel, Sleep has hovering violet
+stars, Courage radiates gold sparks, healing converges versus water rain, and
+stone fragments settle versus phasing dust sweeping across the body. Fit heights
+to the target sculpt; avoid flat glyphs and dense additive white strands.
 Particle/core/ring resources are reused, unlit, noninteractive and shadow-free;
-no new point lights or gameplay RNG. Effects use only displayed actors/revealed
+one permanent non-shadow spell-light slot fades in the recipe colour and follows
+projectiles. No gameplay RNG. Effects use only displayed actors/revealed
 doors. Refresh skips them. Reduced motion/hidden/context loss finish waits and
 release the gate; a bounded watchdog prevents an abandoned effect from locking play.
 
@@ -169,6 +185,15 @@ figures never enter rule occupancy/sight/targeting. Resume the acknowledged CPU
 queue only after removal. CPU activation cursor advances once per queued ID,
 outside find predicates; Sleep wake resumes the already-spent activation ID.
 
+After removal, leave a small noninteractive dark-red blood pool at the casualty's
+square. Projection exposes only discovered fallen IDs/positions; omit trapped
+heroes and the held pending-report figure. Derive pools from existing saved Body
+and positions, with no new save fields or rule occupancy. A bounded 900ms opacity
+fade uses per-stain owned materials; reduced motion skips it, no idle loop. Pools
+receive dungeon lighting and the same room-light masks. Hide stale pools on reset.
+Spell outcomes use a compact content-height layout with labelled participants;
+self-casts show one portrait, not duplicate caster/target images.
+
 Terrain rebuilds only on a changed discovery key. Cache visible pick entries,
 reach/known sets, wall layouts and unchanged portrait content. Wall cutaway rays
 are pooled and unprojected once per protected point per frame. No broad per-frame
@@ -177,17 +202,26 @@ Claims of speed improvement require a separately approved profile/benchmark.
 
 Walls use the original tall-wall pack only, deterministic section/stone variation,
 sculpt-derived joins, clipped caps/shadows and printed-line footings. Omit walls
-behind known rubble. Walls/joins/footings are noninteractive. Full/Automatic/Low
-is a main-view control; cutaway protects the active hero's room, defending hero's
+behind known rubble. Blocked squares compose a solid wall-height stone plug with
+a rubble top and share the same clipping/capping and camera obstruction rules.
+Walls/blocked stone/joins/footings are noninteractive. Full/Automatic/Low
+is an icon-only main-view control (distinct full/cut/low wall SVGs); cutaway protects the active hero's room, defending hero's
 room during CPU combat, or a corridor hero point. Spell focus is an additional
 known target. Cut only actual finite camera sight segments; preserve lens morphs,
 door gaps, discovery and run boundaries. Never squash wall height or force Full.
 
+Main-view controls use icon-only bulb, wall and table/board buttons. Keep their
+SVG children when updating state; use title/aria-label and aria-pressed.
 Dynamic lighting is a main-view toggle. On: gloomy visible global light, torches;
 Off: full tabletop lighting. Menu background-light slider 0–100, default 26,
 intensity 0–2.1, optional saved view field. Eight permanent point-light slots keep
 shader counts stable; slot zero alone casts a 512px PCF shadow with hysteresis.
-Fixtures themselves cast no shadow. Refresh shadow maps only for geometry/wall/
+view/light-barriers.js masks all eight torches plus the spell light against
+known full-height walls, closed doors and blocked cells, independently of visual
+cutaway. Board-local material hooks preserve live clipping planes and floor/stone
+shaders. Cache masks by layout/light position; no extra shadow-casting lights.
+Torch reach is six squares at base intensity 10; hearth reach is 6.5 at intensity
+12, with the same flicker. Fixtures themselves cast no shadow. Refresh shadow maps only for geometry/wall/
 light-slot changes, not flicker. Room mounts are deterministic: at least one clear
 mount per room, max two at 20+ cells, avoid doors/furniture/blocked approaches.
 Torch/hearth particles share bounded scheduling; steady reduced-motion flames,
@@ -205,7 +239,13 @@ No Free3D model was used. Walls and xbeaker weapons rack have separate known
 licence notices that must remain with their derivatives.
 
 Barbarian uses eight source-guarded seam-cut materials without pigment noise/wash;
-all hero/monster bases are dark grey #35383b. Other figures await detailed paint.
+all hero/monster bases are dark grey #35383b. Wizard uses Mark’s fingerprinted painter regions with natural finishes guided by
+the original character-card palette; Dwarf, Elf and monsters await detailed paint. Orc cleaver/mace/sword
+and Goblin sword/dagger/axe alternate by stable original quest order via
+HQ.monsterModel, shared by board and portraits. They are appearance aliases,
+never new engine kinds/equipment rules, RNG or save fields. All six sculpts are
+in Models/Test room. The enfenix replacement hero archive was reviewed offline
+but not adopted; no clear upgrade at the matched browser triangle budget.
 Bookcase frame/four inserts and tomb halves are assembled; gargoyle wings remain
 unassembled. Cupboard is painted and in Models/Test room only, not a quest addition.
 All current furniture, doors and rubble have paint derivatives. Source guards,
@@ -225,8 +265,67 @@ miniature-studio pages/links/controller/styles remain removed; source notices st
 
 ## Current review status
 
-Current paint: offline multi-angle authoring/source review. Latest spell particles,
-sandbox/targeting/phasing, camera, lighting and cleanup: source/diff review only;
-no new browser, engine/save, build/lint or performance checks. Mark is testing.
+Current paint: offline multi-angle authoring/source review. Refined spell effects:
+isolated Chrome renders of all twelve, additional side/overhead samples, and
+actual sandbox Genie/Tempest cast-to-modal checks, including a Genie refresh.
+Blocked stone: isolated full/low/automatic authoring renders. See SPELLS.md and
+WALLS.md for limits. No broad engine/save regression, build/lint or performance
+checks; remaining sandbox/targeting/phasing/camera/lighting work is Mark-tested.
 Historical approved results/limits remain in EXPLORATION.md, DICE.md, QUESTS.md,
 SPELLS.md and asset ledgers; they do not verify this latest revision.
+
+Latest click-reduction/coloured spell-light revision: source/diff review only for
+UI/timers. Minimal reported-stair-reach and light-barrier/cutaway diagnostics are
+recorded in DICE.md and WALLS.md; no broad regression or performance pass.
+Latest compact spell-result layout and blood pools: source/diff review only;
+Mark retains manual visual/gameplay/refresh verification.
+
+Current Wizard paint/monster-variant batch: offline multi-angle paint/facing
+authoring and source/diff review only. No new browser, portrait-framing, Test
+room, gameplay/save or performance pass. Blood-pool fade and wider fire lighting
+also have source/diff review only. Mark is manually testing.
+
+## Model region painter
+
+The standalone model-painter.html opens neutral imported sculpts and lazily loads
+one local classic asset script at a time. It expands original triangles in their
+original order for per-face regions; view fitting never changes exported source
+identity. A cached offscreen RGB face-ID render limits brush stamps to visible
+surfaces. Invalidate that cache only on camera/model/viewport changes. Never
+apply markings directly to game assets or saves.
+
+Draft key heroquest.paint.v1.<imported-model-id>; export kind
+heroquest-model-paint-regions/version 1 stores source packed-geometry SHA-256,
+counts, palette and faceRegions in original triangle order. Validate all of those
+before restoring/importing. Thirty undo strokes; region renaming/recolouring is
+separate from stroke history. Browser storage failures retain the in-memory map
+and ask for export. Import replaces the current matching map/history. No source
+STLs, geometry or adventure storage are written by the tool.
+
+Brush/P paints, Rotate/R or right/Alt-drag orbits, Shift/middle-drag pans, wheel
+zooms towards the pointer, Ctrl/Cmd-Z undoes and Shift-Z redoes, E erases, Home
+centres. View and zoom buttons also work on touch. Local drafts save after every
+completed stroke; export supplies the mapping for later offline seam refinement.
+The tool is a region marker, not a texture/UV editor; triangle edges are expected.
+
+Latest Wizard revision uses scripts/paint-regions/wizard.json (Mark's original
+export) via scripts/paint_wizard.py. The recipe validates identity/counts/palette,
+fills 580 unmarked source faces over shared surface edges, and refines seams
+without moving geometry. FINISHES assigns natural colours; Mark's export colours
+were region identifiers only. Eye details are preserved; the base is charcoal.
+Offline depth-correct authoring views were reviewed for this export; no new
+browser/gameplay/save checks. Earlier Chrome renders predate this export. The
+painter and manual dice Continue change still have source review only; manual
+browser verification remains with Mark.
+
+Latest icon-only main-view controls: source/diff review only; no browser check.
+
+Body counters in HUD, party rows, piece contexts and combat/spell outcomes use
+HQ.health.body(current, maximum), with one red heart per remaining point and
+black hearts for lost points. Keep numeric role/img labels and hover titles;
+party buttons also include their Body count in their accessible name. Damage
+and healing delta text and original card descriptions remain unchanged. Known
+cell context headings read Tile; hidden cells retain Unexplored space.
+
+Latest compact dice header/footer, hearts and tile naming: source/diff review
+only; Mark retains manual browser verification.

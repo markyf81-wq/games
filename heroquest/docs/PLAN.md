@@ -5,7 +5,7 @@
 Original North American base Game System for GitHub Pages inside this games
 monorepo. One shared browser, 1–4 selected hero miniatures, CPU Zargon, static 3D
 sculpts with whole-piece motion. Keep authentic base quests/cards/items/rules;
-no expansion/remake/fan content. Terrain hiding, shared stairs and broader rock
+no expansion/remake/fan content. Terrain hiding, discounted stair movement and broader rock
 phasing are Mark's documented digital choices, separate from printed wording.
 
 Plain deferred JavaScript, bundled Three.js, local packed assets; no framework,
@@ -15,7 +15,7 @@ notices and other games. CODE-STRUCTURE.md maps current component boundaries.
 ## Current implementation
 
 - The Trial's source-linked map, briefing, monsters/Verag and individual stair exits.
-- Actual 1–4-hero parties, ownership, handoff, movement/action order, shared stairs,
+- Actual 1–4-hero parties, ownership, handoff, movement/action order, discounted four-square stairs,
   doors, discovery, optional realistic LOS, melee and deterministic CPU turns.
 - Twelve original elemental spells, original card artwork/full text, inertial hand,
   board target selection, used-card removal and spell-specific saved effects.
@@ -25,13 +25,19 @@ notices and other games. CODE-STRUCTURE.md maps current component boundaries.
   defeated-piece removal and gliding focus on movement/discovery.
 - Painted furniture/doors/rubble, supplied board/stair art, tall walls/cutaway,
   deterministic room torches, fireplace fire and bounded pooled lighting.
-- Models and invented 32-type Test room, separate from live gameplay practice.
+- Models and invented 36-type Test room, separate from live gameplay practice.
 
-Latest painting, particle, targeting/sandbox/camera and cleanup changes have
-source/offline authoring review only. Mark is manually testing. Historical scoped
-checks are recorded in the relevant docs, not evidence for the latest changes.
+Latest painting, targeting/sandbox/camera and cleanup changes have source/offline
+authoring review only. Mark is manually testing. Subsequent focused spell-effect
+Chrome checks and blocked-square authoring renders are recorded in SPELLS.md and
+WALLS.md; these do not constitute a broad gameplay/performance pass.
 
 ## Next priorities
+
+Requested setting TODO: **Scale difficulty to hero count** (optional, default
+off). Make small parties, especially a solo hero, easier without changing the
+standard original quest by default. Decide the adjustment formula and what is
+scaled before implementation; no automatic encounter/stat scaling exists yet.
 
 1. **Manual spell pass, one card at a time.** Use SANDBOX.md presets/checklist.
    Check targets/cancellation, movement/action timing, resistance, effect expiry,
@@ -45,7 +51,7 @@ checks are recorded in the relevant docs, not evidence for the latest changes.
    a new migration if stored fields change. No hidden information in target hints.
 4. **Complete The Trial and then original campaign.** Genuine quest exceptions,
    remaining base mechanics, rewards/shopping and persistent campaign progression.
-5. **Further models/performance/presentation.** Heroes and monsters await detailed
+5. **Further models/performance/presentation.** Dwarf, Elf and monsters await detailed
    paint; gargoyle wings need assembly. Profile camera/GPU setup/draw calls/shadows
    only with agreed scope. Add a real library thumbnail/catalog entry when playable.
 

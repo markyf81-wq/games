@@ -106,9 +106,10 @@
       }
       case "MOVE": {
         if(next.movement.closed)return reject(state,"You cannot move again after moving and then acting.");
-        const path=T.routes(next,hero).get(command.to);if(!path)return reject(state,!next.movement.rolled?"Roll movement before leaving the stairway.":"Choose an unoccupied highlighted square within your remaining movement.");
+        const path=T.routes(next,hero).get(command.to);if(!path)return reject(state,!next.movement.rolled?"Roll movement first.":"Choose an unoccupied highlighted square within your remaining movement.");
         motion={actorId:hero.id,from:C.cell(hero),path:[]};let interrupted=false;const rock=T.magic(next,hero,"passThroughRock");
         for(const id of path) {
+          if(next.movement.remaining<=0)break;
           const monster=T.monsterAt(next,id);
           if(monster&&!rock&&!T.magic(next,hero,"veilOfMist")){if(!next.discoveredEntities.includes(monster.id))next.discoveredEntities.push(monster.id);interrupted=true;break;}
           const cost=T.movementCost(C.cell(hero),id),[x,row]=T.parse(id);beginMove(next,hero,cost);hero.x=x;hero.row=row;next.movement.remaining-=cost;if(cost)next.movement.started=true;motion.path.push(id);
@@ -120,7 +121,7 @@
           const from=C.cell(hero);motion.path.pop();const to=motion.path.at(-1)||motion.from;
           next.movement.remaining+=T.movementCost(to,from);[hero.x,hero.row]=T.parse(to);
         }
-        if(motion.path.length){const spent=T.routeCost(motion.from,motion.path);log(next,spent?hero.name+" moves "+spent+" space"+(spent===1?"":"s")+".":hero.name+" repositions within the shared stairway.");}
+        if(motion.path.length){const spent=T.routeCost(motion.from,motion.path);log(next,spent?hero.name+" moves "+spent+" space"+(spent===1?"":"s")+".":hero.name+" moves within the stairway.");}
         if(interrupted)log(next,"New ground comes into view. Review the reveal before continuing your movement.");
         if(rock&&next.movement.remaining===0&&T.unsafe(next,hero))trapped(next,hero);
         break;
@@ -224,8 +225,9 @@
     const monsters=state.monsters.filter(m=>C.alive(m)&&known.has(m.id)&&(!state.settings.realisticLOS||seenFigures.has(m.id))).map(m=>({...m,currentlyVisible:seenFigures.has(m.id)}));
     const spellTargets=controllable?[...state.heroes.filter(C.inPlay),...monsters,...doors].filter(target=>HQ.spells.book(hero).some(card=>!HQ.spells.reason(state,hero,card,target,card.id==="genie"&&doors.some(door=>door.id===target.id)?"door":"attack"))).map(target=>target.id):[];
     const focusFigure=state.phase==="monster-turn"||state.phase==="defeat"?monsters.find(m=>m.id===(state.lastReport?.attackerId))||hero:hero;
+    const fallen=[...state.heroes,...state.monsters].filter(figure=>figure.body===0&&!figure.trapped&&(state.heroes.includes(figure)||known.has(figure.id))&&state.discoveredCells.includes(C.cell(figure))).map(({id,x,row})=>({id,x,row}));
     return {heroes:state.heroes.filter(C.inPlay),activeHero:hero,focusFigure,phase:state.phase,visibleCells:view.cells,discoveredCells:state.discoveredCells,
-      doors,monsters,furniture:Q.furniture.filter(f=>known.has(f.id)),reachable:[...reachable.keys()],attackTargets:C.targets(state,hero),spellTargets,
+      doors,monsters,fallen,furniture:Q.furniture.filter(f=>known.has(f.id)),reachable:[...reachable.keys()],attackTargets:C.targets(state,hero),spellTargets,
       blindMovement:controllable&&state.movement.rolled&&!state.movement.closed&&state.movement.remaining>0&&T.magic(state,hero,"passThroughRock"),
       adjacentDoors:controllable&&!(T.magic(state,hero,"passThroughRock")&&T.unsafe(state,hero))?doors.filter(d=>!d.open&&T.endpoints(d).includes(C.cell(hero))):[],
       discoveredRooms:state.discoveredRooms.length,totalRooms:Q.rooms.length};

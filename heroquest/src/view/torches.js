@@ -4,12 +4,12 @@
   // Decorative wall/hearth fire: never add it to occupancy or sight data.
   const items=HQ.placeQuestTorches(HQ.trial,HQ.board);
   HQ.createTorchLighting=function() {
-    const records=new Map(),frustum=new T.Frustum(),matrix=new T.Matrix4(),sphere=new T.Sphere(new T.Vector3(),4.8);
+    const records=new Map(),frustum=new T.Frustum(),matrix=new T.Matrix4(),sphere=new T.Sphere(new T.Vector3(),6);
     // Stable light/shadow counts prevent new shader variants whenever a camera
     // reveals another torch. Reassign eight reusable lights instead.
     const root=new T.Group(),pool=Array.from({length:8},(_,i)=>{
-      const light=new T.PointLight(0xffb45d,0,4.8,2);light.castShadow=i===0;
-      light.shadow.mapSize.set(512,512);light.shadow.radius=4;light.shadow.camera.near=.12;light.shadow.camera.far=5.2;light.shadow.normalBias=.035;light.shadow.bias=-.00015;root.add(light);return light;
+      const light=new T.PointLight(0xffb45d,0,6,2);light.castShadow=i===0;
+      light.shadow.mapSize.set(512,512);light.shadow.radius=4;light.shadow.camera.near=.12;light.shadow.camera.far=6.8;light.shadow.normalBias=.035;light.shadow.bias=-.00015;root.add(light);return light;
     });
     const flameGeometry=new T.SphereGeometry(1,16,12);
     const vertices=flameGeometry.attributes.position;
@@ -63,7 +63,7 @@
       const halo=new T.Sprite(new T.SpriteMaterial({map:haloTexture,color:0xffce7b,transparent:true,opacity:.52,blending:T.AdditiveBlending,depthWrite:false,toneMapped:false}));
       halo.position.copy(flame.position);halo.scale.set(1.05,1.05,1);mount.add(halo);
       const particles=new T.InstancedMesh(particleGeometry,particleMaterial,24);particles.instanceMatrix.setUsage(T.DynamicDrawUsage);particles.frustumCulled=false;particles.userData.visualEffect=true;particles.raycast=()=>{};mount.add(particles);
-      const light=new T.Object3D();light.distance=4.8;light.position.set(0,1.31,.41);mount.add(light);
+      const light=new T.Object3D();light.distance=6;light.position.set(0,1.31,.41);mount.add(light);
       const record={model,flame,halo,particles,light,phase:records.size*2.73};records.set(item.id,record);updateParticles(record,null,0);return model;
     }
     function registerFireplace(item,model) {
@@ -84,7 +84,7 @@
       const particles=new T.InstancedMesh(particleGeometry,particleMaterial,72);particles.instanceMatrix.setUsage(T.DynamicDrawUsage);particles.frustumCulled=false;mount.add(particles);
       // Fire cannot be selected independently or inflate the fireplace outline.
       mount.traverse(part=>{part.userData.visualEffect=true;part.raycast=()=>{};part.castShadow=false;});
-      const light=new T.Object3D();light.distance=5.2;light.position.set(0,.3,.3);mount.add(light);
+      const light=new T.Object3D();light.distance=6.5;light.position.set(0,.3,.3);mount.add(light);
       const record={model,flame,halo,particles,light,hearth:true,phase:records.size*2.73};records.set(item.id,record);updateParticles(record,null,0);
     }
     function update(camera,target,time,steady=false) {
@@ -100,7 +100,7 @@
         if(lit)nearby.push({id,record,position:sphere.center.clone(),distance:sphere.center.distanceToSquared(target)});
         const t=(time||0)/1000+phase;
         const flicker=steady?1:1+Math.sin(t*6.1)*.055+Math.sin(t*10.7+.8)*.035+Math.sin(t*17.3)*.018;
-        light.intensity=(record.hearth?10:8)*flicker;
+        light.intensity=(record.hearth?12:10)*flicker;
         flame.scale.set(1+(flicker-1)*.35,flicker,1+(flicker-1)*.35);flame.rotation.z=steady?0:Math.sin(t*4.7)*.055;
         halo.material.opacity=.48+(flicker-1)*.7;
       }
@@ -115,7 +115,7 @@
       }
       active=nearby.length>0;return changed;
     }
-    return Object.freeze({root,make,registerFireplace,update,
+    return Object.freeze({root,lights:pool,make,registerFireplace,update,
       itemsFor(projection){return items.filter(item=>projection.discoveredCells.includes(HQ.topology.key(item.x,item.row)));},
       setEnabled(value){enabled=Boolean(value);},get enabled(){return enabled;},get active(){return active;}
     });

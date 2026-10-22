@@ -20,7 +20,7 @@
   // An older outside-origin save may return to the playfield, but no route
   // starting on playable floor can step out of it. Only floor endpoints survive.
   function rockNeighbors(id){const [x,row]=parse(id);return [[x,row-1],[x+1,row],[x,row+1],[x-1,row]].map(p=>key(...p)).filter(next=>floor.has(id)?floor.has(next):rockBounds(next));}
-  const spaceCells=id=>stairs.has(id)?[...stairs]:[id];
+  const spaceCells=id=>[id];
   const movementCost=(from,to)=>stairs.has(from)&&stairs.has(to)?0:1;
   const insideBoard=id=>{const [x,row]=parse(id);return key(x,row)===id&&Number.isInteger(x)&&Number.isInteger(row)&&x>=0&&row>=0&&x<HQ.board.columns&&row<HQ.board.rows;};
   const solid=id=>!floor.has(id)||blocked.has(id);
@@ -34,13 +34,12 @@
   }
   function approachCells(item,type,state) {
     if(type==="door")return endpoints(item);
-    if(type==="hero"&&stairs.has(key(item.x,item.row)))return [...stairs];
     const cells=[];
     for(let row=item.row;row<item.row+(item.depth||1);row++)for(let x=item.x;x<item.x+(item.width||1);x++)cells.push(key(x,row));
     if(item.kind==="stairs")return cells;
     return [...new Set([...cells,...cells.flatMap(id=>neighbors(id).filter(next=>!cells.includes(next)&&connected(id,next,state)))])];
   }
-  function occupiedHero(state,id,except) {return state.heroes.some(h=>h.body>0&&!h.exit&&h.id!==except&&(key(h.x,h.row)===id||stairs.has(id)&&stairs.has(key(h.x,h.row))));}
+  function occupiedHero(state,id,except) {return state.heroes.some(h=>h.body>0&&!h.exit&&h.id!==except&&key(h.x,h.row)===id);}
   function monsterAt(state,id,knownOnly=false,except=null) {return (knownOnly?Object.values(state.monsterMemory):state.monsters.filter(m=>m.body>0)).find(m=>m.id!==except&&key(m.x,m.row)===id);}
   function canStop(state,id,actorId) {return floor.has(id)&&!furniture.has(id)&&!blocked.has(id)&&!monsterAt(state,id,true)&&(!occupiedHero(state,id,actorId)||stairs.has(id));}
   const unsafe=(state,actor)=>solid(key(actor.x,actor.row))||furniture.has(key(actor.x,actor.row))||Boolean(monsterAt(state,key(actor.x,actor.row)))||(!stairs.has(key(actor.x,actor.row))&&occupiedHero(state,key(actor.x,actor.row),actor.id));
@@ -57,6 +56,8 @@
     while(queue.length) {
       queue.sort((a,b)=>a.cost-b.cost||a.steps-b.steps);
       const entry=queue.shift(),here=entry.id,path=paths.get(here);if(entry.cost!==costs.get(here)||entry.steps!==path.length)continue;
+      // Even free stair steps require a rolled movement point still available.
+      if(entry.cost>=budget)continue;
       for(const next of rock?rockNeighbors(here):neighbors(here)) {
         const cost=entry.cost+movementCost(here,next),steps=path.length+1;
         if(cost>budget||!rock&&(!known.has(next)||!connected(here,next,state)||furniture.has(next)||(monsterAt(state,next,true)&&!magic(state,actor,"veilOfMist"))||blocked.has(next)))continue;
@@ -68,13 +69,14 @@
   }
   // Split one known route at its furthest legal stopping square this turn.
   // Intermediate friendly-occupied squares may be traversed, never selected as
-  // the partial endpoint. Use weighted costs so shared stair anchors stay free.
+  // the partial endpoint. Use weighted costs for discounted internal stair steps.
   function routePlan(state,actor,to,paths=routes(state,actor,{budget:floor.size})) {
     const path=paths.get(to);if(!path)return null;
     const from=key(actor.x,actor.row),canMove=state.phase==="hero-turn"&&!state.pending&&!state.movement.closed&&actor.body>0&&!actor.exit&&state.heroes[state.turnIndex]?.id===actor.id;
     const budget=state.movement.rolled?state.movement.remaining:0;
     let here=from,cost=0,reachableSteps=0;
     if(canMove)for(let i=0;i<path.length;i++) {
+      if(cost>=budget)break;
       cost+=movementCost(here,path[i]);here=path[i];if(cost>budget)break;
       if(routeStop(state,here,actor))reachableSteps=i+1;
     }

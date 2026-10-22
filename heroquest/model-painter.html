@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Model painter · HeroQuest</title>
+  <link rel="stylesheet" href="model-painter.css">
+  <script defer src="vendor/three-0.186.1.js"></script>
+  <script defer src="src/tools/model-painter.js"></script>
+</head>
+<body>
+  <header>
+    <a href="index.html">← HeroQuest</a><h1>Model painter</h1>
+    <label class="model-label">Model <select id="model" aria-label="Model"></select></label>
+    <button id="import">Import markings</button><input id="import-file" type="file" accept=".json,application/json" hidden>
+    <button id="export" class="primary" disabled>Export markings ↓</button>
+  </header>
+  <main>
+    <aside>
+      <div class="mode" aria-label="Tool"><button id="paint" aria-pressed="true">Brush <kbd>P</kbd></button><button id="rotate" aria-pressed="false">Rotate <kbd>R</kbd></button></div>
+      <label class="size-label" for="size">Brush size <output id="size-value">24 px</output></label>
+      <input id="size" type="range" min="3" max="90" value="24">
+      <h2>Paint regions</h2><div id="palette" class="palette"></div>
+      <div class="region-edit"><input id="region-name" aria-label="Region name" maxlength="50"><input id="region-colour" type="color" aria-label="Region colour"></div>
+      <button id="add-region" class="quiet">+ Add region</button>
+      <div class="edit-actions"><button id="undo" disabled>Undo stroke</button><button id="redo" disabled>Redo</button></div>
+      <button id="fill" class="quiet">Fill unmarked with this region</button>
+      <button id="clear" class="quiet">Clear all markings</button>
+      <label class="check"><input id="show-colours" type="checkbox" checked> Show region colours</label>
+      <p class="help">Brush marks only the visible surface. Right-drag to rotate; Shift-drag to pan. Scroll to zoom towards the pointer.</p>
+      <p class="help">Mark the areas roughly—I can refine the edges afterwards. Your markings save in this browser; export the JSON when ready.</p>
+    </aside>
+    <section id="stage" aria-label="3D painting area">
+      <canvas id="canvas" tabindex="0" aria-label="Model painting canvas. P brush, R rotate, Shift drag pan, wheel zoom, Control Z undo."></canvas>
+      <div id="brush-cursor" hidden></div>
+      <nav class="views" aria-label="Camera views"><button data-view="0">Front</button><button data-view="270">Left</button><button data-view="180">Back</button><button data-view="90">Right</button><button data-view="above">Above</button><button id="home">Centre</button><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button></nav>
+      <div class="stage-status"><span id="progress">Loading Wizard…</span><span id="message" role="status" aria-live="polite"></span></div>
+    </section>
+  </main>
+</body>
+</html>

@@ -14,6 +14,8 @@
     elf:{asset:"elf",baseWidth:.82,rotation:Math.PI/2,colour:0xa74b3b},
     wizard:{asset:"wizard",baseWidth:.82,rotation:Math.PI/2,colour:0x8c3c39},
     goblin:{asset:"goblin-sword",baseWidth:.78,rotation:Math.PI,colour:0x5b7c43},
+    "goblin-dagger":{asset:"goblin-dagger",baseWidth:.78,rotation:Math.PI,colour:0x5b7c43},
+    "goblin-axe":{asset:"goblin-axe",baseWidth:.78,rotation:Math.PI,colour:0x5b7c43},
     skeleton:{asset:"skeleton",baseWidth:.8,rotation:-Math.PI/2,colour:0xc7c2a8},
     zombie:{asset:"zombie",baseWidth:.8,rotation:0,colour:0x9ca388},
     mummy:{asset:"mummy",baseWidth:.8,rotation:Math.PI/2,colour:0xc4baa0},
@@ -33,6 +35,8 @@
     tomb:{asset:"tomb-bottom",parts:["tomb-top"],width:2.86,rotation:Math.PI/2,colour:0x8e9289},
     blocked:{asset:"blocked-1x1",width:.99,rotation:0,colour:0x636d60},
     orc:{asset:"orc-cleaver",baseWidth:.82,rotation:Math.PI,colour:0x436940},
+    "orc-mace":{asset:"orc-mace",baseWidth:.82,rotation:Math.PI,colour:0x436940},
+    "orc-sword":{asset:"orc-sword",baseWidth:.82,rotation:Math.PI,colour:0x436940},
     table:{asset:"table",width:2.86,rotation:Math.PI/2,colour:0x75482e},
     door:{asset:"closed-door",width:1.23,rotation:0,colour:0x8b8777}
   });

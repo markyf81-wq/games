@@ -35,17 +35,19 @@ def load(key):
  f=np.frombuffer(base64.b64decode(asset['indices']),'<u2' if asset['indexBytes']==2 else '<u4').reshape(-1,3)
  return asset,np.concatenate([p,n],axis=1)[f]
 
-def cut(tris,labels,material,field):
- values=field(tris[:,:,:3].reshape(-1,3)).reshape(-1,3)
+def cut(tris,labels,material,field,attribute=None):
+ # Optional vertex field lets authored surface regions survive later seam cuts.
+ def sample(t):return field(t[:,:,:3].reshape(-1,3)).reshape(-1,3) if attribute is None else t[:,:,attribute]
+ values=sample(tris)
  inside=values>=0;whole=inside.all(1);outside=(~inside).all(1)
  # Subdivide a triangle when it encloses a small fitting without a corner in it.
- middle=field(tris[:,:,:3].mean(1))>=0
+ middle=(field(tris[:,:,:3].mean(1)) if attribute is None else values.mean(1))>=0
  enclosed=(whole&~middle)|(outside&middle)
  if enclosed.any():
   centre=tris[enclosed].mean(1)
   pieces=np.concatenate([np.stack([tris[enclosed,i],tris[enclosed,(i+1)%3],centre],axis=1) for i in range(3)])
   tris=np.concatenate([tris[~enclosed],pieces]);labels=np.concatenate([labels[~enclosed],np.tile(labels[enclosed],3)])
-  values=field(tris[:,:,:3].reshape(-1,3)).reshape(-1,3);inside=values>=0;whole=inside.all(1);outside=(~inside).all(1)
+  values=sample(tris);inside=values>=0;whole=inside.all(1);outside=(~inside).all(1)
  keep=whole|outside;kept=labels[keep].copy();kept[whole[keep]]=material
  output=[tris[keep]];colours=[kept]
  for tri,values,old in zip(tris[~keep],values[~keep],labels[~keep]):

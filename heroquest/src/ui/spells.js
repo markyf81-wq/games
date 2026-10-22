@@ -28,9 +28,18 @@
     async function chooseTarget() {
       if(targets.disabled||frame||gesture?.locked)return;
       const card=HQ.spellData.byId[chosen],legal=figures(card).filter(target=>!HQ.spells.reason(state(),caster(),card,target,choiceMode()));
-      const selected=await onChooseTarget({dialogId:"spell-dialog",title:card.name+" · Choose "+(card.id==="genie"&&choiceMode()==="door"?"a door":"a "+card.target),targets:legal.map(target=>({type:"piece",id:target.id,label:target.name}))});
-      if(selected)targetId=selected.id;
-      populateTargets();targets.focus({preventScroll:true});
+      const selected=await onChooseTarget({dialogId:"spell-dialog",reopenOnPick:false,title:card.name+" · Choose "+(card.id==="genie"&&choiceMode()==="door"?"a door":"a "+card.target),targets:legal.map(target=>({type:"piece",id:target.id,label:target.name}))});
+      if(selected){targetId=selected.id;populateTargets();if(castSelected())return;HQ.dialogs.show("spell-dialog");}
+      else populateTargets();
+      targets.focus({preventScroll:true});
+    }
+    function castSelected() {
+      const card=HQ.spellData.byId[chosen],target=card&&figures(card).find(figure=>figure.id===targetId);
+      if(!target||HQ.spells.reason(state(),caster(),card,target,choiceMode()))return false;
+      const command={type:"CAST_SPELL",spellId:chosen,targetId,mode:choiceMode()};
+      HQ.dialogs.close("spell-dialog");
+      if(onCast(command)===false){HQ.dialogs.show("spell-dialog");populateTargets();return false;}
+      return true;
     }
     function layout() {
       if(!book.length)return;
@@ -163,7 +172,7 @@
     reduced.addEventListener("change",cancelInteraction);
     document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")cancelInteraction();});
     mode.addEventListener("change",()=>{targetId=null;populateTargets();});targets.addEventListener("click",chooseTarget);
-    cast.addEventListener("click",()=>{if(cast.disabled)return;if(!targetId){chooseTarget();return;}const command={type:"CAST_SPELL",spellId:chosen,targetId,mode:choiceMode()};HQ.dialogs.close("spell-dialog");onCast(command);});
+    cast.addEventListener("click",()=>{if(cast.disabled)return;if(!targetId){chooseTarget();return;}castSelected();});
     return Object.freeze({show,close:()=>HQ.dialogs.close("spell-dialog")});
   };
 })();

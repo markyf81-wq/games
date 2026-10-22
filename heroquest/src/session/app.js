@@ -137,7 +137,6 @@
   }
   function modelMoveOption(item) {
     const hero=projection.activeHero;
-    if((item.kind==="stairs"||item.type==="hero"&&T.stairs.has(T.key(item.x,item.row)))&&T.stairs.has(T.key(hero.x,hero.row)))return {label:"Move here",primary:true,disabled:true,reason:"Your hero is already on the shared stairway space."};
     if(T.magic(state,hero,"passThroughRock")&&item.type!=="door"&&item.kind!=="stairs") {
       const id=T.key(item.x,item.row),option=moveOption(id);
       if(!option.disabled)option.reason="Pass through this model. Reach a free playable square before your last move or ending your turn.";
@@ -167,7 +166,7 @@
   function requestMovementRoll() {
     context.close();dicePrompt={type:"movement"};
     const count=projection.activeHero.effects.swiftWind?4:2;
-    diceTray.show({id:"movement-ready",kind:"movement",count,title:"Movement",kicker:projection.activeHero.owner+" · "+projection.activeHero.name,figures:[{...projection.activeHero,role:"Movement"}],description:count+" red dice",automatic:false,rolled:false,cancellable:true});
+    diceTray.show({id:"movement-ready",kind:"movement",count,title:"Movement",kicker:projection.activeHero.owner+" · "+projection.activeHero.name,figures:[{...projection.activeHero,role:"Movement"}],description:count+" red dice",automatic:true,autoRollDelay:0,rolled:false});
   }
   function rollDice() {
     if(dicePrompt){animateDice=true;return dispatch(dicePrompt.type==="movement"?{type:"ROLL_MOVEMENT"}:{type:"ATTACK",targetId:dicePrompt.targetId});}
@@ -203,10 +202,11 @@
   function openCell(id) {
     if(boardChoice?.pick({type:"cell",id}))return;
     if(!state||state.pending||moving||!projection.discoveredCells.includes(id)&&!(projection.blindMovement&&T.floor.has(id)))return;
-    if(T.stairs.has(id)){const stairs=projection.furniture.find(f=>f.kind==="stairs");if(stairs){openPiece({...stairs,type:"furniture"});return;}}
-    const [x,row]=T.parse(id),point=view.setSelection({type:"cell",id});
+    const point=view.setSelection({type:"cell",id});
     const known=projection.discoveredCells.includes(id),rock=T.magic(state,projection.activeHero,"passThroughRock");
-    context.show({name:known?"Column "+(x+1)+", row "+(row+1):"Unexplored space",kind:rock?"PASS THROUGH ROCK":"DUNGEON SQUARE",description:rock?"Pass through any object. Reach a free playable square before your last move or ending your turn.":T.blocked.has(id)?HQ.pieces.blocked.description:"A square of explored dungeon floor.",actions:[moveOption(id)]},point);
+    const stair=T.stairs.has(id),actions=[moveOption(id)];
+    if(stair)actions.push({label:"Leave dungeon",disabled:Boolean(HQ.quest.exitReason(state,projection.activeHero)),reason:HQ.quest.exitReason(state,projection.activeHero)||"",run:async()=>{if(await HQ.questUI.confirmExit(state))dispatch({type:"EXIT_QUEST"});}});
+    context.show({name:known?"Tile":"Unexplored space",kind:rock?"PASS THROUGH ROCK":stair?"STAIRWAY":"DUNGEON SQUARE",description:rock?"Pass through any object. Reach a free playable square before your last move or ending your turn.":stair?"Movement within the stairs is free while you have movement remaining.":T.blocked.has(id)?HQ.pieces.blocked.description:"A square of explored dungeon floor.",actions},point);
     previewRoute(id,true);
   }
   function previewRoute(id,select=false) {
@@ -226,7 +226,7 @@
     if(!state||state.pending||moving||item.type==="wall")return;
     const point=view.setSelection({type:"piece",id:item.id}),actions=[];let details="";
     if(item.type==="monster") {
-      details="Body "+item.body+" / "+item.maxBody+" · Attack "+item.attack+" · Defend "+HQ.combat.defence(item)+" · Move "+item.movement+(item.effects.sleep?" · Asleep":"");
+      details="Attack "+item.attack+" · Defend "+HQ.combat.defence(item)+" · Move "+item.movement+(item.effects.sleep?" · Asleep":"");
       actions.push(proximityAction(item,{label:"Attack",ready:()=>projection.attackTargets.some(m=>m.id===item.id),
         blocked:state.actionUsed?"Your action has already been used this turn.":"",
         accept:id=>{const [x,row]=T.parse(id);return HQ.combat.adjacent(state,{...projection.activeHero,x,row},item);},run:()=>requestAttack(item)}));
@@ -234,7 +234,7 @@
       actions.push(proximityAction(item,{label:"Open door",ready:()=>projection.adjacentDoors.some(d=>d.id===item.id),
         blocked:item.open?"This door is already open and stays open.":"",reason:"Opening a door is free.",run:()=>dispatch({type:"OPEN_DOOR",id:item.id})}));
     } else if(item.type==="hero") {
-      details=item.owner+" · Body "+item.body+" / "+item.maxBody+" · Attack "+HQ.combat.attack(item)+" · Defend "+HQ.combat.defence(item)+(item.effects.rockSkin?" · Rock Skin":"")+(item.effects.courage?" · Courage":"");
+      details=item.owner+" · Attack "+HQ.combat.attack(item)+" · Defend "+HQ.combat.defence(item)+(item.effects.rockSkin?" · Rock Skin":"")+(item.effects.courage?" · Courage":"");
     }
     if(item.type==="monster"&&item.effects.tempest)details+=" · Tempest";
     if(["hero","monster","door"].includes(item.type)&&HQ.spells.isCaster(projection.activeHero))actions.push({label:"Cast spell",disabled:!projection.spellTargets.includes(item.id),

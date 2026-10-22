@@ -24,5 +24,5 @@
     } else throw new Error("No generated prop is configured for "+kind+".");
     return group;
   }
-  HQ.models=Object.freeze({makeProp,make(kind,options){return HQ.stlModels.make(kind,options);},material,box});
+  HQ.models=Object.freeze({makeProp,make(kind,options){return kind==="blocked"?HQ.blockedScenery.make():HQ.stlModels.make(kind,options);},material,box});
 })();

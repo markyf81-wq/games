@@ -40,6 +40,8 @@
     const torchLighting=HQ.createTorchLighting();let torchTimer=0,ambientLightLevel=26;
     scene.add(torchLighting.root);
     const wallLayer=HQ.createDungeonWalls();
+    const lightBarriers=HQ.createLightBarriers();
+    const bloodPools=HQ.createBloodPools(scene);
     const ambient=new T.HemisphereLight(0xe9edda,0x3f4a38,1.35);scene.add(ambient);
     const sun=new T.DirectionalLight(0xffe5bd,3.2);sun.position.set(-10,23,9);sun.castShadow=true;
     sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-24,right:24,top:21,bottom:-21,near:1,far:70});sun.shadow.normalBias=.035;sun.shadow.bias=-.00015;scene.add(sun);
@@ -54,7 +56,7 @@
       for(const {model} of entities.values())for(const material of model.userData.paintedMaterials||[])
         if(material.metalness>.3)material.envMapIntensity=enabled ? ambientLightLevel*.08/26 : .75;
       host.closest(".tabletop").classList.toggle("torch-lit",enabled);
-      const button=document.getElementById("dynamic-lighting");button.setAttribute("aria-pressed",String(enabled));button.textContent="Dynamic lighting: "+(enabled?"On":"Off");
+      const button=document.getElementById("dynamic-lighting");button.setAttribute("aria-pressed",String(enabled));button.setAttribute("aria-label","Dynamic lighting: "+(enabled?"On":"Off"));button.title=button.getAttribute("aria-label");
       document.getElementById("light-level-setting").hidden=!enabled;
       renderer.shadowMap.needsUpdate=true;requestRender();
     }
@@ -89,30 +91,30 @@
     function requestRender(){clearTimeout(torchTimer);torchTimer=0;if(!frame&&contextReady&&document.visibilityState!=="hidden")frame=requestAnimationFrame(draw);}
     function updateCamera(){cameraMotion.project();}
     function draw(time){
-      frame=0;const wasMoving=motion.active;motion.update(time);spellEffects.update(time,renderer.domElement.height);const cameraMoving=!combatCamera.active&&cameraMotion.update(time);updateCamera();
+      frame=0;const wasMoving=motion.active;motion.update(time);bloodPools.update(time,reducedMotion.matches);spellEffects.update(time,renderer.domElement.height);const cameraMoving=!combatCamera.active&&cameraMotion.update(time);updateCamera();
       combatCamera.update(time,host.clientWidth/Math.max(1,host.clientHeight));
       const renderCamera=combatCamera.camera,renderTarget=combatCamera.focus;
       const focusModel=currentCutawayHero&&entities.get(currentCutawayHero.id)?.model,focus=spellFocus||(focusModel?.visible?focusModel.position.clone().add(new T.Vector3(0,.65,0)):null);
       const figurePoints=[...entities.values()].filter(entry=>(entry.type==="hero"||entry.type==="monster")&&entry.model.visible).map(entry=>entry.model.position.clone().add(new T.Vector3(0,.65,0)));
       const wallChanged=wallLayer.update(renderCamera,focus,time,reducedMotion.matches,figurePoints),torchChanged=torchLighting.update(renderCamera,renderTarget,time,reducedMotion.matches);
+      lightBarriers.update(renderCamera,[...torchLighting.lights,spellEffects.light]);
       if(wallChanged||torchChanged||wasMoving)renderer.shadowMap.needsUpdate=true;
       combatCamera.render(()=>{renderer.render(scene,renderCamera);glow.render(renderCamera);});if(selected)onAnchor(anchor(selected));
-      if(motion.active||spellEffects.active||combatCamera.animating||wallLayer.animating||cameraMoving)requestRender();else if(torchLighting.active&&!reducedMotion.matches)torchTimer=setTimeout(requestRender,34);
+      if(motion.active||bloodPools.animating||spellEffects.active||combatCamera.animating||wallLayer.animating||cameraMoving)requestRender();else if(torchLighting.active&&!reducedMotion.matches)torchTimer=setTimeout(requestRender,34);
     }
     function resize(){renderer.setSize(host.clientWidth,host.clientHeight,false);requestRender();}
     function world(id,y=.075){const [x,row]=Topo.parse(id);return new T.Vector3(x+.5-13,y,row+.5-9.5);}
     const refKey=ref=>ref?ref.type+":"+ref.id:"";
-    const selectable=entry=>Boolean(entry&&entry.type!=="wall"&&entry.model.visible);
+    const selectable=entry=>Boolean(entry&&entry.type!=="wall"&&entry.type!=="blocked"&&entry.model.visible);
     function known(ref){return ref&&(ref.type==="cell"?knownCells.has(ref.id)||current?.blindMovement&&Topo.floor.has(ref.id):selectable(entities.get(ref.id)));}
     function inReach(ref){
       const reachable=reachableCells;
-      if(ref.type==="cell")return Topo.stairs.has(ref.id)&&Topo.stairs.has(Topo.key(current.activeHero.x,current.activeHero.row))?false:reachable.has(ref.id);
+      if(ref.type==="cell")return reachable.has(ref.id);
       const entry=entities.get(ref.id),item=entry.item;
       if(entry.type==="monster"&&current.attackTargets.some(m=>m.id===item.id))return true;
       if(current.spellTargets?.includes(item.id))return true;
       if(entry.type==="door"&&current.adjacentDoors.some(d=>d.id===item.id))return true;
       if(entry.type==="hero"&&item.id===current.activeHero.id)return false;
-      if(entry.type==="hero"&&Topo.stairs.has(Topo.key(item.x,item.row))&&Topo.stairs.has(Topo.key(current.activeHero.x,current.activeHero.row)))return false;
       if(item.kind==="stairs"&&Topo.stairs.has(Topo.key(current.activeHero.x,current.activeHero.row)))return false;
       // Movement reach for a model means reaching its square or a free square
       // beside its footprint, through an open edge. Camera actions do not count.
@@ -122,7 +124,7 @@
       const targets=[];
       if(boardChoices) {
         for(const ref of boardChoices.values())if(interactive&&known(ref))targets.push(ref.type==="cell"?{point:world(ref.id,.17),reachable:true}:{model:entities.get(ref.id).model,reachable:true});
-      } else for(const [ref,isSelected] of [[selected,true],[hovered,false]])if(interactive&&known(ref)&&(isSelected||refKey(ref)!==refKey(selected)))targets.push(ref.type==="cell"?{point:world(ref.id,.17),reachable:inReach(ref)}:{model:entities.get(ref.id).model,reachable:inReach(ref)});
+      } else for(const [ref,isSelected] of [[selected,true],[hovered,false]])if(interactive&&known(ref)&&(isSelected||refKey(ref)!==refKey(selected)))targets.push(ref.type==="cell"?{point:world(ref.id,Topo.stairs.has(ref.id)?.21:.17),reachable:inReach(ref)}:{model:entities.get(ref.id).model,reachable:inReach(ref)});
       glow.setTargets(targets);requestRender();
     }
     function setBoardChoices(refs) {
@@ -148,13 +150,14 @@
     function makeEntity(item,type) {
       let model;
       if(type==="wall")model=wallLayer.make(item);
+      else if(type==="blocked")model=wallLayer.makeBlocked(item);
       else if(type==="torch")model=torchLighting.make(item);
       else if(type==="door")model=M.make(item.open?"open-door":"door");
       else if(item.kind==="stairs")model=M.makeProp(item.kind);
       else {
         const sideways=Math.abs(Math.sin(item.rotation||0))>.5;
         const options=type==="furniture"?{width:sideways?item.depth:item.width,depth:sideways?item.width:item.depth}:{};
-        model=M.make(item.kind,options);
+        model=M.make(type==="monster"?HQ.monsterModel(item.kind,item.id):item.kind,options);
       }
       if(model.userData.paintedMaterials)sourceReflections(model.userData.paintedMaterials);
       if(type==="furniture"&&item.kind==="fireplace")torchLighting.registerFireplace(item,model);
@@ -181,6 +184,8 @@
         entry.item=item;entry.model.visible=true;position(entry.model,item,type);
       }
       for(const [id,entry] of entities)if(!wanted.has(id))entry.model.visible=false;
+      bloodPools.sync(projection.fallen||[],defeatedFigure?.id);
+      lightBarriers.setProjection(projection);lightBarriers.bind(scene);
       pickable=[...entities].filter(([,entry])=>selectable(entry));
       const hero=projection.focusFigure||projection.activeHero;ring.visible=["hero-turn","monster-turn"].includes(projection.phase)&&hero.body>0&&!hero.exit;ring.position.copy(world(Topo.key(hero.x,hero.row),.162));
       const newMark=hero.id+":"+hero.x+","+hero.row;if(follow&&newMark!==activeMark&&!preserveCamera&&!combatCamera.active)target.copy(world(Topo.key(hero.x,hero.row),.4));activeMark=newMark;
@@ -199,7 +204,9 @@
     function zoom(factor){if(combatCamera.active)return;setHover(null);halfHeight=T.MathUtils.clamp(halfHeight/factor,1.8,20);requestRender();}
     function view(overhead){if(combatCamera.active)return;elevation=overhead?Math.PI/2-.001:.91;if(overhead)yaw=0;document.getElementById("view-overhead").setAttribute("aria-pressed",String(overhead));document.getElementById("view-tabletop").setAttribute("aria-pressed",String(!overhead));requestRender();}
     function pickTarget(event){if(!current||motion.active||combatCamera.active||!interactive)return null;const rect=canvas.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);updateCamera();raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(pickable.filter(([id])=>choiceAllowed({type:"piece",id})).map(([,entry])=>entry.model),true);
-      for(const hit of hits){if(!hit.object.visible)continue;let object=hit.object;while(object&&!object.userData.entityId)object=object.parent;if(!object)continue;const entry=entities.get(object.userData.entityId);return {type:"piece",id:entry.item.id};}
+      for(const hit of hits){if(!hit.object.visible)continue;let object=hit.object;while(object&&!object.userData.entityId)object=object.parent;if(!object)continue;const entry=entities.get(object.userData.entityId);
+        if(entry.item.kind==="stairs"&&!boardChoices){const id=Topo.key(Math.floor(hit.point.x+13),Math.floor(hit.point.z+9.5));if(Topo.stairs.has(id))return {type:"cell",id};}
+        return {type:"piece",id:entry.item.id};}
       const tiles=raycaster.intersectObjects(terrain.floors,false);for(const hit of tiles){const id=hit.object.userData.cells[hit.instanceId];if(knownCells.has(id)&&choiceAllowed({type:"cell",id}))return {type:"cell",id};}
       if(current.blindMovement&&!boardChoices) {
         const point=raycaster.ray.intersectPlane(new T.Plane(new T.Vector3(0,1,0),-.15),new T.Vector3());

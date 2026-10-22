@@ -4,11 +4,18 @@
   function dicePanel(label,rolls,note,figure) {
     const panel=document.createElement("section"),heading=document.createElement("h3"),dice=document.createElement("div"),text=document.createElement("p");panel.className="combat-roll";heading.textContent=label;dice.className="combat-dice";
     if(rolls.length)rolls.forEach(kind=>dice.append(HQ.dieFaces.combat(kind)));else {const empty=document.createElement("span");empty.textContent="No defence needed";empty.className="combat-no-roll";dice.append(empty);}
-    const header=document.createElement("div");header.className="combat-figure";if(figure)header.append(HQ.portraits.image(figure.kind,figure.name));header.append(heading);
+    const header=document.createElement("div");header.className="combat-figure";if(figure)header.append(HQ.portraits.image(figure.kind,figure.name,figure.id));header.append(heading);
     text.textContent=note;panel.append(header,dice,text);return panel;
+  }
+  function bodySummary(report) {
+    const row=document.createElement("p"),name=document.createElement("span");row.className="body-summary";
+    name.textContent=report.defenderName+(report.defeated?" defeated":"");row.append(name);
+    if(Number.isFinite(report.maxBody))row.append(HQ.health.body(report.bodyAfter,report.maxBody));
+    return row;
   }
   function render(state) {
     const content=$("combat-content");content.replaceChildren();const intro=state.pending?.type==="monster-intro",report=state.lastReport;
+    $("combat-dialog").dataset.reportType=intro?"intro":report.type;
     $("combat-kicker").textContent="ROUND "+state.round+" · "+(intro||state.phase==="monster-turn"?"ZARGON’S TURN":"COMBAT");
     if(intro) {
       $("combat-heading").textContent="Zargon’s turn";
@@ -21,17 +28,19 @@
       const rolls=document.createElement("div");rolls.className="combat-rolls";
       rolls.append(dicePanel("Attack · "+report.attackerName,report.attackDice,report.skulls+" skull"+(report.skulls===1?"":"s"),attacker),dicePanel("Defence · "+report.defenderName,report.defendDice,report.skulls?report.shields+" "+(report.shield==="white-shield"?"white":"black")+" shield"+(report.shields===1?"":"s")+" blocked":"Miss",defender));content.append(rolls);
       const summary=document.createElement("div");summary.className="combat-outcome";
-      const amount=document.createElement("strong"),text=document.createElement("p");amount.textContent=report.damage?"−"+report.damage+" Body":"No damage";text.textContent=report.defeated?report.defenderName+" defeated":report.defenderName+" · Body "+report.bodyAfter+" / "+report.maxBody;summary.append(amount,text);content.append(summary);
+      const amount=document.createElement("strong"),text=bodySummary(report);amount.textContent=report.damage?"−"+report.damage+" Body":"No damage";summary.append(amount,text);content.append(summary);
     } else if(report.type==="spell") {
       $("combat-kicker").textContent="SPELL";
-      const portraits=document.createElement("div");HQ.portraits.set(portraits,[attacker,defender].filter(Boolean));content.append(portraits);
+      const result=document.createElement("div"),portraits=document.createElement("div");result.className="spell-result";portraits.className="spell-result-participants";
+      const participants=attacker?.id===defender?.id?[{...attacker,role:"Caster · Target"}]:[attacker&&{...attacker,role:"Caster"},defender&&{...defender,role:"Target"}].filter(Boolean);
+      HQ.portraits.set(portraits,participants);result.append(portraits);content.append(result);
       if(report.redDice.length) {
         const dice=document.createElement("div");dice.className="combat-dice";
-        for(const value of report.redDice){const host=document.createElement("span");host.className="d6";HQ.dieFaces.numbered(host,value);host.setAttribute("aria-label","Spell die: "+value);dice.append(host);}content.append(dice);
+        for(const value of report.redDice){const host=document.createElement("span");host.className="d6";HQ.dieFaces.numbered(host,value);host.setAttribute("aria-label","Spell die: "+value);dice.append(host);}result.append(dice);
       }
-      const summary=document.createElement("div"),amount=document.createElement("strong"),text=document.createElement("p");summary.className="combat-outcome";
+      const summary=document.createElement("div"),amount=document.createElement("strong"),text=bodySummary(report);summary.className="combat-outcome spell-result-outcome";
       amount.textContent=report.healed?"+"+report.healed+" Body":report.damage?"−"+report.damage+" Body":report.detail;
-      text.textContent=report.defeated?report.defenderName+" defeated":report.defenderName+" · Body "+report.bodyAfter+" / "+report.maxBody;summary.append(amount,text);content.append(summary);
+      summary.append(amount,text);result.append(summary);
     } else {const figure=document.createElement("div");HQ.portraits.set(figure,attacker?[attacker]:[]);const p=document.createElement("p");p.className="dialog-lead";p.textContent=report.detail|| (report.type==="monster-skip"?report.reason:report.steps?"Moved "+report.steps+" squares · No attack":"No hero within reach");content.append(figure,p);}
     $("continue-combat").textContent=HQ.quest.isEnded(state.phase)?"View outcome →":state.phase==="monster-turn"?(state.monsterTurn.resumeId?"Continue turn →":state.monsterTurn.index<state.monsterTurn.queue.length?"Next monster →":"Heroes’ turn →"):"Continue →";
   }

@@ -102,3 +102,25 @@ Spell milestone: Rock Skin adds one effective defence die and breaks on actual
 Body damage; Tempest consumes exactly one CPU activation. Fire spells use their
 printed red resistance dice, not normal black-shield defence. See SPELLS.md for
 source locators, scope and the current approved checks.
+
+## Blood pools and compact spell results — 22 October 2026
+
+After the acknowledged miniature finishes removal, `view/blood-pools.js` leaves
+a small irregular dark-red stain at its square. Its opacity eases in over 900ms;
+reduced motion shows the settled stain immediately. Rendering stops when the fade
+finishes, and re-rendering an existing stain does not restart the fade. Shared texture/geometry, one owned fade material per stain
+and deterministic per-ID rotation/scale keep allocation bounded; no idle timer,
+new lights, rules blockers or picking targets. Standard materials receive the
+scene's lighting and room-light masks. Stair stains sit above the printed tile.
+
+`exploration.project` exposes a derived `fallen` list only for known casualties
+on discovered terrain, excluding trapped heroes. The held pending-report figure
+does not get a stain until removal completes. Existing saved Body/position data
+reconstructs pools after refresh; no schema/storage change is needed. Reset or
+sandbox revival hides obsolete stains. Historical discovered casualties also
+appear when an existing save is opened.
+
+Spell outcomes now size to content, use smaller result text, labelled caster and
+target portraits, and one combined portrait for a self-cast. Combat roll layouts
+retain their existing reserved space. These additions have source/diff review
+only; no new browser, death/refresh, layout or gameplay verification was run.

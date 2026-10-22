@@ -38,8 +38,8 @@
     for(let i=0;i<tile.attributes.normal.count;i++){const shade=tile.attributes.normal.getY(i)>.5?1:.3;colours.push(shade,shade,shade);}
     tile.setAttribute("color",new T.Float32BufferAttribute(colours,3));tile.clearGroups();
     const floorMaterial=new T.MeshStandardMaterial({color:0x62685f,roughness:.96,vertexColors:true});
-    const floor=new T.InstancedMesh(tile,floorMaterial,26*19),dummy=new T.Object3D();
-    for(let row=0;row<19;row++)for(let x=0;x<26;x++){dummy.position.set(x-12.5,-.075,row-9);dummy.updateMatrix();floor.setMatrixAt(row*26+x,dummy.matrix);}
+    const floor=new T.InstancedMesh(tile,floorMaterial,26*22),dummy=new T.Object3D();
+    for(let row=0;row<22;row++)for(let x=0;x<26;x++){dummy.position.set(x-12.5,-.075,row-9);dummy.updateMatrix();floor.setMatrixAt(row*26+x,dummy.matrix);}
     floor.instanceMatrix.needsUpdate=true;floor.receiveShadow=true;wrapper.add(floor);
     // Backdrop only; the front and sides stay open for unobstructed inspection.
     for(let x=-12;x<=12;x+=2){const wall=own(HQ.models.make("wall-two"));wall.position.set(x,0,-8.65);wrapper.add(wall);backdrop.push(wall);}
@@ -49,10 +49,12 @@
       ["door","open-door","stairs","wall-one","wall-two"]
     ];
     rows.forEach((row,r)=>row.forEach((id,col)=>place(id,-10+col*5,-6+r*4)));
-    place("cupboard",9.5,8);
+    place("cupboard",9.5,10.3);
     const figures=HQ.pieceCatalog.filter(group=>["Heroes","Monsters"].includes(group.label)).flatMap(group=>group.entries);
-    figures.forEach((piece,i)=>place(piece.id,(i-(figures.length-1)/2)*1.9,5.7,1.7));
-    place("blocked",-7,8,2.5);place("movement-die",-1.8,8,2.5);place("combat-die",2.2,8,2.5);
+    const extraIds=new Set(["orc-mace","orc-sword","goblin-dagger","goblin-axe"]),core=figures.filter(piece=>!extraIds.has(piece.id)),extra=figures.filter(piece=>extraIds.has(piece.id));
+    core.forEach((piece,i)=>place(piece.id,(i-(core.length-1)/2)*1.9,5.7,1.7));
+    extra.forEach((piece,i)=>place(piece.id,(i-(extra.length-1)/2)*4,8.1,2.5));
+    place("blocked",-9,10.3,2.5);place("movement-die",-3,10.3,2.5);place("combat-die",1.7,10.3,2.5);
     place("torch",-7.5,-8.13,2);
     // Extra back-wall sconces light the display without adding model types.
     for(const x of [-2.5,7.5]){const torch=fire.make({id:"test-room-torch-"+x});torch.position.set(x,0,-8.13);wrapper.add(torch);}
@@ -67,7 +69,7 @@
       for(const material of materials)if(material.metalness>.3)material.envMapIntensity=lit ? .08 : .75;
     }
     setLighting(false);
-    return Object.freeze({wrapper,pieces,size:new T.Vector3(26,3.2,19),setLighting,
+    return Object.freeze({wrapper,pieces,size:new T.Vector3(26,3.2,22),setLighting,
       update(camera,target,time,steady){
         // Orbiting behind the display must not hide every exhibit behind stone.
         let changed=false;const visible=camera.position.z>-8.65;

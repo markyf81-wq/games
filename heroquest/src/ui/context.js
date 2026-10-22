@@ -21,7 +21,11 @@
       if(restoreFocus)canvas.focus({preventScroll:true});
     }
     function show({name,kind,description:copy,details:info,actions:options,figure},point) {
-      document.getElementById("context-kicker").textContent=kind;heading.textContent=name;description.textContent=copy;details.textContent=info||"";details.hidden=!info;
+      document.getElementById("context-kicker").textContent=kind;heading.textContent=name;description.textContent=copy;details.replaceChildren();
+      const hasHealth=figure&&Number.isFinite(figure.maxBody);
+      if(hasHealth)details.append(HQ.health.body(figure.body,figure.maxBody));
+      if(info){const stats=document.createElement("span");stats.textContent=info;details.append(stats);}
+      details.hidden=!info&&!hasHealth;
       actions.replaceChildren();
       HQ.portraits.set(document.getElementById("context-portrait"),figure?[figure]:[]);
       for(const option of options) {

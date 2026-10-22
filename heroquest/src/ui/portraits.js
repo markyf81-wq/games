@@ -6,6 +6,8 @@
   const frames={barbarian:[27.7,14,-.3,-1],dwarf:[18,13,0,0],elf:[28,15,0,0],wizard:[26,15,0,0],
     orc:[25,17,0,0],goblin:[16,13,0,0],fimir:[30,18,0,0],skeleton:[28,14,0,0],
     zombie:[24,16,0,0],mummy:[30,16,0,0],"chaos-warrior":[31,18,0,0],gargoyle:[35.5,22,0,0]};
+  for(const id of ["orc-mace","orc-sword"])frames[id]=frames.orc;
+  for(const id of ["goblin-dagger","goblin-axe"])frames[id]=frames.goblin;
   let renderer=null,scene=null,camera=null,environment=null,frame=0,unavailable=false;
   function ensure() {
     if(renderer||unavailable)return;
@@ -43,7 +45,8 @@
     if([...slots].some(slot=>slot.isConnected))try {const url=capture(kind);cache.set(kind,url);for(const slot of slots)fill(slot,url);}catch(error){cache.set(kind,null);}
     if(waiting.size)frame=requestAnimationFrame(drawNext);
   }
-  function image(kind,name="") {
+  function image(kind,name="",id=null) {
+    kind=HQ.monsterModel(kind,id);
     const slot=document.createElement("span");slot.className="miniature-portrait";slot.setAttribute("aria-hidden","true");slot.textContent=(name||kind||"?").slice(0,1).toUpperCase();
     if(!frames[kind])return slot;
     if(cache.has(kind)){const url=cache.get(kind);if(url){const img=document.createElement("img");img.alt="";img.width=img.height=160;img.src=url;slot.replaceChildren(img);}return slot;}
@@ -52,11 +55,11 @@
   }
   function set(container,figures=[]) {
     figures=figures.filter(Boolean);
-    const signature=JSON.stringify(figures.map(figure=>[figure.kind||figure.id,figure.name,figure.role]));
+    const signature=JSON.stringify(figures.map(figure=>[HQ.monsterModel(figure.kind||figure.id,figure.id),figure.name,figure.role]));
     if(contents.get(container)===signature)return;contents.set(container,signature);
     container.replaceChildren();container.hidden=!figures.length;
     for(const figure of figures) {
-      const row=document.createElement("span");row.className="miniature-reference";row.append(image(figure.kind||figure.id,figure.name));
+      const row=document.createElement("span");row.className="miniature-reference";row.append(image(figure.kind||figure.id,figure.name,figure.id));
       if(figure.role){const copy=document.createElement("span"),name=document.createElement("strong"),role=document.createElement("small");name.textContent=figure.name;role.textContent=figure.role;copy.append(name,role);row.append(copy);}
       container.append(row);
     }

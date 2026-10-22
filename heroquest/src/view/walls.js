@@ -42,7 +42,7 @@
     material.customProgramCacheKey=()=>"heroquest-wall-stone-palette-v1";
   }
   HQ.createDungeonWalls=function () {
-    const records=new Map(),capGeometry=new T.BoxGeometry(1,.025,.15),footingGeometry=new T.BoxGeometry(1,.02,.28);
+    const records=new Map(),capGeometry=new T.BoxGeometry(1,.025,.15),blockedCapGeometry=new T.BoxGeometry(.99,.025,.99),footingGeometry=new T.BoxGeometry(1,.02,.28);
     const footingMaterial=HQ.models.material(0x535044,.98);
     const capMaterial=HQ.models.material(0x98917e,.94),nearPoint=new T.Vector3(),hit=new T.Vector3(),frustum=new T.Frustum(),viewProjection=new T.Matrix4(),rayPool=[];
     let mode="cutaway",lastTime=null,animate=false,exploredTargets=[],protectedCells=new Set(),layoutKey=null,layoutItems=null;
@@ -157,6 +157,20 @@
       const record={model,plane,cap,height,current,item,joints:new Map(),worldBounds:new T.Box3()};
       records.set(item.id,record);syncJoints(record,item);return model;
     }
+    function makeBlocked(item) {
+      if(records.has(item.id))return records.get(item.id).model;
+      const model=HQ.models.make("blocked"),height=model.userData.blockedHeight,plane=new T.Plane(new T.Vector3(0,-1,0),10),seed=wallHash(item.id);
+      model.traverse(mesh=>{
+        if(!mesh.isMesh)return;
+        const clone=surface=>{const copy=surface.clone();copy.clippingPlanes=[plane];copy.clipShadows=true;
+          if(mesh.userData.blockedStone)colourStones(copy,seed);return copy;};
+        if(mesh.userData.blockedStone)stoneAttributes(mesh.geometry);
+        mesh.material=Array.isArray(mesh.material)?mesh.material.map(clone):clone(mesh.material);
+      });
+      const cap=new T.Mesh(blockedCapGeometry,capMaterial);cap.visible=false;cap.castShadow=true;cap.receiveShadow=true;model.add(cap);
+      const current=mode==="full"?height:lowHeight,block={...item,cutawayGroup:item.id};
+      records.set(item.id,{model,plane,cap,height,current,item:block,joints:new Map(),worldBounds:new T.Box3()});return model;
+    }
     function update(camera,focus,time,steady=false,figures=[]) {
       const dt=lastTime===null?1/60:Math.min(.05,Math.max(0,(time-lastTime)/1000));lastTime=time;
       let changed=false;animate=false;
@@ -183,9 +197,11 @@
         // Only cut for an actual camera ray from explored floor/a shown figure.
         // Facing the camera alone is not evidence of anything being obscured.
         for(const record of group.records) {
-          const wall=record.item,cx=wall.axis==="h"?wall.x+wall.length/2-13:wall.x-13,cz=wall.axis==="v"?wall.row+wall.length/2-9.5:wall.row-9.5;
-          record.worldBounds.min.set(cx-(wall.axis==="h"?wall.length/2:.09),floorHeight,cz-(wall.axis==="v"?wall.length/2:.09));
-          record.worldBounds.max.set(cx+(wall.axis==="h"?wall.length/2:.09),floorHeight+record.height,cz+(wall.axis==="v"?wall.length/2:.09));
+          const wall=record.item,blocked=wall.kind==="blocked";
+          const cx=blocked?wall.x+.5-13:wall.axis==="h"?wall.x+wall.length/2-13:wall.x-13,cz=blocked?wall.row+.5-9.5:wall.axis==="v"?wall.row+wall.length/2-9.5:wall.row-9.5;
+          const halfX=blocked?.5:wall.axis==="h"?wall.length/2:.09,halfZ=blocked?.5:wall.axis==="v"?wall.length/2:.09;
+          record.worldBounds.min.set(cx-halfX,floorHeight,cz-halfZ);
+          record.worldBounds.max.set(cx+halfX,floorHeight+record.height,cz+halfZ);
           for(let i=0;i<rayCount;i++) {
             const {ray,distanceSq}=rayPool[i];
             if(ray.intersectBox(record.worldBounds,hit)!==null&&hit.distanceToSquared(ray.origin)<=distanceSq){group.cut=true;break;}
@@ -216,10 +232,10 @@
       if(!modes.includes(value))return;
       mode=value;
       const button=document.getElementById("wall-mode");
-      if(button){button.textContent=labels[mode];button.dataset.mode=mode;button.setAttribute("aria-label","Walls: "+labels[mode]+". Click to change.");button.title="Full walls / Automatic cutaway / Low walls";}
+      if(button){button.dataset.mode=mode;button.setAttribute("aria-label","Walls: "+labels[mode]+". Click to change.");button.title=labels[mode]+" (click to change)";}
     }
     setMode(mode);
-    return Object.freeze({itemsFor,make,update,setMode,
+    return Object.freeze({itemsFor,make,makeBlocked,update,setMode,
       get mode(){return mode;},get animating(){return animate;},modes
     });
   };

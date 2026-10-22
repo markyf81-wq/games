@@ -2,8 +2,8 @@
 
 **Models** in the main header opens the native model-viewer modal. **View models**
 in setup opens it above setup without submitting or replacing the adventure.
-Choose a model from the grouped Model list; all 32 current game model types are
-available: four heroes, eight monsters, fourteen furniture/door/generated props,
+Choose a model from the grouped Model list; all 36 current game model types are
+available: four heroes, twelve monster sculpts (eight rule types), fourteen furniture/door/generated props,
 four scenery types (two walls, blocked stone and torch), and two dice.
 Unused raw components/variants from the 40-STL collection are not represented as
 finished game models. The original stone walls have one/two-space previews; the rejected lightweight pack is removed.
@@ -67,7 +67,7 @@ review only, with no new Chrome model-viewer check.
 
 ## Test room
 
-The Test room button in the header or setup opens a labelled display of all 32
+The Test room button in the header or setup opens a labelled display of all 36
 current game model types together. It reuses the existing viewer renderer/modal,
 geometry factories and local reflection recipe. It is an invented showroom, not
 a quest, and reads no adventure state, locations, discoveries or RNG. Closing it
@@ -103,3 +103,16 @@ Doors and blocked stone now use painted derivatives. The supplied cupboard joins
 the catalog and Test room (rear-right exhibit); it has walnut panels/frame, iron
 fittings and an ivory skull. These additions have offline authoring/source review
 only; no new browser check. See assets/models/furniture/SCENERY.md.
+
+The blocked-square factory now composes the original wall sculpts and supplied
+rubble into a solid wall-height stone plug. Models/Test room show full height;
+the dungeon applies its shared Full/Automatic/Low setting. Isolated Chrome
+authoring inspected the assembly and cutaway silhouette; no viewer-layout or
+Test room interaction pass was included. See WALLS.md.
+
+The Orc mace/sword and Goblin dagger/axe sculpts join the existing cleaver Orc
+and sword Goblin. The Test room places the four additions in a second figure
+row, with a longer neutral floor and relocated front exhibits. All six weapon
+sculpts remain cosmetic variants of the original Orc/Goblin rules. Wizard now
+uses the painted hero factory in board, portraits and viewer. Offline geometry/
+paint authoring only; no new viewer layout/picking or portrait browser check.

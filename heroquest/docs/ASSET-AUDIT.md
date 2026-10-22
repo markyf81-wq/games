@@ -4,12 +4,12 @@ Reviewed against actual factories and the supplied component catalog, updated 20
 
 | Component | Current implementation | Available work/resources |
 | --- | --- | --- |
-| Four heroes | Supplied STL sculpts; Barbarian has seam-cut multi-region paint; all hero bases are dark grey | Paint the other heroes from existing visual references |
-| Eight monster types | Supplied STL sculpts; simple base colours | Paint existing geometry; assemble supplied gargoyle wings |
+| Four heroes | Supplied STL sculpts; Barbarian and Wizard have seam-cut multi-region paint; all hero bases are dark grey | Paint Dwarf and Elf from existing visual references |
+| Eight monster types | Supplied STL sculpts; three Orc and three Goblin weapon varieties integrated; simple base colours | Paint existing geometry; assemble supplied gargoyle wings |
 | Gargoyle wings | Prepared STL, not assembled | Existing `gargoyle-wings` source; no new model needed |
 | Closed / open doors | Supplied stone arches, walnut panels, iron hinges/rings and charcoal bases | Offline multi-angle paint authoring; furniture/SCENERY.md |
 | Cupboard | Supplied walnut/iron/ivory sculpt, now in Models and Test room | 3×1 display fit; no quest placement added; furniture/SCENERY.md |
-| Blocked passages | Supplied rubble with varied limestone, dark joints and charcoal rims | Both sizes prepared; current game uses 1×1 only; furniture/SCENERY.md |
+| Blocked passages | Wall-height solid stone assembly using original wall sculpts and supplied painted rubble; shares wall cutaway | Current game uses 1×1 only; original rubble derivatives remain intact; furniture/SCENERY.md and WALLS.md |
 | Wooden table / treasure chest | Supplied sculpts with seam-cut walnut/iron/brass finishes and aligned grain UVs | First two-piece batch completed 2026-10-22; [recipe/review](../assets/models/furniture/README.md) |
 | Throne / fireplace | Supplied sculpts painted walnut/red cloth/brass and limestone/iron/brass | Offline multi-angle paint authoring completed 2026-10-22; discovered fireplace has particle fire and warm light |
 | Alchemist’s bench | Recovered supplied sculpt with round bottles/jars and painted walnut/brass/vessels/parchment/ivory | Normalized source reduction and four-angle paint authoring; furniture/WORKSHOP.md retains source guards/notices |
@@ -65,3 +65,10 @@ Weapons rack painting completed 2026-10-22 in an independent agent batch.
 Original source untouched; guarded recipe and four-angle offline authoring preview
 are retained. Parent integrated the replacement and checked it in Chrome Models
 without reported console warnings/errors. No board-lighting/performance pass.
+
+Wizard follow-up: Mark supplied fingerprinted region markings from the model
+painter. `scripts/paint-regions/wizard.json` is the preserved input;
+`scripts/paint_wizard.py` fills unmarked surface gaps and refines the paint
+boundaries offline. Export colours were labels; natural cloth/leather/wood/skin
+and bronze finishes are defined separately. See the hero asset README for
+provenance, palette, preparation and current authoring review limits.

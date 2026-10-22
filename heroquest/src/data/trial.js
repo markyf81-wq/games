@@ -72,7 +72,7 @@
     monsters:Object.freeze(monsters),furniture:Object.freeze(furniture),
     blocked:Object.freeze(["0,1","12,5","13,5","17,9","14,18"]),
     startingRoom:"room-20",stairs:Object.freeze(["1,14","2,14","1,15","2,15"]),
-    startingPlacement:"Digital choice: separate rendering anchors within one larger shared stairway space. Internal stair movement is free; leaving costs one movement. This shared-space adaptation was requested by Mark, not confirmed in the printed rules.",
+    startingPlacement:"Digital choice: four individual stairway squares for placement, reach and sight. Internal steps are free only with rolled movement remaining; entering or leaving costs one movement. This movement adaptation was requested by Mark, not confirmed in the printed rules.",
     // Quest notes are authoritative future content, never shown as reveal hints.
     notes:Object.freeze({A:{effect:"empty-weapons-rack"},B:{effect:"empty-chest"},C:{attackDice:4},D:{gold:84},E:{gold:120}}),
     limitations:"Gameplay prototype: exploration, melee combat, CPU turns, stairway exits and quest outcomes. All twelve elemental spells are available. Searches, potions, thrown weapons and campaign progression are not implemented. Progress autosaves in this browser."

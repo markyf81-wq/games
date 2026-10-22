@@ -2,7 +2,7 @@
   "use strict";
   const HQ=window.HeroQuest;
   // A transient modal-to-board round trip. Callers supply already-filtered
-  // public refs; selecting or cancelling never dispatches a game command.
+  // public refs. The picker never dispatches; its caller may act on selection.
   HQ.createBoardChoice=function({view}) {
     const host=document.getElementById("canvas-host"),canvas=document.getElementById("board-canvas"),bar=document.createElement("section"),text=document.createElement("p"),hint=document.createElement("small"),cancel=document.createElement("button");
     bar.className="board-choice hq-panel";bar.hidden=true;bar.setAttribute("aria-label","Choose a target");
@@ -18,18 +18,18 @@
       if(reopen)HQ.dialogs.show(ended.dialogId);
       ended.resolve(ref);
     }
-    function choose({dialogId,title,targets}) {
+    function choose({dialogId,title,targets,reopenOnPick=true}) {
       if(pending||!targets.length||!document.getElementById(dialogId)?.open)return Promise.resolve(null);
       const unlock=HQ.turnControls.lock();
       return new Promise(resolve=>{
-        pending={dialogId,title,resolve,unlock,targets:new Map(targets.map(ref=>[key(ref),ref]))};
+        pending={dialogId,title,resolve,unlock,reopenOnPick,targets:new Map(targets.map(ref=>[key(ref),ref]))};
         text.textContent=title;bar.hidden=false;HQ.dialogs.close(dialogId);
         view.setBoardChoices(targets);canvas.focus({preventScroll:true});
       });
     }
     function pick(ref) {
       if(!pending)return false;
-      const target=pending.targets.get(key(ref));if(target)finish(target);
+      const target=pending.targets.get(key(ref));if(target)finish(target,pending.reopenOnPick);
       return true;
     }
     function hover(ref) {

@@ -80,6 +80,7 @@
       const same=current?.id===options.id&&current.rolled===options.rolled;
       if(same){HQ.dialogs.show("dice-dialog");return;}
       clearTimeout(automatic);if(frame)cancelAnimationFrame(frame);frame=0;busy=false;current=options;
+      $("dice-dialog").dataset.rollType=options.resultFormat==="faces"?"spell":options.kind;
       $("dice-heading").textContent=options.title;$("dice-kicker").textContent=options.kicker;$("dice-instructions").textContent=options.description;
       HQ.portraits.set($("dice-participants"),options.figures||[]);
       $("dice-result").textContent="";$("dice-result").hidden=true;next.textContent=options.continueLabel||"Continue →";next.hidden=true;next.disabled=true;
@@ -90,7 +91,7 @@
         dice.forEach((d,i)=>{d.landing=resultRotation(options.results[i],i);});
         roll.disabled=true;roll.textContent="Rolling…";
         if(options.animate&&!failed&&!reduced.matches&&document.visibilityState!=="hidden"){busy=true;started=null;frame=requestAnimationFrame(animate);}else settle();
-      } else {draw();roll.focus({preventScroll:true});if(options.automatic)automatic=setTimeout(()=>{if(current===options&&!busy&&!roll.disabled)roll.click();},650);}
+      } else {draw();roll.focus({preventScroll:true});if(options.automatic)automatic=setTimeout(()=>{if(current===options&&!busy&&!roll.disabled)roll.click();},options.autoRollDelay??650);}
     }
     roll.addEventListener("click",()=>{if(!current||busy||current.rolled)return;clearTimeout(automatic);roll.disabled=true;if(onRoll()===false)roll.disabled=false;});
     next.addEventListener("click",()=>{if(current?.rolled&&!busy)onContinue();});

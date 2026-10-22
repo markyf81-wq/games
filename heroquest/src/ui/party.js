@@ -66,7 +66,11 @@
       button.setAttribute("aria-label","Centre "+E.heroNames.get(h.id)+(h.owner?", controlled by "+h.owner:""));
       const n=document.createElement("span");n.className="turn-number";n.textContent=String(i+1);
       const copy=document.createElement("span"),name=document.createElement("strong"),owner=document.createElement("small");name.textContent=E.heroNames.get(h.id);owner.textContent=h.owner||"Choose a player";copy.append(name,owner);
-      if(state){const health=document.createElement("small");health.className="hero-health";health.textContent=h.exit==="completed"?"Quest completed":h.exit==="retreated"?"Retreated":h.body>0?"Body "+h.body+" / "+h.maxBody:"Fallen";copy.append(health);}
+      if(state){const health=document.createElement("small");health.className="hero-health";
+        if(h.exit)health.textContent=h.exit==="completed"?"Quest completed":"Retreated";
+        else {const hearts=HQ.health.body(h.body,h.maxBody);health.append(hearts);if(h.body<=0)health.append(" Fallen");button.setAttribute("aria-label",button.getAttribute("aria-label")+", "+hearts.getAttribute("aria-label")+(h.body<=0?", fallen":""));}
+        copy.append(health);
+      }
       const mark=document.createElement("span");mark.className="active-mark";mark.textContent=isActive?"◆":"";mark.setAttribute("aria-hidden","true");button.append(n,HQ.portraits.image(h.kind||h.id,E.heroNames.get(h.id)),copy,mark);
       button.disabled=!state||!HQ.combat.inPlay(h);button.addEventListener("click",()=>onFocus(h.id));$("party-list").append(button);
     }

@@ -29,11 +29,12 @@
       for(const id of known) {
         const [x,row]=Topo.parse(id),left=x-13,top=row-9.5;
         for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]) {
-          const other=Topo.key(x+dx,row+dy);if(Topo.stairs.has(id)&&Topo.stairs.has(other))continue;
+          const other=Topo.key(x+dx,row+dy);
           const edge=Topo.edgeKey(id,other);if(edges.has(edge))continue;edges.add(edge);
           const a=dx?[left+(dx>0?1:0),top]:[left,top+(dy>0?1:0)],b=dx?[a[0],top+1]:[left+1,a[1]],sx=-(b[1]-a[1])*.012,sz=(b[0]-a[0])*.012;
           const corners=[[a[0]+sx,a[1]+sz],[a[0]-sx,a[1]-sz],[b[0]+sx,b[1]+sz],[b[0]-sx,b[1]-sz]];
-          for(const index of [0,2,1,2,3,1])positions.push(corners[index][0],.154,corners[index][1]);
+          const height=Topo.stairs.has(id)&&Topo.stairs.has(other)?.205:.154;
+          for(const index of [0,2,1,2,3,1])positions.push(corners[index][0],height,corners[index][1]);
         }
       }
       const geometry=new T.BufferGeometry();geometry.setAttribute("position",new T.Float32BufferAttribute(positions,3));geometry.computeVertexNormals();

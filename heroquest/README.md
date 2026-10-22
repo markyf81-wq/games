@@ -33,17 +33,19 @@ positions, follows moving figures and centres newly revealed areas.
 Attacks use an attacker-eye camera before the shared 3D Roll modal. Movement dice
 are rounded red dice with white pips; combat dice use the original skull/shield
 symbols. Outcomes are recorded independently of animation/physics. CPU dice roll
-automatically. Defeated pieces remain through the result and fade/tip away after
+automatically. Movement rolls start when opened; Continue returns to the board after the dice
+settle. Defeated pieces remain through the result and fade/tip away after
 acknowledgement. End turn advances the selected heroes, then the CPU monster queue.
 
 Spells opens the twelve original elemental cards assigned to that caster. Swipe,
 drag or use arrows to browse the inertial carousel; full printed text and details
-sit below it. Choose targets on the glowing board, return to review, then Cast.
+sit below it. Choosing a glowing target on the board casts the selected spell
+immediately; Cancel returns to the book without casting.
 Used cards leave the hand. A short spell-specific particle/projectile effect plays
 on the board before resistance/combat dice or the outcome modal opens. Effects
 skip under reduced motion or interrupted graphics; saved outcomes never replay.
 
-Return to the shared stairway to Leave dungeon. Leaving before defeating Verag is
+Return to the stairway to Leave dungeon. Leaving before defeating Verag is
 an individual retreat; other heroes can continue. Restart confirms a fresh quest
 with the same party; New adventure returns to setup.
 
@@ -54,7 +56,9 @@ corridors appear as explored. Static terrain/furniture remain. Optional realisti
 LOS hides movable pieces outside combined party sight; spell targeting always
 uses the individual caster's sight. Floor/grid brightness follows scene lighting.
 
-The main-view wall button cycles Full walls, Automatic cutaway and Low walls.
+The main-view wall icon cycles Full walls, Automatic cutaway and Low walls.
+The bulb toggles lighting; table and board icons select tabletop/overhead views.
+Hover tooltips name each control and its current state.
 Automatic cutaway clears actual obstructions to the active/defending hero's room,
 or the hero point in corridors. Walls have deterministic stone/section variation
 and sculpted joins. Dynamic lighting toggles gloomy torch/hearth lighting versus
@@ -63,7 +67,7 @@ lighting is on. Every room has a deterministic clear torch mount, up to two in
 large rooms. Decorative fire never changes rules, sight or occupancy.
 
 Furniture, doors and rubble have prepared wood/cloth/stone/metal finishes. The
-Barbarian is painted; other heroes and monsters await detailed painting. All
+Barbarian and Wizard are painted; Dwarf, Elf and monsters await detailed painting. All
 miniature bases are dark grey. Floors use Mark's supplied board image and stairs
 use the original printed tile artwork. [Asset audit](docs/ASSET-AUDIT.md) records
 sources, remaining assembly and limits. No new models are currently needed for
@@ -71,7 +75,12 @@ The Trial; the gargoyle's separate supplied wings still need assembly.
 
 ## Inspection and practice
 
-**Models** rotates any of 32 public model types. **Test room** displays them all,
+[Model painter](model-painter.html) is a separate authoring tool: brush named
+regions on the supplied neutral sculpts, orbit/pan/zoom, undo/redo and export
+markings for refinement. Drafts use independent `heroquest.paint.v1.<model>`
+browser keys; they do not change game paint or adventure saves.
+
+**Models** rotates any of 36 public model types. **Test room** displays them all,
 including the newly painted cupboard, in an invented neutral-floor showroom.
 These viewers share game factories but reveal no quest placements or save state.
 
@@ -88,7 +97,8 @@ and view preferences. Accepted outcomes save before presentation. Refresh resume
 recorded results without recasting/rerolling. Invalid saves remain until explicit
 replacement. No cloud save, export/import or account system is implemented.
 
-The 2×2 stairs as one shared space and broader Pass Through Rock object traversal
+Discounted movement inside the four individual stair squares and broader Pass
+Through Rock object traversal
 are Mark's digital rulings, distinct from original printed rules. Rock movement
 stays within the quest's playable floor; ending inside any object with no movement
 left, or ending the turn there, is fatal. Original base cards/items/quests only;

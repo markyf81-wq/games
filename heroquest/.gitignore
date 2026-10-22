@@ -9,6 +9,9 @@ references/**/*.part
 tmp/
 __pycache__/
 
+# Generated offline paint-review images are local authoring output, not game assets.
+assets/previews/
+
 # User-supplied printing sources; browser derivatives are in assets/models/imported.
 references/stl-source/
 references/retired-studies/

@@ -1,5 +1,26 @@
 # Tall walls and route preview
 
+## Light blocking independent of cutaway — 22 October 2026
+
+`view/light-barriers.js` gives all eight torch/hearth lights and the permanent
+spell glow a cached 2D visibility mask against discovered wall boundaries,
+closed doors and blocked squares. Lowering a visible wall never opens this
+lighting boundary. Light can travel directly through an open doorway; it does
+not bend around corners. Ambient background light remains unchanged.
+
+The 208×152 mask per light is a presentation approximation, independent of rules
+and physical shadow maps. Layout/door changes invalidate the cache; moving a
+projectile updates its own mask. No extra six-face shadow maps are added. Board
+materials are cloned locally with their floor/stone hooks intact. They retain
+the wall layer's live clipping-plane references; copying those planes had frozen
+cutaway heights during implementation and was corrected.
+
+A minimal Chrome shader/geometry diagnostic confirmed light masks of 255/0 on
+opposite sides of a closed door and 255/255 after opening it. The rendered wall
+materials' live planes lowered, raised and lowered again with the wall mode;
+no JS/shader errors were reported. This was a reported-problem diagnostic, not
+a full lighting appearance, performance, gameplay/save or UI regression pass.
+
 ## Wall modes
 
 The button above the board, alongside Tabletop/Overhead, cycles **Full walls →
@@ -173,7 +194,28 @@ was a reported-problem diagnostic, not browser or broad regression verification.
 
 ## Rubble boundaries
 
-Known blocked squares use their rubble model without tall wall sections crossing behind or surrounding that tile. Skip their owned edges and edges emitted by a known neighbour against known rubble. Discovery filtering still applies. `topology.connected` rejects rubble entry; sight can reach rubble itself but cannot pass through it. This change only removes redundant render geometry. Individual-stone colours and rubble boundaries have source/minimal mesh-data review only, without a new browser pass.
+Known blocked squares omit redundant boundary walls behind or surrounding that
+tile. Skip their owned edges and edges emitted by a known neighbour against known
+rubble. Discovery filtering still applies. `topology.connected` rejects rubble
+entry; sight can reach rubble itself but cannot pass through it. Pass Through
+Rock retains its existing exception; this presentation work changes no rules.
+
+Blocked stone now has its own solid, wall-height assembly in
+`view/blocked-scenery.js`: four original wall sculpts/joins, the supplied painted
+rubble at the foot, and a stone-coloured rubble top. Existing geometry is reused;
+original assets and their separate provenance notices remain intact. The board
+wall layer owns per-instance clipping planes, varied stone colours and a closing
+cap. Full walls shows the 1.864-square height, Low walls clips at 0.27, and
+Automatic cutaway lowers only an obstructing block using the same protected-area
+camera rays. Each block is independent from adjoining wall-run groups. Blocked
+stone is noninteractive like walls; its underlying square remains available to
+the ordinary board picker where rules permit it. Models/Test room show full height.
+
+Focused Chrome authoring renders inspected the full/low silhouette and automatic
+cutaway with a hero behind the block, then overhead with no obstruction: clipping
+was respectively 1.864 / 0.27 / 0.27 / 1.864, without reported JS/shader errors.
+This used the production factories in an isolated scene, not a gameplay, picking,
+save, shadow or performance regression pass.
 
 An isolated low section in Mark’s screenshot exposed the per-model cutaway decisions. Run grouping now shares known-side selection and miniature-occlusion cuts across adjacent collinear sections. A minimal Node/Three geometry diagnostic on the current quest layout confirmed all eight adjoining sections stayed full without an occlusion and all lowered to 0.27 when a focus ray crossed one section. This was not a browser screenshot/layout check; no broad regression checks were run.
 
@@ -197,3 +239,8 @@ boundaries exposed beside the narrower sculpt. Footings follow actual section
 lengths and door gaps, receive light/shadows and remain noninteractive scenery;
 they do not change movement/sight topology, wall heights or discovery. No new
 Chrome visual check was run for this appearance fix.
+
+Torch/hearth spread follow-up: torch range increased from 4.8 to 6 squares and
+base intensity 8 to 10; hearth range 5.2 to 6.5 and intensity 10 to 12. The one
+point-shadow camera extends to 6.8. Global ambient is unchanged and every light
+retains the room-boundary mask. Source review only; no new lighting/profile pass.
