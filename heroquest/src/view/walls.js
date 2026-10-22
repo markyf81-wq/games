@@ -42,9 +42,10 @@
     material.customProgramCacheKey=()=>"heroquest-wall-stone-palette-v1";
   }
   HQ.createDungeonWalls=function () {
-    const records=new Map(),capGeometry=new T.BoxGeometry(1,.025,.15);
-    const capMaterial=HQ.models.material(0x98917e,.94),cameraDirection=new T.Vector3(),focusRay=new T.Ray(),hit=new T.Vector3(),frustum=new T.Frustum(),viewProjection=new T.Matrix4();
-    let mode="cutaway",lastTime=null,animate=false,exploredTargets=[],protectedCells=new Set();
+    const records=new Map(),capGeometry=new T.BoxGeometry(1,.025,.15),footingGeometry=new T.BoxGeometry(1,.02,.28);
+    const footingMaterial=HQ.models.material(0x535044,.98);
+    const capMaterial=HQ.models.material(0x98917e,.94),nearPoint=new T.Vector3(),hit=new T.Vector3(),frustum=new T.Frustum(),viewProjection=new T.Matrix4(),rayPool=[];
+    let mode="cutaway",lastTime=null,animate=false,exploredTargets=[],protectedCells=new Set(),layoutKey=null,layoutItems=null;
     function itemsFor(projection,hero=projection.activeHero) {
       const known=new Set(projection.discoveredCells),doors=new Set(projection.doors.map(d=>Topo.edgeKey(...Topo.endpoints(d))));
       const heroCell=hero&&Topo.key(hero.x,hero.row),region=heroCell&&Topo.regions.get(heroCell),inRoom=region&&region!=="corridor";
@@ -52,6 +53,8 @@
       // Only the current hero's room needs its floor opened up. A corridor
       // protects the hero point below, rather than every explored corridor tile.
       exploredTargets=inRoom?[...protectedCells].map(id=>{const [x,row]=Topo.parse(id);return new T.Vector3(x+.5-13,floorHeight+.03,row+.5-9.5);}):[];
+      const key=projection.discoveredCells.join("|")+";"+projection.doors.map(door=>door.id).join("|");
+      if(layoutKey===key)return layoutItems;
       const edges=new Map(),runs=new Map();
       for(const id of known) {
         // Revealed rubble supplies the corridor stop; do not back it with a
@@ -108,7 +111,7 @@
         owner.item.joints.push({key,offset:owner.offset-owner.item.length/2,walls:connections.map(c=>c.item.id)});
       }
       for(const item of items)if(records.has(item.id))syncJoints(records.get(item.id),item);
-      return items;
+      layoutKey=key;layoutItems=items;return items;
     }
     function syncJoints(record,item) {
       const wanted=new Set(item.joints.map(j=>j.key));
@@ -146,33 +149,47 @@
       // A stone section face closes the visual cut; the sculpt is clipped,
       // never compressed vertically. Full-height jagged tops retain their shape.
       const cap=new T.Mesh(capGeometry,capMaterial);cap.scale.x=item.length;cap.visible=false;cap.castShadow=true;cap.receiveShadow=true;model.add(cap);
+      // Cover pale printed wall lines in the floor scan at the sculpt's feet.
+      // Scenery only: retain known wall lengths and actual door openings.
+      const footing=new T.Mesh(footingGeometry,footingMaterial);footing.scale.x=item.length;
+      footing.position.y=.005;footing.receiveShadow=true;model.add(footing);
       const current=mode==="full"?height:lowHeight;
       const record={model,plane,cap,height,current,item,joints:new Map(),worldBounds:new T.Box3()};
       records.set(item.id,record);syncJoints(record,item);return model;
     }
-    function update(camera,target,focus,time,steady=false,figures=[]) {
+    function update(camera,focus,time,steady=false,figures=[]) {
       const dt=lastTime===null?1/60:Math.min(.05,Math.max(0,(time-lastTime)/1000));lastTime=time;
-      cameraDirection.copy(camera.position).sub(target).normalize();
       let changed=false;animate=false;
       frustum.setFromProjectionMatrix(viewProjection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
       const roomFigures=figures.filter(point=>protectedCells.has(Topo.key(Math.floor(point.x+13),Math.floor(point.z+9.5))));
       const sightTargets=[...exploredTargets,...roomFigures,...(focus?[focus]:[])].filter(point=>frustum.containsPoint(point));
+      let rayCount=0;
+      if(mode==="cutaway")for(const point of sightTargets) {
+        // A target's camera ray is identical for every wall in this frame.
+        // Reuse the pool and unproject once per target, not once per wall.
+        nearPoint.copy(point).project(camera);nearPoint.z=-1;nearPoint.unproject(camera);
+        if(!rayPool[rayCount])rayPool[rayCount]={ray:new T.Ray(),distanceSq:0};
+        const entry=rayPool[rayCount];entry.ray.origin.copy(point);entry.ray.direction.subVectors(nearPoint,point);
+        entry.distanceSq=entry.ray.direction.lengthSq();if(entry.distanceSq<.000001)continue;
+        entry.ray.direction.normalize();rayCount++;
+      }
       const groups=new Map();
       for(const record of records.values())if(record.model.visible) {
         const id=record.item.cutawayGroup;
         if(!groups.has(id))groups.set(id,{records:[],cut:mode==="low"});
         groups.get(id).records.push(record);
       }
-      for(const group of groups.values())if(mode==="cutaway"&&cameraDirection.y<.985) {
-        const item=group.records[0].item,along=item.axis==="h"?"z":"x",line=item.axis==="h"?item.row-9.5:item.x-13;
+      for(const group of groups.values())if(mode==="cutaway") {
         // Only cut for an actual camera ray from explored floor/a shown figure.
         // Facing the camera alone is not evidence of anything being obscured.
-        const behind=sightTargets.filter(point=>cameraDirection[along]*(line-point[along])>.04);
         for(const record of group.records) {
           const wall=record.item,cx=wall.axis==="h"?wall.x+wall.length/2-13:wall.x-13,cz=wall.axis==="v"?wall.row+wall.length/2-9.5:wall.row-9.5;
           record.worldBounds.min.set(cx-(wall.axis==="h"?wall.length/2:.09),floorHeight,cz-(wall.axis==="v"?wall.length/2:.09));
           record.worldBounds.max.set(cx+(wall.axis==="h"?wall.length/2:.09),floorHeight+record.height,cz+(wall.axis==="v"?wall.length/2:.09));
-          for(const point of behind){focusRay.set(point,cameraDirection);if(focusRay.intersectBox(record.worldBounds,hit)!==null){group.cut=true;break;}}
+          for(let i=0;i<rayCount;i++) {
+            const {ray,distanceSq}=rayPool[i];
+            if(ray.intersectBox(record.worldBounds,hit)!==null&&hit.distanceToSquared(ray.origin)<=distanceSq){group.cut=true;break;}
+          }
           if(group.cut)break;
         }
       }

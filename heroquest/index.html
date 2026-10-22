@@ -9,12 +9,17 @@
   <link rel="stylesheet" href="ui.css">
   <script defer src="vendor/three-0.186.1.js"></script>
   <script defer src="src/data/board.js"></script>
+  <script defer src="src/data/pieces.js"></script>
   <script defer src="src/data/trial.js"></script>
   <script defer src="src/rules/topology.js"></script>
   <script defer src="src/data/combat.js"></script>
   <script defer src="src/rules/combat.js"></script>
+  <script defer src="src/data/spells.js"></script>
+  <script defer src="src/rules/spells.js"></script>
+  <script defer src="src/rules/quest.js"></script>
   <script defer src="src/ai/zargon.js"></script>
   <script defer src="src/engine/exploration.js"></script>
+  <script defer src="src/session/sandbox.js"></script>
   <script defer src="src/session/storage.js"></script>
   <script defer src="assets/models/imported/barbarian.js"></script>
   <script defer src="assets/models/barbarian-paint.js"></script>
@@ -29,50 +34,68 @@
   <script defer src="assets/models/imported/fimir.js"></script>
   <script defer src="assets/models/imported/chaos-warrior.js"></script>
   <script defer src="assets/models/imported/gargoyle.js"></script>
-  <script defer src="assets/models/imported/table.js"></script>
-  <script defer src="assets/models/imported/closed-door.js"></script>
-  <script defer src="assets/models/imported/open-door.js"></script>
-  <script defer src="assets/models/imported/alchemists-bench.js"></script>
-  <script defer src="assets/models/imported/torture-rack.js"></script>
-  <script defer src="assets/models/imported/sorcerers-table.js"></script>
-  <script defer src="assets/models/imported/fireplace.js"></script>
-  <script defer src="assets/models/imported/chest.js"></script>
-  <script defer src="assets/models/imported/throne.js"></script>
-  <script defer src="assets/models/imported/tomb-bottom.js"></script>
-  <script defer src="assets/models/imported/tomb-top.js"></script>
-  <script defer src="assets/models/imported/blocked-1x1.js"></script>
+  <script defer src="assets/models/furniture/table.js"></script>
+  <script defer src="assets/models/furniture/closed-door.js"></script>
+  <script defer src="assets/models/furniture/open-door.js"></script>
+  <script defer src="assets/models/furniture/cupboard.js"></script>
+  <script defer src="assets/models/furniture/alchemists-bench.js"></script>
+  <script defer src="assets/models/furniture/torture-rack.js"></script>
+  <script defer src="assets/models/furniture/sorcerers-table.js"></script>
+  <script defer src="assets/models/furniture/fireplace.js"></script>
+  <script defer src="assets/models/furniture/chest.js"></script>
+  <script defer src="assets/models/furniture/throne.js"></script>
+  <script defer src="assets/models/furniture/tomb-bottom.js"></script>
+  <script defer src="assets/models/furniture/tomb-top.js"></script>
+  <script defer src="assets/models/furniture/blocked-1x1.js"></script>
   <script defer src="assets/models/imported/combat-die.js"></script>
   <script defer src="assets/models/combat-die-paint.js"></script>
   <script defer src="assets/models/movement-die-body.js"></script>
   <script defer src="assets/models/walls/wall-one.js"></script>
   <script defer src="assets/models/walls/wall-two.js"></script>
   <script defer src="assets/models/walls/wall-join.js"></script>
-  <script defer src="assets/models/weapons-rack/weapons-rack.js"></script>
+  <script defer src="assets/models/furniture/weapons-rack.js"></script>
+  <script defer src="assets/models/bookcase/bookcase.js"></script>
+  <script defer src="src/view/furniture-surfaces.js"></script>
   <script defer src="src/view/stl-models.js"></script>
   <script defer src="assets/textures/tiles/stairway.js"></script>
   <script defer src="assets/textures/board/board.js"></script>
   <script defer src="src/view/component-textures.js"></script>
   <script defer src="src/view/models.js"></script>
+  <script defer src="src/view/model-surfaces.js"></script>
   <script defer src="src/view/dice-models.js"></script>
   <script defer src="src/view/interaction-glow.js"></script>
   <script defer src="src/view/torch-placement.js"></script>
   <script defer src="src/view/torches.js"></script>
   <script defer src="src/view/floors.js"></script>
   <script defer src="src/view/walls.js"></script>
+  <script defer src="src/view/figure-motion.js"></script>
+  <script defer src="src/view/board-camera.js"></script>
+  <script defer src="src/view/board-terrain.js"></script>
+  <script defer src="src/view/spell-effects.js"></script>
+  <script defer src="src/view/combat-camera.js"></script>
   <script defer src="src/view/tabletop.js"></script>
   <script defer src="src/ui/dialogs.js"></script>
+  <script defer src="src/ui/controls.js"></script>
   <script defer src="src/ui/die-faces.js"></script>
   <script defer src="src/ui/portraits.js"></script>
   <script defer src="src/ui/dice.js"></script>
   <script defer src="src/ui/combat.js"></script>
+  <script defer src="src/ui/spells.js"></script>
+  <script defer src="src/ui/board-choice.js"></script>
   <script defer src="src/ui/context.js"></script>
+  <script defer src="src/view/test-room.js"></script>
   <script defer src="src/ui/model-viewer.js"></script>
+  <script defer src="src/ui/quest.js"></script>
+  <script defer src="src/ui/adventure-hud.js"></script>
+  <script defer src="src/ui/party.js"></script>
   <script defer src="src/session/app.js"></script>
 </head>
 <body class="exploration-app">
   <header class="topbar">
     <a class="back-link" href="../index.html"><span aria-hidden="true">←</span> Games library</a>
-    <span class="prototype-label"><span aria-hidden="true"></span> Combat prototype</span>
+    <span class="prototype-label"><span aria-hidden="true"></span> Gameplay prototype</span>
+    <a class="hq-button hq-button--quiet" id="sandbox-link" href="index.html?sandbox=1" target="_blank" rel="noopener">Gameplay sandbox</a>
+    <button class="hq-button hq-button--quiet" id="test-room-button" data-open-test-room type="button">Test room</button>
     <button class="hq-button hq-button--quiet" id="model-viewer-button" data-open-model-viewer type="button">Models</button>
     <button class="hq-button" id="restart-game" type="button" disabled>Restart <span aria-hidden="true">↻</span></button>
     <button class="hq-button hq-button--quiet" id="menu-button" type="button">Menu <span aria-hidden="true">☰</span></button>
@@ -86,9 +109,11 @@
         <div id="hero-combat-stats" class="hero-combat-stats" aria-live="polite"></div>
         <div class="dice-row" aria-live="polite" aria-atomic="true"><span class="d6" id="die-one" aria-hidden="true">—</span><span class="d6" id="die-two" aria-hidden="true">—</span><div><strong id="movement-remaining">Ready to begin</strong><small id="dice-description">Set up your adventure</small></div></div>
         <button class="hq-button hq-button--primary" id="roll-movement" type="button" disabled>Roll movement <span aria-hidden="true">◆</span></button>
-        <p id="action-status" class="action-status">One attack per turn</p>
+        <button class="hq-button" id="open-spellbook" type="button" hidden>Spells</button>
+        <p id="action-status" class="action-status">One action per turn</p>
         <button class="hq-button" id="end-turn" type="button" disabled>End turn <span aria-hidden="true">→</span></button>
       </section>
+      <p class="quest-objective" id="quest-objective"></p>
       <section class="party-section" aria-labelledby="party-heading"><div class="section-heading"><h2 id="party-heading">The party</h2><span>TURN ORDER</span></div><div class="party-list" id="party-list"></div></section>
       <p class="board-controls-hint">Click a tile or model for actions.</p>
     </aside>
@@ -100,35 +125,52 @@
     </section>
     <aside class="journal-panel" aria-labelledby="journal-heading"><div class="section-heading"><h2 id="journal-heading">Adventure journal</h2><span aria-hidden="true">◇</span></div><ol id="event-log" class="event-log" aria-live="off"></ol></aside>
   </main>
-  <footer class="page-footer"><span>THE ORIGINAL ADVENTURE</span><p id="session-footer" role="status">One shared browser · 1–4 heroes · Browser autosave</p><a href="assets/models/README.md">Model credits</a><a href="studio.html?inspect=barbarian">Miniature studio ↗</a></footer>
+  <footer class="page-footer"><span>THE ORIGINAL ADVENTURE</span><p id="session-footer" role="status" hidden></p></footer>
 
   <dialog id="setup-dialog" class="hq-dialog setup-dialog" aria-labelledby="setup-heading">
     <form id="setup-form">
       <div class="dialog-ornament" aria-hidden="true">◆</div><p class="eyebrow">THE ORIGINAL ADVENTURE</p><h1 id="setup-heading">Gather your party</h1><p class="dialog-lead">Choose your players and heroes.</p>
-      <div class="quest-card"><span>QUEST 01</span><div><strong>The Trial</strong><p>Combat prototype · Original North American map</p></div><span aria-hidden="true">◇</span></div>
+      <div class="quest-card"><span>QUEST 01</span><div><strong>The Trial</strong><p>Gameplay prototype · Original North American map</p></div><span aria-hidden="true">◇</span></div>
       <label class="hq-field player-count-field"><span>Number of players</span><select id="player-count" name="player-count" aria-describedby="player-count-help"><option value="1">1 player</option><option value="2">2 players</option><option value="3">3 players</option><option value="4" selected>4 players</option></select></label>
       <p id="player-count-help" class="setup-help">One hero per player. The computer controls Zargon.</p>
       <fieldset class="ownership-fields"><legend>Player names</legend><div id="player-fields" class="owner-grid"></div></fieldset>
       <fieldset class="ownership-fields"><legend>Choose your heroes</legend><p>Choosing an assigned hero swaps the two heroes.</p><div id="hero-fields" class="owner-grid"></div></fieldset>
       <label class="hq-check"><input type="checkbox" id="setup-realistic-los"><span><strong>Use realistic line of sight</strong><small>Movable pieces disappear outside the party’s sight. Explored rooms and furniture remain.</small></span></label>
-      <p class="hq-callout">Prototype: melee combat only. Spells, searches, healing and quest completion are unavailable.</p>
-      <div class="dialog-actions"><button class="hq-button hq-button--quiet" data-open-model-viewer type="button">View models</button><button class="hq-button hq-button--primary" type="submit" id="start-adventure">Enter the catacombs <span aria-hidden="true">→</span></button></div>
+      <p class="hq-callout">Prototype: elemental spells available. Searches and potions are unfinished.</p>
+      <div class="dialog-actions"><button class="hq-button hq-button--quiet" data-open-test-room type="button">Test room</button><button class="hq-button hq-button--quiet" data-open-model-viewer type="button">View models</button><button class="hq-button hq-button--primary" type="submit" id="start-adventure">Enter the catacombs <span aria-hidden="true">→</span></button></div>
     </form>
   </dialog>
   <dialog id="briefing-dialog" class="hq-dialog" aria-labelledby="briefing-heading"><p class="eyebrow">MENTOR’S WORDS</p><h2 id="briefing-heading">The Trial</h2><blockquote class="quest-briefing" id="quest-briefing"></blockquote><p class="hq-callout">No traps or secret doors in this quest.</p><div class="dialog-actions"><button class="hq-button hq-button--primary" id="begin-turn" type="button">Begin exploring →</button></div></dialog>
   <dialog id="handoff-dialog" class="hq-dialog handoff-dialog" aria-labelledby="handoff-heading"><div class="dialog-ornament" aria-hidden="true">◇</div><p class="eyebrow" id="handoff-round">NEXT HERO</p><h2 id="handoff-heading">Pass the device</h2><div id="handoff-portrait" class="handoff-portrait" hidden></div><p class="dialog-lead" id="handoff-description"></p><div class="dialog-actions"><button class="hq-button hq-button--primary" id="ready-hero" type="button">I’m ready →</button></div></dialog>
   <dialog id="menu-dialog" class="hq-dialog" aria-labelledby="menu-heading"><div class="dialog-title-row"><div><p class="eyebrow">AT THE TABLE</p><h2 id="menu-heading">Adventure menu</h2></div><button class="dialog-close" data-close-dialog="menu-dialog" type="button" aria-label="Close menu">×</button></div><label class="hq-check"><input id="setting-realistic-los" type="checkbox"><span><strong>Use realistic line of sight</strong><small>Hide movable pieces outside party sight. Explored terrain and furniture remain.</small></span></label><label class="hq-check"><input id="setting-grid" type="checkbox" checked><span><strong>Show square grid</strong></span></label><div class="hq-range-setting" id="light-level-setting"><label for="setting-light-level">Background light <output id="light-level-value" for="setting-light-level">26%</output></label><input id="setting-light-level" type="range" min="0" max="100" step="1" value="26"><div class="range-endpoints" aria-hidden="true"><span>Dark</span><span>Bright</span></div></div><div class="menu-actions"><button class="hq-button" id="open-help" type="button">How to explore <span aria-hidden="true">?</span></button><button class="hq-button" id="restart-adventure" type="button">New adventure <span aria-hidden="true">↻</span></button><button class="hq-button hq-button--primary" data-close-dialog="menu-dialog" type="button">Return to the table →</button></div></dialog>
-  <dialog id="help-dialog" class="hq-dialog" aria-labelledby="help-heading"><div class="dialog-title-row"><h2 id="help-heading">How to explore</h2><button class="dialog-close" data-close-dialog="help-dialog" type="button" aria-label="Close help">×</button></div><ol class="help-steps"><li>Choose Roll movement, then press Roll in the dice modal once on your hero’s turn. Red dice use white pips; attack and defence use the skull/shield dice. Heroes press Roll and Zargon rolls automatically.</li><li>Click a square and choose Move here in its panel. Hover outlines the tile or model: light blue means it is within movement or action reach, and yellow means it is not; selecting keeps that same colour. A blue line shows a route within your movement; yellow needs more movement. Movement follows the grid one square at a time.</li><li>Use the wall button above the board to cycle Full walls, Automatic cutaway and Low walls. Cutaway lowers foreground walls as you rotate the camera. Dynamic lighting switches between torch-lit darkness and full tabletop lighting.</li><li>When new ground appears, movement pauses so you can review it. Your unspent movement remains.</li><li>Click a closed door and choose Open door when adjacent. Opening is free and doors stay open.</li><li>Pass through friendly heroes, but finish on an empty square. Monsters and furniture block movement. The whole 2×2 stairway is one shared space: moving inside it is free, and stepping off costs one movement. This shared-space rule is our digital adaptation.</li><li>Click a monster and choose Attack, then roll in the modal. Attack once with your starting weapon against a monster directly beside you, across an open edge. Skulls hit; heroes defend on white shields and monsters on black shields.</li><li>You may attack before moving, or move and then attack. Attacking after any movement ends your remaining movement.</li><li>Every revealed piece opens a panel with its name and description. Unavailable actions stay visible and explain why they are disabled. Shift + arrows selects a known square, [ / ] cycles revealed pieces, and Enter opens the panel; Escape closes it.</li><li>End your turn and hand the device to the next living hero. After the party, Zargon controls the revealed monsters. Continue through the result screens to review their moves and attacks.</li></ol><p class="hq-callout">Autosaves in this browser. Spells, healing, searches, thrown weapons and quest completion are unavailable.</p><div class="dialog-actions"><button class="hq-button hq-button--primary" data-close-dialog="help-dialog" type="button">Back to exploring →</button></div></dialog>
+  <dialog id="help-dialog" class="hq-dialog" aria-labelledby="help-heading"><div class="dialog-title-row"><h2 id="help-heading">How to explore</h2><button class="dialog-close" data-close-dialog="help-dialog" type="button" aria-label="Close help">×</button></div><ol class="help-steps"><li>Choose Roll movement, then press Roll in the dice modal once on your hero’s turn. Red dice use white pips; attack and defence use the skull/shield dice. Heroes press Roll and Zargon rolls automatically.</li><li>Click a square and choose Move here in its panel. Hover outlines the tile or model: light blue means it is within movement or action reach, and yellow means it is not; selecting keeps that same colour. The route is blue as far as you can move this turn, then yellow. Choose Move partway here to follow its blue section. Movement follows the grid one square at a time.</li><li>Use the wall button above the board to cycle Full walls, Automatic cutaway and Low walls. Cutaway clears walls blocking the active hero’s room; in corridors it protects the hero. Dynamic lighting switches between torch-lit darkness and full tabletop lighting.</li><li>When new ground appears, movement pauses so you can review it. Your unspent movement remains.</li><li>Click a closed door and choose Open door. Your hero walks into reach first if the route fits your remaining movement. Opening is free and doors stay open.</li><li>Heroes may pass through heroes; monsters may pass through monsters. Opposing figures and furniture block ordinary movement. Finish on an empty square. With Pass Through Rock active, select unseen playable squares normally, pass through objects, and reach a free square before your last move or End turn. Unused areas outside the playfield cannot be selected. The whole 2×2 stairway is one shared space: moving inside it is free, and stepping off costs one movement. This shared-space rule is our digital adaptation.</li><li>Click a monster and choose Attack to view the opponent from your hero’s eyes, then roll in the modal. The camera returns after the outcome or Cancel. Attack once with your starting weapon against a monster directly beside you, across an open edge. Skulls hit; heroes defend on white shields and monsters on black shields.</li><li>Move then act, or act then move. Never move, act, then resume moving. Attacking or casting first still allows movement afterwards; acting after movement ends the remaining movement. Opening doors is free.</li><li>Every revealed piece opens a panel with its name and description. Unavailable actions stay visible and explain why they are disabled. Shift + arrows selects a known square, [ / ] cycles revealed pieces, and Enter opens the panel; Escape closes it.</li><li>After defeating Verag, return to the stairway and choose Leave dungeon to complete that hero’s quest. Leaving earlier is a retreat. Other heroes can continue; the session ends when everyone has left or fallen.</li><li>End your turn and hand the device to the next hero still in the dungeon. After the party, Zargon controls the revealed monsters. Continue through the result screens to review their moves and attacks.</li></ol><p class="hq-callout">Elf and Wizard: choose Spells to cast instead of attacking. Browse the original spell cards using the arrows or swipe. Choose a target on the glowing board, then confirm the cast; cast cards leave your hand. Gameplay sandbox opens a separate practice save; Test room remains the model showroom. Searches, potions and thrown weapons are unfinished.</p><div class="dialog-actions"><button class="hq-button hq-button--primary" data-close-dialog="help-dialog" type="button">Back to exploring →</button></div></dialog>
   <dialog id="confirm-dialog" class="hq-dialog" aria-labelledby="confirm-heading"><p class="eyebrow">START AGAIN</p><h2 id="confirm-heading">Gather a new party?</h2><p class="dialog-lead">Replaces your current adventure and browser save.</p><div class="dialog-actions"><button class="hq-button" data-close-dialog="confirm-dialog" type="button">Keep exploring</button><button class="hq-button hq-button--primary" id="confirm-restart" type="button">New adventure</button></div></dialog>
   <dialog id="action-dialog" class="hq-dialog" aria-labelledby="action-heading"><p class="eyebrow" id="action-kicker">YOUR ACTION</p><h2 id="action-heading">Choose an action</h2><p class="dialog-lead" id="action-description"></p><div id="action-options"></div><div class="dialog-actions"><button id="cancel-action" class="hq-button" type="button">Cancel</button><button id="confirm-action" class="hq-button hq-button--primary" type="button">Continue →</button></div></dialog>
   <dialog id="dice-dialog" class="hq-dialog dice-dialog" aria-labelledby="dice-heading"><p id="dice-kicker" class="eyebrow">DICE TRAY</p><h2 id="dice-heading">Your roll</h2><p id="dice-instructions" class="dialog-lead"></p><div id="dice-participants" class="roll-participants" hidden></div><div id="dice-stage" class="dice-stage"><canvas id="dice-canvas" role="img" aria-label="Animated three-dimensional dice. The result is announced below after rolling."></canvas><span id="dice-stage-note" class="dice-stage-note">HEROQUEST</span></div><p id="dice-result" class="dice-result" role="status" hidden></p><div class="dialog-actions"><button id="dice-cancel" class="hq-button" type="button">Cancel</button><button id="dice-roll" class="hq-button hq-button--primary" type="button">Roll</button><button id="dice-continue" class="hq-button hq-button--primary" type="button" hidden>Continue →</button></div></dialog>
   <dialog id="combat-dialog" class="hq-dialog combat-dialog" aria-labelledby="combat-heading"><p class="eyebrow" id="combat-kicker">COMBAT</p><h2 id="combat-heading">Combat result</h2><div id="combat-content"></div><div class="dialog-actions"><button class="hq-button hq-button--primary" id="continue-combat" type="button">Continue →</button></div></dialog>
-  <dialog id="defeat-dialog" class="hq-dialog handoff-dialog" aria-labelledby="defeat-heading"><p class="eyebrow">THE CATACOMBS CLAIM THEIR DUE</p><h2 id="defeat-heading">The party has fallen</h2><p class="dialog-lead">Gather a new party to try again.</p><p class="hq-callout">Healing and recovery are not available yet.</p><div class="dialog-actions"><button class="hq-button hq-button--primary" id="retry-adventure" type="button">Gather a new party →</button></div></dialog>
+  <dialog id="spell-dialog" class="hq-dialog spell-dialog" aria-labelledby="spell-heading">
+    <div class="dialog-title-row"><h2 id="spell-heading">Spellbook</h2><button class="dialog-close" data-close-dialog="spell-dialog" type="button" aria-label="Close spellbook">×</button></div>
+    <p id="spell-note" class="hq-muted"></p>
+    <div id="spell-cards" class="spell-cards" role="group" aria-label="Spell cards. Use left and right arrows to browse."></div>
+    <div class="spell-deck-controls"><button id="spell-previous" class="hq-button" type="button" aria-label="Previous spell">←</button><span id="spell-position" aria-live="polite"></span><button id="spell-next" class="hq-button" type="button" aria-label="Next spell">→</button></div>
+    <section class="spell-details hq-panel" aria-labelledby="spell-detail-heading"><p id="spell-detail-group" class="eyebrow"></p><h3 id="spell-detail-heading"></h3><p id="spell-detail-description"></p><p id="spell-detail-status" class="hq-muted" aria-live="polite"></p>
+      <label id="spell-mode-field" class="hq-field" hidden><span>Genie’s task</span><select id="spell-mode"><option value="attack">Attack a monster</option><option value="door">Open a door</option></select></label>
+      <div class="spell-target-area"><div id="spell-target-portrait" hidden></div><div class="hq-field"><span>Target</span><button id="spell-target" class="hq-button" type="button">Choose on board</button></div><p id="spell-target-note" class="hq-muted" aria-live="polite"></p></div>
+    </section>
+    <div class="dialog-actions"><button class="hq-button" data-close-dialog="spell-dialog" type="button">Cancel</button><button class="hq-button hq-button--primary" id="cast-spell" type="button" disabled>Cast spell</button></div>
+  </dialog>
+  <dialog id="quest-outcome-dialog" class="hq-dialog handoff-dialog" aria-labelledby="quest-outcome-heading"><p class="eyebrow" id="quest-outcome-kicker">THE TRIAL ENDS</p><h2 id="quest-outcome-heading">The party has fallen</h2><p class="dialog-lead" id="quest-outcome-description"></p><ul class="quest-outcome-heroes" id="quest-outcome-heroes"></ul><div class="dialog-actions"><button class="hq-button hq-button--primary" id="retry-adventure" type="button">Gather a new party →</button></div></dialog>
   <dialog id="model-viewer-dialog" class="hq-dialog model-viewer-dialog" aria-labelledby="model-viewer-heading">
     <div class="dialog-title-row"><h2 id="model-viewer-heading">Model viewer</h2><button class="dialog-close" data-close-dialog="model-viewer-dialog" type="button" aria-label="Close model viewer">×</button></div>
     <label class="hq-field model-viewer-field"><span>Model</span><select id="model-viewer-list"></select></label>
+    <div id="test-room-controls" class="test-room-controls" hidden>
+      <label class="hq-field"><span>Piece</span><select id="test-room-piece"></select></label>
+      <button id="test-room-focus" class="hq-button" type="button">Focus piece</button>
+      <button id="test-room-inspect" class="hq-button" type="button">Inspect model</button>
+      <button id="test-room-lighting" class="hq-button" type="button" aria-pressed="false">Dynamic lighting: Off</button>
+    </div>
     <div id="model-viewer-stage" class="model-viewer-stage"><canvas id="model-viewer-canvas" tabindex="0" aria-label="3D model. Drag to rotate; scroll or pinch to zoom."></canvas><p id="model-viewer-status" class="model-viewer-status" role="status" hidden></p></div>
-    <div class="model-viewer-controls"><p>Drag to rotate · Scroll or pinch to zoom</p><div><button id="model-viewer-reset" class="hq-button" type="button">Reset view</button><button id="model-viewer-zoom-out" class="hq-button" type="button" aria-label="Zoom model out">−</button><button id="model-viewer-zoom-in" class="hq-button" type="button" aria-label="Zoom model in">+</button></div></div>
+    <div class="model-viewer-controls"><p>Drag to rotate · Scroll or pinch to zoom</p><div><button class="hq-button" data-open-test-room type="button">Test room</button><button id="model-viewer-reset" class="hq-button" type="button">Reset view</button><button id="model-viewer-zoom-out" class="hq-button" type="button" aria-label="Zoom model out">−</button><button id="model-viewer-zoom-in" class="hq-button" type="button" aria-label="Zoom model in">+</button></div></div>
   </dialog>
 </body>
 </html>

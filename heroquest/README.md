@@ -1,86 +1,119 @@
-# HeroQuest
+# HeroQuest — The Trial prototype
 
-A combat prototype for the original North American HeroQuest Game System, played in one shared browser. One to four human-controlled heroes explore The Trial and fight CPU-controlled revealed monsters with static 3D miniatures. The remaining game rules are later milestones.
+A client-side 3D adaptation of the original North American base Game System for
+one shared browser. Choose 1–4 players, each with an actual hero miniature; the
+computer controls Zargon. This is an unfinished gameplay prototype, not yet a
+playable entry in the games library.
 
-## Play the combat prototype
+## Run
 
-Open [`index.html`](index.html) in Chrome. Choose 1–4 players, enter their names, and choose one unique hero miniature per player. Only the selected heroes enter the board and turn order; one player can adventure with just one miniature. Selecting another player’s hero swaps their choices. Quest encounters and statistics stay unchanged. Choose the optional sight setting, read Mentor’s briefing, and begin. No installation, build, server or network connection is required; the browser needs WebGL 2. The approved browser check used localhost; direct-file operation is preserved by the implementation but was not separately checked in that pass.
+Open [index.html](index.html) in Chrome with WebGL 2. Scripts, Three.js, textures
+and packed models are local. No install, build, server, CDN or network is needed;
+ordinary deferred scripts retain file:// support. GitHub Pages can host the same
+files beneath the monorepo's heroquest directory. Use Games library to return.
 
-- Choose **Roll movement**, then press **Roll** in the 3D dice modal. Movement uses traditional red dice with white pips. Attacks and defence use the supplied skull/shield dice in the same tray; heroes press Roll and Zargon rolls automatically. Results come from the random engine; animation only displays them. Continue through the recorded stages and outcome.
-- The 2×2 stairway is one larger shared space: moving within it is free, and stepping off it costs one movement. Its internal coordinates only position the miniatures. This shared-space adaptation was requested by Mark; it is not stated in the original movement rules.
-- Hover a known square or piece for a glow outline: light blue when within current movement/action reach, yellow otherwise. Selecting keeps the same colour. Click to open its nearby action panel. Choose **Move here** on a reachable square.
-- The miniature takes a short hop across each traversed square and turns to face each step, retaining its final facing when it stops. Movement/turn controls pause until it lands; reduced-motion preferences skip the animation.
-- Every revealed model opens a panel with its name, a short description and **Move here**. This chooses the shortest known route to a reachable free square beside monsters, furniture or other heroes; doors use either endpoint and stairs use their footprint. The active hero’s own square and blocked stone cannot be movement destinations. Unavailable actions remain visible, disabled with a reason. Click a door and choose **Open door** when adjacent; opening is free and doors stay open.
-- Review new discoveries before continuing the remaining movement.
-- Click a monster and choose **Attack**, then **Roll** in the modal, once per turn. Skulls hit; heroes defend with white shields and monsters with black shields. Attack before moving, or move then attack; attacking after paid movement ends the remaining movement.
-- End the turn to hand the device to the next living hero. After the party, Zargon chooses moves and attacks for the revealed monsters. Continue through their results to review the phase.
-- Drag to rotate, Shift-drag to pan, scroll/pinch or use plus/minus to zoom. With the canvas focused, arrows rotate and Home centres the active hero. Shift + arrows selects known squares, [ / ] cycles revealed pieces, Enter opens the context panel, and Escape closes it. **Explored map** fits only discovered terrain; party buttons centre a hero without changing turns.
-- The sidebar keeps global controls such as **Roll movement** and **End turn**, plus party/status information. Tile, door and attack actions live in context panels; rolls and decisions use shared modal dialogs. The button above the board cycles **Full walls / Automatic cutaway / Low walls**. **Menu** contains sight, grid/torch controls, instructions and restart confirmation.
+## Play and controls
 
-**Models** in the main header opens a model viewer. Choose any current hero, monster, furniture, scenery or die from the list; drag to rotate, scroll/pinch to zoom, or use the keyboard and Reset view. Setup also offers **View models**. The viewer leaves the adventure and its save untouched. See [viewer details](docs/MODEL-VIEWER.md); this addition has source review only.
+Set up the party and spell groups, read Mentor's briefing, then roll movement.
+Click a tile or revealed model for its context panel. Hover outlines and routes
+are blue within reach, yellow beyond it; Move partway here follows a legal blue
+prefix. Door opening and looking are free. An action can follow movement or
+precede it, but movement cannot be split around an attack/cast.
 
-Only discovered terrain is rendered. Rooms reveal their full contents when opened; corridors appear as they come into view. Explored terrain and furniture remain; scene lighting alone controls terrain brightness. **Use realistic line of sight**, off by default, hides discovered movable pieces outside the combined sight of the heroes. It changes presentation without deleting entities or discovery memory.
+Open door and Attack can walk into reach first when a fully known legal route
+fits the remaining movement. Discovery interrupts movement; choose again to
+continue. Every displayed piece except walls has a context panel, with unavailable
+actions disabled and explained. Roll movement and End turn remain global controls.
 
-Room torches are placed automatically: one per room, with up to two in rooms of
-20 or more squares. Placements avoid doors and furniture, spread light across
-the room and stay the same for every playthrough of the quest. They give warm pools of light,
-glowing flames and subtle flicker. **Dynamic lighting: On/Off**, beside the wall
-controls, switches between gloomy torch lighting and full tabletop lighting; the
-choice is saved. A faint global light keeps areas away from torches visible.
-With dynamic lighting on, **Menu → Background light** adjusts that level and
-remembers it. Torches have rising flame particles and embers; reduced motion
-keeps a steady flame without particles. The square-grid overlay receives the
-same lighting and shadows as the floor.
-Torches are clickable scenery with names, descriptions and movement/context
-actions. Only discovered fixtures appear. Lighting never changes exploration or
-gameplay sight. Reduced motion makes the flames/light steady; hidden tabs pause
-flicker. This first lighting pass has source review only, with no browser check.
+Drag to orbit, Shift-drag to pan, wheel/pinch or plus/minus to zoom. Arrow keys
+rotate; Home centres the active hero. Shift+arrows selects squares, [ / ] cycles
+pieces, Enter opens their panel, Escape dismisses it. Camera focus glides between
+positions, follows moving figures and centres newly revealed areas.
 
-Painted tall stone walls follow discovered room boundaries, with stone fillers closing section joins and gaps left for doors. The main-view wall button changes full height, automatic cutaway for the current hero’s room (the defending hero during monster attacks), and low walls; the choice saves in this browser. Hovering a destination shows a blue route within movement reach or a yellow known route beyond it. Clicking retains a route when the pointer leaves the board. [Wall fitting, source credit and current verification limits](docs/WALLS.md). The original tall stone pack is used throughout; varied section lengths, faces, mirroring and subtle stone tones reduce the repeating pattern. Variations stay consistent for each quest.
+Attacks use an attacker-eye camera before the shared 3D Roll modal. Movement dice
+are rounded red dice with white pips; combat dice use the original skull/shield
+symbols. Outcomes are recorded independently of animation/physics. CPU dice roll
+automatically. Defeated pieces remain through the result and fade/tip away after
+acknowledgement. End turn advances the selected heroes, then the CPU monster queue.
 
-Sidebar red dice show white pips, and combat results share the supplied die’s skull/shield symbols. The roll modal reserves space so results do not change its height. These UI/artwork changes have source review only; see [visual details and reference](docs/VISUALS.md).
+Spells opens the twelve original elemental cards assigned to that caster. Swipe,
+drag or use arrows to browse the inertial carousel; full printed text and details
+sit below it. Choose targets on the glowing board, return to review, then Cast.
+Used cards leave the hand. A short spell-specific particle/projectile effect plays
+on the board before resistance/combat dice or the outcome modal opens. Effects
+skip under reduced motion or interrupted graphics; saved outcomes never replay.
 
-Progress autosaves in this browser after each action. Refreshing the same game address restores positions, health, discoveries, doors, turn order, movement remaining, dice outcomes and pending combat/handoff screens, including an unrolled defence prompt. Camera, facing and grid/wall settings are retained. **New adventure** replaces the saved game when you start the new party; clearing the browser’s site data removes it. The footer reports if browser storage is unavailable. See [save details](docs/SAVES.md) and the [approved dice/refresh checks](docs/DICE.md).
+Return to the shared stairway to Leave dungeon. Leaving before defeating Verag is
+an individual retreat; other heroes can continue. Restart confirms a fresh quest
+with the same party; New adventure returns to setup.
 
-Attacking miniatures turn and lunge before the roll dialog. Defeated pieces tip, sink and fade after you continue from the outcome; reduced motion skips these effects. This animation update has source review only.
+## Visibility and appearance
 
-Starting stats/weapons, adjacent melee combat, recorded attack/defence dice, Body Point loss, defeated-piece removal and CPU monster turns are implemented. Searches, spells, healing, thrown weapons, traps, quest completion, fallen-hero possessions and audio remain unavailable. The Elf and Wizard currently use their starting melee weapons without spells. Fallen heroes leave the board and turn order; losing every selected hero ends the prototype. This is not a complete playable quest and has no library catalog card.
+Only discovered terrain is displayed. Rooms reveal their contents together;
+corridors appear as explored. Static terrain/furniture remain. Optional realistic
+LOS hides movable pieces outside combined party sight; spell targeting always
+uses the individual caster's sight. Floor/grid brightness follows scene lighting.
 
-Your supplied board image now replaces the generated floors. The stairs use
-actual tile-sheet artwork on a thin 2x2 tile. See the [asset audit](docs/ASSET-AUDIT.md)
-for remaining placeholders and resources needed.
+The main-view wall button cycles Full walls, Automatic cutaway and Low walls.
+Automatic cutaway clears actual obstructions to the active/defending hero's room,
+or the hero point in corridors. Walls have deterministic stone/section variation
+and sculpted joins. Dynamic lighting toggles gloomy torch/hearth lighting versus
+full tabletop light. Menu → Background light adjusts global visibility while
+lighting is on. Every room has a deterministic clear torch mount, up to two in
+large rooms. Decorative fire never changes rules, sight or occupancy.
 
-## Content and implementation
+Furniture, doors and rubble have prepared wood/cloth/stone/metal finishes. The
+Barbarian is painted; other heroes and monsters await detailed painting. All
+miniature bases are dark grey. Floors use Mark's supplied board image and stairs
+use the original printed tile artwork. [Asset audit](docs/ASSET-AUDIT.md) records
+sources, remaining assembly and limits. No new models are currently needed for
+The Trial; the gargoyle's separate supplied wings still need assembly.
 
-The board’s 26 × 19 grid and 22 room rectangles are traced from the original blank map. The Trial uses 11 of those rooms, 12 doors, 24 monsters and 16 scenery placements, including the stairway. The map, symbol legend, briefing and exploration rules were visually reviewed against the original scans. See [`docs/EXPLORATION.md`](docs/EXPLORATION.md) for precise source locators, digital interpretations, verification and remaining limits. [Combat notes](docs/COMBAT.md) record the newly reviewed stats/rules, CPU policy and current verification status. The rest of the rules/cards have not received a complete audit.
+## Inspection and practice
 
-Ordinary deferred scripts separate quest data, grid queries, command resolution, presentation and DOM controls. The engine owns a serializable state and seeded dice outcomes; the renderer receives a filtered projection. Three.js picking selects a cell or piece but never decides movement legality or sight. See [`AGENTS.md`](AGENTS.md) for the file map and invariants.
+**Models** rotates any of 32 public model types. **Test room** displays them all,
+including the newly painted cupboard, in an invented neutral-floor showroom.
+These viewers share game factories but reveal no quest placements or save state.
 
-The original North American edition is authoritative. Preserve original names, quests, rules, cards and statistics. The Hasbro remake is comparison material only; fan equipment cards must be checked against the original Armoury.
+**Gameplay sandbox** opens [a separate practice game](index.html?sandbox=1).
+Its tools prepare each spell, movement, heroes and original opponents through
+fixtures while real rolls/effects use the normal engine. Its browser save is
+separate from the adventure. See [sandbox guide/checklist](docs/SANDBOX.md).
 
-## Miniature studio and assets
+## Saves, rules and implementation
 
-[`barbarian.html`](barbarian.html) opens the painted barbarian studio. [`studio.html`](studio.html) preserves the earlier full-board visual study with four sample pieces; those sample placements are not a quest. The studio has its own camera/selection controls and fixed explored-room demonstration. Its full-board controls are separate from the actual discovery engine.
+Adventure autosave uses heroquest.session.v1; practice uses heroquest.sandbox.v1.
+Envelope 1/state schema 5 retain RNG, spent cards, pending dice/reports, CPU queue
+and view preferences. Accepted outcomes save before presentation. Refresh resumes
+recorded results without recasting/rerolling. Invalid saves remain until explicit
+replacement. No cloud save, export/import or account system is implemented.
 
-All 40 supplied STL files have packed browser derivatives in [`assets/models/imported/catalog.json`](assets/models/imported/catalog.json). The exploration entry loads the heroes, Trial monsters and required scenery; the visual studio loads four samples. Most pieces use simple matte colours. The barbarian has eight clean materials, with offline cuts at colour boundaries to avoid painting across whole triangles. His supplied shape and pose are preserved. Every hero/monster base has a dark grey top and rim. Live lighting provides surface shading; no pigment noise or cavity wash is baked in. A source geometry hash prevents mismatched paint. See the [offline colour-layout preview](assets/previews/barbarian-painted.png) and [`assets/models/README.md`](assets/models/README.md).
+The 2×2 stairs as one shared space and broader Pass Through Rock object traversal
+are Mark's digital rulings, distinct from original printed rules. Rock movement
+stays within the quest's playable floor; ending inside any object with no movement
+left, or ending the turn there, is fatal. Original base cards/items/quests only;
+no expansion/remake/fan content. Searches, traps, treasure/possessions, potions,
+throwing, Chaos spells and campaign progression are still unfinished.
 
-Bookcases remain generated placeholders; the weapons rack uses the supplied xbeaker sculpt and stairs use original tile-sheet artwork. The tomb uses both supplied halves; the gargoyle currently uses its supplied body without separate wings. Decorative geometry never changes grid footprints. Sources are decoded once and cached, with no runtime STL parsing or simplification.
+[Code structure](docs/CODE-STRUCTURE.md), [plan](docs/PLAN.md),
+[spell rules](docs/SPELLS.md), [combat](docs/COMBAT.md), [quest](docs/QUESTS.md),
+[turn order](docs/RULES-TURN-ORDER.md), [saves](docs/SAVES.md) and
+[model viewer](docs/MODEL-VIEWER.md) describe responsibilities and decisions.
+Shared reusable components own camera motion, discovery-keyed terrain, control
+locks, recorded dice, target selection and bounded effects. Geometry/textures,
+wall layouts and unchanged portraits are cached; cutaway rays are reused across
+walls. These are source-level optimisations, not benchmarked performance claims.
 
-Mark supplied the STL collection from a shared personal drive and describes it as open licence. Creator, licence text and original links were not included and remain unknown; no specific licence is assigned or independently verified. No Free3D asset was used. Original ZIPs/STLs and retired modelling studies remain local and ignored by Git.
+## Sources and review limits
 
-## Guides and references
+Original rules/cards are source-linked in [content](docs/CONTENT.md). The supplied
+40-STL collection's creator/exact licence remain unknown beyond Mark's open-licence
+statement. Walls and weapons rack have their own notices. Preserve originals and
+[model provenance](references/MODEL-SOURCES.md); no Free3D asset was used.
+Paint recipes/previews/notices live beside their derivatives under assets/models.
 
-- [Implementation plan](docs/PLAN.md): architecture and remaining milestones.
-- [Exploration implementation](docs/EXPLORATION.md): source ledger, state, sight and UI conventions.
-- [Combat implementation](docs/COMBAT.md): source ledger, attack ordering, CPU turns and result UI.
-- [Browser autosave](docs/SAVES.md): save format, restore timing and verification limits.
-- [3D dice and stairway](docs/DICE.md): supplied die mapping, Roll flow, shared-space movement and focused checks.
-- [Content guide](docs/CONTENT.md): edition policy and transcription requirements.
-- [Visual guide](docs/VISUALS.md): static miniature and shared interface direction.
-- [Reference collection](references/README.md): source links and local archives.
-
-Three.js 0.186.1 is bundled locally as a classic script; see [`vendor/README.md`](vendor/README.md) and its MIT licence. Preserve ordinary scripts and direct-file support; do not introduce fetched runtime content or modules without an agreed runtime change. Downloaded reference scans and HTML are research material, never executable/runtime dependencies.
-
-From the repository root, missing references can be downloaded with `python3 heroquest/scripts/fetch_references.py` (Python 3.9+ and curl). The utility checks signatures and records sizes/hashes; a successful download does not certify content accuracy.
-
-The header **Restart** button starts The Trial again with the same party after confirmation. It replaces the current browser save and returns to the briefing. **Menu → New adventure** lets you choose a different party. Restart received source review only; no new browser/save checks were run.
+Latest furniture/scenery painting has offline multi-angle authoring review.
+Latest spell particles, sandbox/targeting/phasing, camera/lighting and cleanup have
+source/diff review only. No new automated/browser checks, build, lint/typecheck or
+performance benchmark were run; Mark is testing manually. Historical approved
+checks and exact limits remain in the feature docs and do not verify this revision.

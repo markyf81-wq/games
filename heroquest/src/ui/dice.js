@@ -53,10 +53,11 @@
       dice.forEach(d=>{d.model.position.copy(d.rest);if(d.landing)d.model.quaternion.copy(d.landing);});draw();
       if(!current?.rolled)return;
       const result=$("dice-result");result.replaceChildren();
-      if(current.kind==="movement")result.textContent=current.results.join(" + ")+" = "+current.results.reduce((a,b)=>a+b,0);
+      if(current.kind==="movement"&&current.resultFormat==="faces")current.results.forEach(value=>{const face=document.createElement("span");face.className="d6";HQ.dieFaces.numbered(face,value);face.setAttribute("aria-label","Spell die: "+value);result.append(face);});
+      else if(current.kind==="movement")result.textContent=current.results.join(" + ")+" = "+current.results.reduce((a,b)=>a+b,0);
       else current.results.forEach(value=>result.append(HQ.dieFaces.combat(value)));
       // Text equivalents remain on each face for screen readers and fallback.
-      canvas.setAttribute("aria-label",current.kind==="movement"?"Movement roll: "+current.results.join(", "):"Combat roll: "+current.results.map(value=>names[value]).join(", "));
+      canvas.setAttribute("aria-label",current.kind==="movement"?(current.resultFormat==="faces"?"Spell roll: ":"Movement roll: ")+current.results.join(", "):"Combat roll: "+current.results.map(value=>names[value]).join(", "));
       $("dice-result").hidden=false;roll.hidden=true;next.hidden=false;next.disabled=false;
       if(document.visibilityState!=="hidden"&&$("dice-dialog").open)next.focus({preventScroll:true});
     }

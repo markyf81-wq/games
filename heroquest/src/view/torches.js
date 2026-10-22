@@ -1,10 +1,16 @@
 (function () {
   "use strict";
   const HQ=window.HeroQuest,T=window.HQThree;
-  // Decorative wall fixtures: never add these to quest occupancy or sight data.
+  // Decorative wall/hearth fire: never add it to occupancy or sight data.
   const items=HQ.placeQuestTorches(HQ.trial,HQ.board);
   HQ.createTorchLighting=function() {
     const records=new Map(),frustum=new T.Frustum(),matrix=new T.Matrix4(),sphere=new T.Sphere(new T.Vector3(),4.8);
+    // Stable light/shadow counts prevent new shader variants whenever a camera
+    // reveals another torch. Reassign eight reusable lights instead.
+    const root=new T.Group(),pool=Array.from({length:8},(_,i)=>{
+      const light=new T.PointLight(0xffb45d,0,4.8,2);light.castShadow=i===0;
+      light.shadow.mapSize.set(512,512);light.shadow.radius=4;light.shadow.camera.near=.12;light.shadow.camera.far=5.2;light.shadow.normalBias=.035;light.shadow.bias=-.00015;root.add(light);return light;
+    });
     const flameGeometry=new T.SphereGeometry(1,16,12);
     const vertices=flameGeometry.attributes.position;
     for(let i=0;i<vertices.count;i++){const y=vertices.getY(i),taper=1-Math.max(0,y)*.65;vertices.setXYZ(i,vertices.getX(i)*taper,y,vertices.getZ(i)*taper);}
@@ -13,17 +19,26 @@
     gradient.addColorStop(0,"rgba(255,211,115,.7)");gradient.addColorStop(.2,"rgba(255,159,49,.32)");gradient.addColorStop(1,"rgba(255,111,20,0)");ctx.fillStyle=gradient;ctx.fillRect(0,0,64,64);
     const haloTexture=new T.CanvasTexture(image);haloTexture.colorSpace=T.SRGBColorSpace;
     const particleGeometry=new T.PlaneGeometry(1,1),particleMaterial=new T.MeshBasicMaterial({map:haloTexture,transparent:true,opacity:.9,blending:T.AdditiveBlending,depthWrite:false,toneMapped:false,side:T.DoubleSide});
+    const logGeometry=new T.CylinderGeometry(.036,.045,.54,7),logMaterial=HQ.models.material(0x30291f,.97);
     const particlePosition=new T.Vector3(),particleScale=new T.Vector3(),particleRotation=new T.Quaternion(),parentRotation=new T.Quaternion(),particleMatrix=new T.Matrix4(),particleColour=new T.Color();
     let enabled=true,active=false,shadowId=null;
+    function makeFlame(){
+      const flame=new T.Group();
+      const outer=new T.Mesh(flameGeometry,orange);outer.scale.set(.085,.19,.085);flame.add(outer);
+      const core=new T.Mesh(flameGeometry,yellow);core.scale.set(.045,.115,.045);core.position.y=-.045;flame.add(core);
+      return flame;
+    }
     function updateParticles(record,camera,time){
-      const {particles,phase}=record;
+      const {particles,phase}=record,hearth=record.hearth;
+      const baseY=hearth ? .15 : 1.2,baseZ=hearth ? 0 : .36;
       particleRotation.identity();
       if(camera){record.model.getWorldQuaternion(parentRotation);camera.getWorldQuaternion(particleRotation);particleRotation.premultiply(parentRotation.invert());}
       for(let i=0;i<particles.count;i++){
         // Fixed phase offsets/lifetimes: entirely cosmetic, no gameplay RNG.
-        const age=((time/1000+phase)/(.75+(i%7)*.071)+i*.61803398875)%1,ember=i>=18;
+        const age=((time/1000+phase)/(.75+(i%7)*.071)+i*.61803398875)%1,ember=i%24>=18;
         const sway=Math.sin(i*9.31+age*5.4);
-        particlePosition.set(Math.sin(i*17.1)*.055+sway*age*.06,1.2+age*(ember ? .78 : .42),.36+Math.cos(i*7.3)*.035+age*.045);
+        const emitterX=hearth?(Math.floor(i/24)-1)*.18:0;
+        particlePosition.set(emitterX+Math.sin(i*17.1)*.055+sway*age*.06,baseY+age*(ember ? .78 : .42),baseZ+Math.cos(i*7.3)*.035+age*.045);
         const width=ember ? .014+(i%3)*.004 : .025+(1-age)*.055;
         particleScale.set(width,ember?width:width*2.1,1);particleMatrix.compose(particlePosition,particleRotation,particleScale);particles.setMatrixAt(i,particleMatrix);
         const fade=Math.sin(age*Math.PI)*(ember ? .8 : 1);
@@ -44,39 +59,63 @@
       // A single point inside the flame exaggerates the basket/bracket into a
       // huge wedge. Treat the fixture as an emitter, not a shadow occluder.
       mount.traverse(object=>{if(object.isMesh)object.castShadow=false;});
-      const flame=new T.Group();flame.position.set(0,1.28,.36);mount.add(flame);
-      const outer=new T.Mesh(flameGeometry,orange);outer.scale.set(.085,.19,.085);flame.add(outer);
-      const core=new T.Mesh(flameGeometry,yellow);core.scale.set(.045,.115,.045);core.position.y=-.045;flame.add(core);
+      const flame=makeFlame();flame.position.set(0,1.28,.36);mount.add(flame);
       const halo=new T.Sprite(new T.SpriteMaterial({map:haloTexture,color:0xffce7b,transparent:true,opacity:.52,blending:T.AdditiveBlending,depthWrite:false,toneMapped:false}));
       halo.position.copy(flame.position);halo.scale.set(1.05,1.05,1);mount.add(halo);
       const particles=new T.InstancedMesh(particleGeometry,particleMaterial,24);particles.instanceMatrix.setUsage(T.DynamicDrawUsage);particles.frustumCulled=false;particles.userData.visualEffect=true;particles.raycast=()=>{};mount.add(particles);
-      const light=new T.PointLight(0xffb45d,8,4.8,2);light.position.set(0,1.31,.41);light.shadow.mapSize.set(512,512);
-      light.shadow.radius=4;
-      light.shadow.camera.near=.12;light.shadow.camera.far=4.8;light.shadow.normalBias=.035;light.shadow.bias=-.00015;mount.add(light);
+      const light=new T.Object3D();light.distance=4.8;light.position.set(0,1.31,.41);mount.add(light);
       const record={model,flame,halo,particles,light,phase:records.size*2.73};records.set(item.id,record);updateParticles(record,null,0);return model;
+    }
+    function registerFireplace(item,model) {
+      if(records.has(item.id))return;
+      // Source-space mouth of the supplied fireplace. Counter-scale the effect
+      // so particles/light retain board units after uniform footprint fitting.
+      const mount=new T.Group();mount.position.set(0,7.6,-2.3);mount.scale.setScalar(1/model.scale.x);model.add(mount);
+      // A small static fuel bed remains visible when dynamic fire is disabled.
+      for(const [z,angle] of [[-.055,.18],[.055,-.22]]){
+        const log=new T.Mesh(logGeometry,logMaterial);log.rotation.set(0,angle,Math.PI/2);log.position.set(0,.015,z);log.receiveShadow=true;mount.add(log);
+      }
+      const flame=new T.Group();mount.add(flame);
+      for(const [x,size] of [[-.18,.9],[0,1.1],[.18,.95]]){
+        const tongue=makeFlame();tongue.position.set(x,.23,0);tongue.scale.setScalar(size);flame.add(tongue);
+      }
+      const halo=new T.Sprite(new T.SpriteMaterial({map:haloTexture,color:0xffce7b,transparent:true,opacity:.52,blending:T.AdditiveBlending,depthWrite:false,toneMapped:false}));
+      halo.position.set(0,.23,.08);halo.scale.set(1.05,1.05,1);mount.add(halo);
+      const particles=new T.InstancedMesh(particleGeometry,particleMaterial,72);particles.instanceMatrix.setUsage(T.DynamicDrawUsage);particles.frustumCulled=false;mount.add(particles);
+      // Fire cannot be selected independently or inflate the fireplace outline.
+      mount.traverse(part=>{part.userData.visualEffect=true;part.raycast=()=>{};part.castShadow=false;});
+      const light=new T.Object3D();light.distance=5.2;light.position.set(0,.3,.3);mount.add(light);
+      const record={model,flame,halo,particles,light,hearth:true,phase:records.size*2.73};records.set(item.id,record);updateParticles(record,null,0);
     }
     function update(camera,target,time,steady=false) {
       matrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(matrix);
       const nearby=[];
       for(const [id,record] of records) {
         const {model,light,flame,halo,particles,phase}=record;
+        sphere.radius=light.distance;
         light.getWorldPosition(sphere.center);
         const lit=enabled&&model.visible&&frustum.intersectsSphere(sphere);
-        light.visible=lit;flame.visible=enabled;halo.visible=enabled;
+        flame.visible=enabled;halo.visible=enabled;
         particles.visible=lit&&!steady;if(particles.visible)updateParticles(record,camera,time||0);
-        if(lit)nearby.push({id,record,distance:sphere.center.distanceToSquared(target)});
+        if(lit)nearby.push({id,record,position:sphere.center.clone(),distance:sphere.center.distanceToSquared(target)});
         const t=(time||0)/1000+phase;
         const flicker=steady?1:1+Math.sin(t*6.1)*.055+Math.sin(t*10.7+.8)*.035+Math.sin(t*17.3)*.018;
-        light.intensity=8*flicker;
+        light.intensity=(record.hearth?10:8)*flicker;
         flame.scale.set(1+(flicker-1)*.35,flicker,1+(flicker-1)*.35);flame.rotation.z=steady?0:Math.sin(t*4.7)*.055;
         halo.material.opacity=.48+(flicker-1)*.7;
       }
       nearby.sort((a,b)=>a.distance-b.distance);
+      const previous=nearby.find(entry=>entry.id===shadowId);
+      if(previous&&previous.distance<nearby[0].distance*1.3){nearby.splice(nearby.indexOf(previous),1);nearby.unshift(previous);}
       const nextShadow=nearby[0]?.id||null,changed=shadowId!==nextShadow;shadowId=nextShadow;
-      for(const [id,record] of records)record.light.castShadow=id===shadowId;
+      root.visible=enabled;root.updateWorldMatrix(true,false);
+      for(let i=0;i<pool.length;i++){
+        const light=pool[i],entry=nearby[i];light.intensity=entry?entry.record.light.intensity:0;
+        if(entry){root.worldToLocal(light.position.copy(entry.position));light.distance=entry.record.light.distance;}
+      }
       active=nearby.length>0;return changed;
     }
-    return Object.freeze({make,update,
+    return Object.freeze({root,make,registerFireplace,update,
       itemsFor(projection){return items.filter(item=>projection.discoveredCells.includes(HQ.topology.key(item.x,item.row)));},
       setEnabled(value){enabled=Boolean(value);},get enabled(){return enabled;},get active(){return active;}
     });

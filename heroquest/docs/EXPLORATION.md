@@ -60,7 +60,7 @@ This animation update received focused source review only; the earlier approved 
 
 The runtime loads prepared STL derivatives for the four heroes, eight monster types, doors, blocked tiles and most furniture. Only the barbarian has detailed authored paint; other pieces use matte colours, with separate dark grey bases on every hero and monster. The tomb is assembled from its source halves. Gargoyle wings remain unassembled; bookcases use a generated placeholder; the weapons rack uses the separately supplied xbeaker STL. Stairs now show original tile-sheet artwork on a thin 2x2 tile. These presentation choices do not change quest occupancy. Source orientation was reviewed independently for each hero/monster; appearance of every late-quest object has not received a browser review.
 
-The earlier visual study lives in `studio.html` with its separate full-board/fixed-mask controls. It must not be used as evidence of actual discovery behavior.
+The earlier visual study and its full-board/fixed-mask controller have been removed. Historical studio screenshots are not evidence of actual discovery behavior.
 
 ## Approved verification — 2026-10-21
 

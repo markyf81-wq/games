@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  const HQ=window.HeroQuest,T=window.HQThree,cache=new Map(),waiting=new Map();
+  const HQ=window.HeroQuest,T=window.HQThree,cache=new Map(),waiting=new Map(),contents=new WeakMap();
   // Bust framing in the supplied sculpt's units, after its normal facing fix.
   // Weapons above the head must not shrink faces to a dot in these small images.
   const frames={barbarian:[27.7,14,-.3,-1],dwarf:[18,13,0,0],elf:[28,15,0,0],wizard:[26,15,0,0],
@@ -18,22 +18,14 @@
       for(const [colour,power,position] of [[0xffe3bf,3.5,[-4,8,5]],[0xdceaff,1.5,[5,4,1]],[0xffe4c0,1.4,[-1,5,-5]]]) {
         const light=new T.DirectionalLight(colour,power);light.position.set(...position);scene.add(light);
       }
-      const image=document.createElement("canvas");image.width=256;image.height=128;
-      const ctx=image.getContext("2d"),gradient=ctx.createLinearGradient(0,0,0,128);gradient.addColorStop(0,"#c2cbd0");gradient.addColorStop(.5,"#555d5c");gradient.addColorStop(1,"#242b25");ctx.fillStyle=gradient;ctx.fillRect(0,0,256,128);ctx.fillStyle="#fff0d6";ctx.fillRect(35,18,45,55);ctx.fillStyle="#e4f0fa";ctx.fillRect(155,10,20,75);
-      const texture=new T.CanvasTexture(image);texture.colorSpace=T.SRGBColorSpace;texture.mapping=T.EquirectangularReflectionMapping;
-      const generator=new T.PMREMGenerator(renderer);environment=generator.fromEquirectangular(texture);texture.dispose();generator.dispose();
+      environment=HQ.modelSurfaces.createEnvironment(renderer,{width:256});
       canvas.addEventListener("webglcontextlost",event=>{event.preventDefault();unavailable=true;waiting.clear();});
     } catch(error){unavailable=true;waiting.clear();}
   }
   function capture(kind) {
-    const model=HQ.models.make(kind),materials=new Set();
+    const model=HQ.models.make(kind);let materials=new Set();
     try {
-      model.traverse(object=>{
-        if(!object.material)return;
-        const clone=source=>{const copy=source.clone();copy.clippingPlanes=null;copy.clipShadows=false;
-          if(copy.isMeshStandardMaterial){copy.envMap=copy.metalness>.3?environment.texture:null;copy.envMapIntensity=.75;}materials.add(copy);return copy;};
-        object.material=Array.isArray(object.material)?object.material.map(clone):clone(object.material);
-      });
+      materials=HQ.modelSurfaces.cloneForPreview(model,environment);
       const [y,span,x,z]=frames[kind],scale=model.scale.x,target=new T.Vector3(x*scale,y*scale,z*scale),half=span*scale/2;
       camera.left=-half;camera.right=half;camera.top=half;camera.bottom=-half;camera.updateProjectionMatrix();
       camera.position.copy(target).add(new T.Vector3(.18,.08,1).normalize().multiplyScalar(5));camera.lookAt(target);
@@ -60,9 +52,10 @@
   }
   function set(container,figures=[]) {
     figures=figures.filter(Boolean);
+    const signature=JSON.stringify(figures.map(figure=>[figure.kind||figure.id,figure.name,figure.role]));
+    if(contents.get(container)===signature)return;contents.set(container,signature);
     container.replaceChildren();container.hidden=!figures.length;
     for(const figure of figures) {
-      if(!figure)continue;
       const row=document.createElement("span");row.className="miniature-reference";row.append(image(figure.kind||figure.id,figure.name));
       if(figure.role){const copy=document.createElement("span"),name=document.createElement("strong"),role=document.createElement("small");name.textContent=figure.name;role.textContent=figure.role;copy.append(name,role);row.append(copy);}
       container.append(row);

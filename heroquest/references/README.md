@@ -48,7 +48,7 @@ On 2026-10-21 Mark supplied four ZIP archives containing 40 STL files from a sha
 
 Mark describes the collection as open licence. The archives contain no licence, creator or original-link documents, and Mark does not know those details. This is user-reported provenance, not an independently verified licence assignment.
 
-Browser derivatives and tracked conversion provenance are under `../assets/models/imported/`; see `../assets/models/README.md`. The Trial loads its required sculpts, with a generated bookshelf placeholder still awaiting replacement and a separately supplied weapons-rack sculpt now integrated. Other derivatives can be multi-part or unreviewed printing components, and their names do not define authentic rules or grid footprints.
+Browser derivatives and tracked conversion provenance are under `../assets/models/imported/`; see `MODEL-SOURCES.md`. The Trial loads its required sculpts, with a generated bookshelf placeholder still awaiting replacement and a separately supplied weapons-rack sculpt now integrated. Other derivatives can be multi-part or unreviewed printing components, and their names do not define authentic rules or grid footprints.
 
 ## Runtime artwork crops
 

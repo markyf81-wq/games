@@ -16,8 +16,15 @@
     for(let row=f.row;row<f.row+f.depth;row++)for(let x=f.x;x<f.x+f.width;x++)furniture.set(key(x,row),f.id);
   });
   function neighbors(id) {const [x,row]=parse(id);return [[x,row-1],[x+1,row],[x,row+1],[x-1,row]].map(p=>key(...p)).filter(k=>floor.has(k));}
+  const rockBounds=id=>{const [x,row]=parse(id);return key(x,row)===id&&Number.isInteger(x)&&Number.isInteger(row)&&x>=-24&&row>=-24&&x<HQ.board.columns+24&&row<HQ.board.rows+24;};
+  // An older outside-origin save may return to the playfield, but no route
+  // starting on playable floor can step out of it. Only floor endpoints survive.
+  function rockNeighbors(id){const [x,row]=parse(id);return [[x,row-1],[x+1,row],[x,row+1],[x-1,row]].map(p=>key(...p)).filter(next=>floor.has(id)?floor.has(next):rockBounds(next));}
   const spaceCells=id=>stairs.has(id)?[...stairs]:[id];
   const movementCost=(from,to)=>stairs.has(from)&&stairs.has(to)?0:1;
+  const insideBoard=id=>{const [x,row]=parse(id);return key(x,row)===id&&Number.isInteger(x)&&Number.isInteger(row)&&x>=0&&row>=0&&x<HQ.board.columns&&row<HQ.board.rows;};
+  const solid=id=>!floor.has(id)||blocked.has(id);
+  const magic=(state,actor,name)=>Boolean(actor.effects?.[name]||state.heroes[state.turnIndex]?.id===actor.id&&state.movement[name]);
   function routeCost(from,path){let cost=0;for(const to of path){cost+=movementCost(from,to);from=to;}return cost;}
   function connected(a,b,state) {
     if(!floor.has(a)||!floor.has(b)||blocked.has(a)||blocked.has(b))return false;
@@ -33,24 +40,46 @@
     if(item.kind==="stairs")return cells;
     return [...new Set([...cells,...cells.flatMap(id=>neighbors(id).filter(next=>!cells.includes(next)&&connected(id,next,state)))])];
   }
-  function occupiedHero(state,id,except) {return state.heroes.some(h=>h.body>0&&h.id!==except&&(key(h.x,h.row)===id||stairs.has(id)&&stairs.has(key(h.x,h.row))));}
+  function occupiedHero(state,id,except) {return state.heroes.some(h=>h.body>0&&!h.exit&&h.id!==except&&(key(h.x,h.row)===id||stairs.has(id)&&stairs.has(key(h.x,h.row))));}
   function monsterAt(state,id,knownOnly=false,except=null) {return (knownOnly?Object.values(state.monsterMemory):state.monsters.filter(m=>m.body>0)).find(m=>m.id!==except&&key(m.x,m.row)===id);}
-  function canStop(state,id,actorId) {return !furniture.has(id)&&!blocked.has(id)&&(!occupiedHero(state,id,actorId)||stairs.has(id));}
+  function canStop(state,id,actorId) {return floor.has(id)&&!furniture.has(id)&&!blocked.has(id)&&!monsterAt(state,id,true)&&(!occupiedHero(state,id,actorId)||stairs.has(id));}
+  const unsafe=(state,actor)=>solid(key(actor.x,actor.row))||furniture.has(key(actor.x,actor.row))||Boolean(monsterAt(state,key(actor.x,actor.row)))||(!stairs.has(key(actor.x,actor.row))&&occupiedHero(state,key(actor.x,actor.row),actor.id));
+  const routeStop=(state,id,actor)=>magic(state,actor,"passThroughRock")?floor.has(id):canStop(state,id,actor.id);
   // UI previews may look farther along known terrain; command callers retain
   // the current rolled budget by default and still validate the chosen move.
   function routes(state,actor,{budget=state.movement.rolled?state.movement.remaining:0}={}) {
+    const rock=magic(state,actor,"passThroughRock");
+    // Unknown squares all have the same cost/passability: previews must never
+    // consult their hidden floor, furniture or monster contents. At most 24
+    // movement can be rolled; a larger bounded preview still spans the board.
+    if(rock)budget=Math.min(budget,HQ.board.columns+HQ.board.rows);
     const start=key(actor.x,actor.row),known=new Set(state.discoveredCells),paths=new Map([[start,[]]]),costs=new Map([[start,0]]),queue=[{id:start,cost:0,steps:0}];
     while(queue.length) {
       queue.sort((a,b)=>a.cost-b.cost||a.steps-b.steps);
       const entry=queue.shift(),here=entry.id,path=paths.get(here);if(entry.cost!==costs.get(here)||entry.steps!==path.length)continue;
-      for(const next of neighbors(here)) {
+      for(const next of rock?rockNeighbors(here):neighbors(here)) {
         const cost=entry.cost+movementCost(here,next),steps=path.length+1;
-        if(cost>budget||!known.has(next)||!connected(here,next,state)||furniture.has(next)||monsterAt(state,next,true))continue;
+        if(cost>budget||!rock&&(!known.has(next)||!connected(here,next,state)||furniture.has(next)||(monsterAt(state,next,true)&&!magic(state,actor,"veilOfMist"))||blocked.has(next)))continue;
         if(costs.has(next)&&(costs.get(next)<cost||costs.get(next)===cost&&paths.get(next).length<=steps))continue;
         paths.set(next,[...path,next]);costs.set(next,cost);queue.push({id:next,cost,steps});
       }
     }
-    return new Map([...paths].filter(([id])=>id!==start&&canStop(state,id,actor.id)));
+    return new Map([...paths].filter(([id])=>id!==start&&routeStop(state,id,actor)));
+  }
+  // Split one known route at its furthest legal stopping square this turn.
+  // Intermediate friendly-occupied squares may be traversed, never selected as
+  // the partial endpoint. Use weighted costs so shared stair anchors stay free.
+  function routePlan(state,actor,to,paths=routes(state,actor,{budget:floor.size})) {
+    const path=paths.get(to);if(!path)return null;
+    const from=key(actor.x,actor.row),canMove=state.phase==="hero-turn"&&!state.pending&&!state.movement.closed&&actor.body>0&&!actor.exit&&state.heroes[state.turnIndex]?.id===actor.id;
+    const budget=state.movement.rolled?state.movement.remaining:0;
+    let here=from,cost=0,reachableSteps=0;
+    if(canMove)for(let i=0;i<path.length;i++) {
+      cost+=movementCost(here,path[i]);here=path[i];if(cost>budget)break;
+      if(routeStop(state,here,actor))reachableSteps=i+1;
+    }
+    const prefix=path.slice(0,reachableSteps),spent=routeCost(from,prefix);
+    return {path,reachableSteps,spent,partialTo:reachableSteps<path.length&&spent>0?prefix[prefix.length-1]:null};
   }
   // Cell-centre supercover trace. A corner may be grazed when either orthogonal
   // route is open, but two sealed walls never disclose a diagonal hidden room.
@@ -79,5 +108,5 @@
     }
     return true;
   }
-  HQ.topology=Object.freeze({key,parse,floor,blocked,stairs,regions,endpoints,edgeKey,doorEdges,furniture,neighbors,spaceCells,movementCost,routeCost,connected,approachCells,occupiedHero,monsterAt,canStop,routes,canSee});
+  HQ.topology=Object.freeze({key,parse,floor,blocked,stairs,regions,endpoints,edgeKey,doorEdges,furniture,neighbors,spaceCells,movementCost,insideBoard,rockBounds,solid,unsafe,magic,routeCost,connected,approachCells,occupiedHero,monsterAt,canStop,routes,routePlan,canSee});
 })();

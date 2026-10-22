@@ -108,9 +108,10 @@ Torches use their original full-size fixtures and wall-face mounts.
 ## Hover and selected destination routes
 
 Hovering a tile shows a thin ribbon along the known shortest movement route from
-the active hero, with a destination dot. Light blue means it can be reached with
-the current movement; yellow means the route exceeds the available movement or
-requires rolling first. Blocked/occupied/unconnected or undiscovered destinations
+the active hero, with a destination dot. The ribbon stays light blue up to the
+furthest legal stopping square within current movement, then yellow for the rest.
+The destination outline/dot stays yellow when the full route is out of range.
+Blocked/occupied/unconnected or undiscovered destinations
 have no invented route. Clicking retains the route for touch/context-panel use;
 hovering another tile temporarily replaces it. Leaving the tile/board restores
 the clicked route, if any. Keyboard square hover uses the same preview. A
@@ -125,6 +126,18 @@ The ribbon is transient presentation; it is cleared on dismissal, new selection
 or command/animation. It neither rolls dice nor spends movement nor enters saves.
 Movement can still stop early at a new discovery or a newly encountered obstacle,
 as before. The line does not disclose unknown current monster positions.
+
+`topology.routePlan` shares this split between the ribbon and tile action. It
+counts weighted stair costs and backs up from an occupied friendly square to a
+legal endpoint. A farther tile offers **Move partway here** when a positive-cost
+prefix is available; it dispatches ordinary MOVE to that endpoint, with the same
+engine validation, route ordering, animation, reveal pauses and autosave. The
+action remains disabled before rolling, with no movement left, after movement
+closes, without a known route, or during a pending decision. Free stair
+repositioning does not enable a pointless partial move
+towards an otherwise unaffordable destination. No new command or save fields.
+This split-route revision received focused source/diff review only; engine and
+Chrome verification have not been run for it.
 
 ## Verification status
 
@@ -167,3 +180,20 @@ An isolated low section in Mark’s screenshot exposed the per-model cutaway dec
 The later cutaway correction supersedes the earlier nearest-side/group-only rule: a minimal current-quest geometry diagnostic confirmed the void-backed corridor wall remains at full height (1.864), three obstructing room sections lower to 0.27, and the new stone join measures 0.11 × 1.85 × 0.145 with 952 triangles. The join asset was prepared offline from wall-one; see `scripts/prepare_wall_join.py` and the source notices. No new Chrome/visual or broad regression check was run.
 
 The final room-scoped diagnostic confirmed the active room’s three obstructing sections lower to 0.27, while the neighbouring explored room’s two sections and the void-backed corridor section stay full at 1.864. Changing turn/attack context selects the protected hero through presentation options, without new save fields. Native Chrome/layout checks remain unrun.
+
+The first-person combat camera keeps the selected wall mode throughout approach,
+held view and return. Automatic cutaway unprojects each frustum-visible protected
+terrain/figure point to its pixel on the near plane. The resulting finite sight
+segment follows orthographic, blended and perspective lenses consistently; only
+an intersection before the near plane requests a cut. Walls beyond/behind the
+camera rise through the existing height easing. Protected-room scope and
+discovery filtering remain intact. No full-height override or saved preference
+change. The minimal five-pose numeric projection diagnostic verifies the camera
+handoff, not Chrome wall appearance or gameplay.
+
+Known wall sections share a dark rough-stone footing, 0.28 squares wide and 0.02
+high, centred 0.005 above the floor. This masks the scan's pale printed wall
+boundaries exposed beside the narrower sculpt. Footings follow actual section
+lengths and door gaps, receive light/shadows and remain noninteractive scenery;
+they do not change movement/sight topology, wall heights or discovery. No new
+Chrome visual check was run for this appearance fix.

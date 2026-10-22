@@ -1,0 +1,211 @@
+{
+  "edition": "original North American Game System",
+  "page": 1,
+  "recipe": "scripts/prepare_spell_cards.py",
+  "sources": [
+    {
+      "source": "references/original-na/system-air-spells.pdf",
+      "sha256": "636147a01a269e1ae501b24213773652f269e0ad583382b855da5260c93d0120",
+      "cards": [
+        {
+          "id": "genie",
+          "file": "genie.jpg",
+          "crop": [
+            44,
+            30,
+            450,
+            668
+          ],
+          "size": [
+            480,
+            754
+          ],
+          "sha256": "548a9de453b1182177d7c74f149c524b5c95aa1722f2ab68973f033785c40009"
+        },
+        {
+          "id": "tempest",
+          "file": "tempest.jpg",
+          "crop": [
+            480,
+            30,
+            885,
+            668
+          ],
+          "size": [
+            480,
+            756
+          ],
+          "sha256": "6b21c96f8729686644e0a1dd31553351f77d0ef3ec7653413036cc795c249bf4"
+        },
+        {
+          "id": "swift-wind",
+          "file": "swift-wind.jpg",
+          "crop": [
+            44,
+            691,
+            450,
+            1320
+          ],
+          "size": [
+            480,
+            744
+          ],
+          "sha256": "a4acd4d56a5792aa306fa49c24e9389773dda1d80e1a48a42858b18645ecec68"
+        }
+      ]
+    },
+    {
+      "source": "references/original-na/system-earth-spells.pdf",
+      "sha256": "6c545da1b0ca49e0b9c1b748f35ffc4dbfe0cf1a9f1c5070d17b297df3b34389",
+      "cards": [
+        {
+          "id": "heal-body",
+          "file": "heal-body.jpg",
+          "crop": [
+            44,
+            30,
+            450,
+            668
+          ],
+          "size": [
+            480,
+            754
+          ],
+          "sha256": "7bdf047132a3d000ba74b55d257aeaf56b1607ef64b28d8f2c5109a08a357308"
+        },
+        {
+          "id": "rock-skin",
+          "file": "rock-skin.jpg",
+          "crop": [
+            480,
+            30,
+            885,
+            668
+          ],
+          "size": [
+            480,
+            756
+          ],
+          "sha256": "24c8bd19246616584cbcc641a5253e3eed94e0b8d771a61b83bd897b4fba900a"
+        },
+        {
+          "id": "pass-through-rock",
+          "file": "pass-through-rock.jpg",
+          "crop": [
+            44,
+            691,
+            450,
+            1320
+          ],
+          "size": [
+            480,
+            744
+          ],
+          "sha256": "8f4b0f3a3618b71e7cd535249fc595edd2654926d995ee119c7253d011480af2"
+        }
+      ]
+    },
+    {
+      "source": "references/original-na/system-fire-spells.pdf",
+      "sha256": "9920d3434c598e1d80b13c5868e572d5c8823b3d0964a1dc01fd1a4040dd4b31",
+      "cards": [
+        {
+          "id": "ball-of-flame",
+          "file": "ball-of-flame.jpg",
+          "crop": [
+            44,
+            30,
+            450,
+            668
+          ],
+          "size": [
+            480,
+            754
+          ],
+          "sha256": "8ee73824bc70971d8e344ebafc0a5990f55859e225b64cca1b9a7f3175e8c9f0"
+        },
+        {
+          "id": "fire-of-wrath",
+          "file": "fire-of-wrath.jpg",
+          "crop": [
+            480,
+            30,
+            885,
+            668
+          ],
+          "size": [
+            480,
+            756
+          ],
+          "sha256": "4ea908668a43bc4fe48863282b74069e98fd9ed86e4498a7cbc04be40859c158"
+        },
+        {
+          "id": "courage",
+          "file": "courage.jpg",
+          "crop": [
+            44,
+            691,
+            450,
+            1320
+          ],
+          "size": [
+            480,
+            744
+          ],
+          "sha256": "14bdbc4d04326dc548c09e5cd2646cda93e274395362ac0e6d758f3ecbda128d"
+        }
+      ]
+    },
+    {
+      "source": "references/original-na/system-water-spells.pdf",
+      "sha256": "bda583959ba742e80764e8696139f4b180ef2464029ab2138c75a2a4194c7693",
+      "cards": [
+        {
+          "id": "sleep",
+          "file": "sleep.jpg",
+          "crop": [
+            44,
+            30,
+            450,
+            668
+          ],
+          "size": [
+            480,
+            754
+          ],
+          "sha256": "ac09134c3b3367f34c5ea40201c465df8fe7bd9f11559171746a2b1276fe4d40"
+        },
+        {
+          "id": "water-of-healing",
+          "file": "water-of-healing.jpg",
+          "crop": [
+            480,
+            30,
+            885,
+            668
+          ],
+          "size": [
+            480,
+            756
+          ],
+          "sha256": "10e48853c1d4bb36f380926edbe50ad5a2781627758405bd1353cda711790c38"
+        },
+        {
+          "id": "veil-of-mist",
+          "file": "veil-of-mist.jpg",
+          "crop": [
+            44,
+            691,
+            450,
+            1320
+          ],
+          "size": [
+            480,
+            744
+          ],
+          "sha256": "cfd496c0b38c84848f6ffc30d0eda87e19350cb235ae64e94211274f75264724"
+        }
+      ]
+    }
+  ]
+}

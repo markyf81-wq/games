@@ -25,6 +25,8 @@
     "torture-rack":{asset:"torture-rack",width:2.86,rotation:0,colour:0x664630},
     "sorcerers-table":{asset:"sorcerers-table",width:2.86,rotation:0,colour:0x745444},
     "weapons-rack":{asset:"weapons-rack",width:2.86,rotation:Math.PI,colour:0x765438},
+    bookcase:{asset:"bookcase",width:2.86,rotation:0,colour:0x623729},
+    cupboard:{asset:"cupboard",width:2.86,rotation:0,colour:0x704530},
     fireplace:{asset:"fireplace",width:2.86,rotation:0,colour:0x817966},
     chest:{asset:"chest",width:.88,rotation:0,colour:0x795234},
     throne:{asset:"throne",width:.88,rotation:0,colour:0x805b40},
@@ -42,6 +44,7 @@
     return new DataView(bytes.buffer);
   }
   function paintFor(asset) {
+    if(asset.faceMaterials&&asset.materials)return asset;
     if(!["barbarian","combat-die"].includes(asset.id))return null;
     const paint=asset.id==="barbarian"?HQ.barbarianPaint:HQ.combatDiePaint;
     if(!paint)throw new Error("Missing colour asset for "+asset.id+".");
@@ -63,6 +66,12 @@
     const result=new T.BufferGeometry();
     result.setAttribute("position",new T.BufferAttribute(positions,3));
     result.setAttribute("normal",new T.BufferAttribute(normals,3));
+    if(surface.uvs) {
+      const data=buffer(surface.uvs),uvs=new Float32Array(count*2);
+      if(data.byteLength!==uvs.byteLength)throw new Error("Incomplete surface UVs for "+asset.id+".");
+      for(let i=0;i<uvs.length;i++)uvs[i]=data.getFloat32(i*4,true);
+      result.setAttribute("uv",new T.BufferAttribute(uvs,2));
+    }
     if(asset.colours) {
       const data=buffer(asset.colours),colours=new Float32Array(count*3),colour=new T.Color();
       if(data.byteLength!==count*3)throw new Error("Incomplete vertex colours for "+asset.id+".");
@@ -104,7 +113,7 @@
     if(!surfaces.has(definition.asset)) {
       const paint=paintFor(asset);
       const materials=paint
-        ? paint.materials.map(surface=>new T.MeshStandardMaterial({
+        ? paint.materials.map(surface=>surface.finish?HQ.furnitureSurfaces.make(surface):new T.MeshStandardMaterial({
           name:surface.name,color:surface.colour,roughness:surface.roughness,
           metalness:surface.metalness
         }))

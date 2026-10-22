@@ -8,7 +8,8 @@
     doors:ruleSource(12,"printed page 13, Looking And Opening Doors; How Zargon Reacts"),
     setup:ruleSource(8,"upright after 180 degree rotation; printed page 8, step 9 and starting-room diagram"),
     sight:ruleSource(10,"upright after 180 degree rotation; printed page 15, SEE"),
-    turnOrder:ruleSource(12,"printed page 12, Order Of Play")
+    turnOrder:ruleSource(12,"printed page 12, Order Of Play"),
+    monsterMovement:ruleSource(4,"rotate 180 degrees; printed page 21, Zargon The Evil Sorcerer's Turn; Monster Movement")
   });
   HQ.heroes=Object.freeze([
     {id:"barbarian",name:"Barbarian",kind:"barbarian",x:1,row:14},
@@ -62,6 +63,9 @@
   ].map(([kind,x,row,width,depth,rotation],i)=>Object.freeze({id:"furniture-"+(i+1),kind,x,row,width,depth,rotation,source:mapSource}));
   HQ.trial=Object.freeze({
     id:"the-trial-combat-v1",title:"The Trial",number:1,edition:"original-na",source:mapSource,
+    objective:Object.freeze({targetId:"monster-21",description:"Find and defeat Verag, then return to the stairway.",
+      source:Object.freeze({sourceId:"system-quest-book",pdfPage:5,region:"Quest 1 parchment",reviewStatus:"visually-reviewed"})}),
+    endingSource:Object.freeze({sourceId:"system-instruction-booklet",pdfPage:2,printedLocator:"printed page 23, Ending The Quest; rotate 180 degrees",reviewStatus:"visually-reviewed"}),
     notesSource:Object.freeze({sourceId:"system-quest-book",pdfPage:5,region:"lower half, Quest 1",reviewStatus:"visually-reviewed"}),
     briefing:"You have learned well, my friends. Now has come the time of your first trial. You must first enter the catacombs which contain Fellmarg’s Tomb. You must seek out and destroy Verag, a foul Gargoyle who hides in the catacombs. This Quest is not easy and you must work together in order to survive. This is your first step on the road to becoming true Heroes. Tread carefully my friends.",
     rooms:Object.freeze(activeRooms),floor:Object.freeze([...floor]),doors:Object.freeze(doors),
@@ -71,6 +75,6 @@
     startingPlacement:"Digital choice: separate rendering anchors within one larger shared stairway space. Internal stair movement is free; leaving costs one movement. This shared-space adaptation was requested by Mark, not confirmed in the printed rules.",
     // Quest notes are authoritative future content, never shown as reveal hints.
     notes:Object.freeze({A:{effect:"empty-weapons-rack"},B:{effect:"empty-chest"},C:{attackDice:4},D:{gold:84},E:{gold:120}}),
-    limitations:"Combat prototype: exploration, adjacent melee attacks and CPU monster turns. Searches, spells, healing, thrown weapons and quest completion are not implemented. Progress autosaves in this browser."
+    limitations:"Gameplay prototype: exploration, melee combat, CPU turns, stairway exits and quest outcomes. All twelve elemental spells are available. Searches, potions, thrown weapons and campaign progression are not implemented. Progress autosaves in this browser."
   });
 })();

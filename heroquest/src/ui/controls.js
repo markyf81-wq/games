@@ -1,0 +1,13 @@
+(function () {
+  "use strict";
+  const HQ=window.HeroQuest;
+  const turnControls="roll-movement open-spellbook end-turn menu-button model-viewer-button test-room-button restart-game sandbox-tools".split(" ");
+  // Both animation and board selection suspend the same global actions.
+  function lock() {
+    const states=turnControls.map(id=>document.getElementById(id)).filter(Boolean).map(button=>[button,button.disabled]);
+    for(const [button] of states)button.disabled=true;
+    let released=false;
+    return ()=>{if(released)return;released=true;for(const [button,disabled] of states)button.disabled=disabled;};
+  }
+  HQ.turnControls=Object.freeze({lock});
+})();

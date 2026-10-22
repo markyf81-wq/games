@@ -140,7 +140,7 @@ def convert(path):
         'geometrySha256':hashlib.sha256(quant.tobytes()+normals.tobytes()+faces.astype(index_type).tobytes()).hexdigest()}
     OUTPUT.mkdir(parents=True,exist_ok=True)
     dest=OUTPUT/(key+'.js')
-    dest.write_text('// User-supplied STL derivative. Provenance: catalog.json and ../README.md.\n'
+    dest.write_text('// User-supplied STL derivative. Provenance: catalog.json and ../../../references/MODEL-SOURCES.md.\n'
         +'window.HeroQuest.stlAssets = window.HeroQuest.stlAssets || {};\n'
         +'window.HeroQuest.stlAssets['+json.dumps(key)+'] = '+json.dumps(metadata,separators=(',',':'))+';\n')
     record={k:v for k,v in metadata.items() if k not in ('positions','normals','indices')}

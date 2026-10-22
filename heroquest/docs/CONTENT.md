@@ -4,7 +4,7 @@
 
 Use the original North American base Game System from Mark's [Ye Olde Inn index](https://north-american.yeoldeinn.com/system.php). Keep original names, narrative, quest order, map placements, printed statistics, card wording, treasure multiplicities, prices, and restrictions. Presentation and original artwork can change without changing those mechanics.
 
-Do not blend this material with the 2021 remake or the European edition. Use Fimir, Chaos Warrior, Chaos spells, and original proper names in the initial content pack. Fan localisations and expansions are separate future content packs, not replacements for the original campaign.
+Do not blend this material with the 2021 remake or the European edition. Use Fimir, Chaos Warrior, Chaos spells, and original proper names. Mark reaffirmed on 2026-10-22 that only the original base game's spells, items and cards belong in this implementation. Exclude expansions, fan cards and remake-only content; do not add additional content packs without an explicit request. Keep approved digital rulings separately documented rather than presenting them as printed rules.
 
 ## Source authority
 

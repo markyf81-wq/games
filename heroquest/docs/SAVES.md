@@ -1,3 +1,43 @@
+# Browser saves — current format
+
+The current save uses `heroquest.session.v1`, envelope version 1, engine schema 5 and content ID `the-trial-combat-v1`. Schemas 2/3/4 are explicitly migrated, not discarded. The historical approved checks below describe their original versions and do not validate the new migration.
+
+## Schema 5 — remaining effects and interrupted wake/travel
+
+Adds hero pending Courage/Swift Wind/Veil/Pass Through Rock and trapped status,
+monster Sleep, active movement magic and the CPU wake `resumeId`. Four movement
+dice and the Genie door/Sleep/stone reports are validated. An active phasing hero may be saved inside an object or outside the board
+with positive rolled movement remaining and no pending result; trapped heroes
+remain valid when dead. Ordinary live actors still require traversable floor. An awake monster can
+resume the already consumed activation after a saved report or ACK_REPORT gap.
+Schema 4 retains books, spent cards, existing effects and recorded dice/RNG;
+new flags are inactive, with no replenishment. See SPELLS.md for exact semantics.
+Current migration verification is pending; older evidence below is historical.
+
+## Schema 4 — spellbooks and effects
+
+Hero spell groups, consumed spell IDs and Rock Skin, and monster Tempest are
+validated/persisted. Spell and skipped-monster reports are supported; fire
+resistance uses the recorded `spell` dice stage. Schema 2/3 migrations add empty
+books and inactive effects without granting cards midway through a quest.
+RNG, reports and progress are preserved. See SPELLS.md for allocation, restart
+behaviour and the 15 approved focused checks plus scoped Chrome coverage.
+The older verification sections below remain historical.
+
+## Schema 3 and compatibility
+
+Every selected hero has `exit: null | "completed" | "retreated"`. The session can also end in `victory` or `retreat`, alongside `defeat`. Objective completion derives from the recorded Verag instance; no extra trigger or RNG field is needed. Exited heroes remain positive-Body records but must be on the stairway and leave occupancy/sight/turn order. Validation checks terminal-phase consistency, exit values and completion eligibility. Unknown formats are rejected/preserved.
+
+Validated schema 2 saves migrate in memory to schema 3 by adding `exit: null` to each hero. Positions, health, discoveries, queue/cursor, RNG, reports, dice presentation stages, screen and view preferences are retained. Loading does not itself overwrite the stored slot; normal persistence writes the upgraded state on the next save. No actor is marked escaped just because their old position was on the stairs.
+
+The gameplay-independent cleanup adds no saved fields. Rendering dependencies, reflection textures, animation promises, geometry and DOM nodes remain transient. See QUESTS.md for exits and CODE-STRUCTURE.md for ownership.
+
+## Current verification — 2026-10-22
+
+With Mark's approval, the focused diagnostic passed schema 3 terminal round trips, schema 2 migration with pending defence dice/RNG preserved, and rejection/preservation of inconsistent exits or unknown formats. Loading migrated data left the original stored text unchanged. The isolated Chrome pass restored an acknowledged hero combat state and a terminal retreat screen after refresh; it also covered same-party restart. Legacy migration and victory/mixed-party endings were engine/save checks, not browser playthroughs. See QUESTS.md for all 17 checks and browser limits.
+
+## Historical format and evidence
+
 # Browser autosave
 
 The current adventure automatically resumes when the same game address is reopened
@@ -88,7 +128,7 @@ stats/Body ranges, movement data, discovery IDs, reports, queue/cursor, phase an
 pending-decision compatibility. An unreadable/incompatible save stays untouched
 and setup displays an explanation; it is replaced only by starting a new game.
 Storage failures do not interrupt play: the footer reports that progress cannot
-be saved instead of claiming autosave succeeded.
+be saved. Successful autosaves have no footer message.
 
 ## Verification
 
@@ -100,4 +140,17 @@ loaded legacy v1 envelopes lacking dice-stage data. This was not a broad save
 regression: mid-hop refresh, storage failures/corruption, every view setting and
 new-game replacement still have source review rather than separate browser checks.
 
-Combat lunge/removal effects are transient view data, not new save fields. CPU outcomes remain saved before movement/lunge; a restored pending report can display its defeated figure until acknowledgement without replaying attacks. ACK_REPORT saves before the visual removal; reload during its fade restores the acknowledged state with the piece removed and the recorded queue position. Hero pre-roll lunges do not commit an attack. Facing is retained in the existing view snapshot. Source review only for these new presentation paths; no new save checks.
+Combat camera/removal effects are transient view data, not new save fields. CPU outcomes remain saved before movement/camera travel; a restored pending report can display its defeated figure until acknowledgement without replaying an attack or camera approach. ACK_REPORT saves before the return/fade; reload restores the acknowledged state with the piece removed and recorded queue position. Hero pre-roll camera travel does not commit an attack. Facing remains in the existing view snapshot, while camera snapshots always describe the ordinary board view, even during first person. Hidden/context loss returns to the board immediately. Source review only for the first-person revision; no new save checks.
+
+Gameplay sandbox uses the same validator/schema under the isolated key
+heroquest.sandbox.v1, selected only by index.html?sandbox=1. Fixture resets are
+explicit and never read/write the adventure slot. Camera snapshots retain desired
+stable framing, not transient damping/arrival state. No new save fields.
+
+Spell-particle presentation and component cleanup (2026-10-22) add no save fields
+or schema change. CAST_SPELL persists its already-resolved report/dice stage before
+camera framing or particles. Reload skips the cosmetic effect and resumes the
+recorded dice/outcome; no damage, card use or RNG is repeated. Particle buffers,
+control locks, camera springs/arrival promises, terrain/layout keys and portrait
+caches are transient. The existing stable camera goals remain the view snapshot.
+Source review only for this revision; no new save/browser checks were run.

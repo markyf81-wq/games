@@ -1,0 +1,21 @@
+{
+  "source": "references/original-na/system-game-screen.pdf",
+  "pdfPage": 1,
+  "sourceSha256": "3ab878a78015d2d3f56a2eaae13357ea38a6df60869ccd95b5b387b3c0e641ea",
+  "renderWidth": 1400,
+  "crop": [
+    500,
+    38,
+    931,
+    383
+  ],
+  "size": [
+    640,
+    512
+  ],
+  "output": "assets/ui/zargon.jpg",
+  "outputSha256": "3c5f588ba023c2163b97d595894fd1f3a3bce5a3e36770eaa8ac25ed93213a6e",
+  "review": "central game-screen artwork visually reviewed 2026-10-22",
+  "recipe": "scripts/prepare_zargon_portrait.py",
+  "rights": "Original game artwork; no open licence asserted. Source PDF retained."
+}

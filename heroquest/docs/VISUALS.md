@@ -20,13 +20,13 @@ Construct the board from data shared with the rules engine. Establish and visual
 
 Use stone floors and a visible square grid. Low walls, faded foreground walls, or the original board's flat wall markings can preserve visibility. Provide angled and overhead camera views, zoom limits, a clear selected square, and distinct selectable pieces. Camera movement must not reveal undiscovered entities.
 
-The exploration entry uses the original Trial layout and actual discovery. The reusable board trace is 26 × 19 with 22 rooms; only the quest’s walkable areas and discovered cells appear. The separate `studio.html` preserves the full-board visual study with central sample placements and a fixed explored-room preview. Those placements are not a quest.
+The exploration entry uses the original Trial layout and actual discovery. The reusable board trace is 26 × 19 with 22 rooms; only the quest’s walkable areas and discovered cells appear. The older full-board visual study has been retired; use the in-game Models viewer to inspect current pieces.
 
 Unexplored floors, rooms and corridors are absent. Once discovered, terrain and furniture remain; explored terrain brightness follows scene lighting alone. **Use realistic line of sight** controls movable pieces only: when enabled, monsters disappear outside combined hero sight. It defaults off. See EXPLORATION.md for the distinction between terrain sight, full room reveals and movable visibility; do not reuse display calculations uncritically as spell/attack rules.
 
 ## Model inspection modal
 
-The main Models button and setup View models button open a 31-type grouped
+The main Models button and setup View models button open a 32-type grouped
 model selector with orbit/zoom/reset controls. It reuses game geometry with
 independent materials, lights and reflections, fitting each object uniformly
 in a fixed-height stage. See MODEL-VIEWER.md for controls, caching/isolation and
@@ -202,17 +202,17 @@ Use simple material groups and bases to keep pieces distinguishable at board sca
 
 Mark's supplied STL collection replaces the handmade miniature studies. Forty source files cover the four heroes, standard monsters and weapon variants, a Chaos Warlock, separate gargoyle wings, furniture/components, a combat die and six tile models. The original files are preserved locally under ignored `references/stl-source/`; see the source inventory and `assets/models/imported/catalog.json` for exact filenames, hashes and actual conversion counts.
 
-The exploration entry loads the four heroes, Trial monster types and required scenery from supplied derivatives. The separate studio still loads barbarian, cleaver orc, table and closed door. The barbarian has authored paint; other models use simple matte colours. STL supplies shape without painted material regions or textures, so keep paint separate from geometry. The original stance/anatomy come from the supplied sculpt.
+The exploration entry loads the four heroes, Trial monster types and required scenery from supplied derivatives. Models and the Test room share the board factories. The barbarian has authored paint; furniture/doors/rubble now use painted derivatives, while other heroes/monsters retain simple colours. STL supplies shape without painted material regions or textures, so keep paint separate from geometry. The original stance/anatomy come from the supplied sculpt.
 
 The barbarian uses eight materials: skin, dark chestnut hair, red cloth, leather, ivory fur, steel, bronze and a dark grey base. Sculpt-landmark contours are refined around the hairline/crown, loincloth, belt, boot cuffs and sword fittings. The offline recipe cuts crossing triangles at material seams, interpolating the existing surface/normals, rather than assigning whole faces across clothing boundaries. The original imported sculpt remains unchanged; the guarded paint asset supplies the prepared surface. Metal retains separate roughness/metalness and local reflections; there is no baked wash or pigment noise. Runtime decoding/material grouping is cached. Every other hero/monster also gets a separate dark grey (#35383b) top/rim material for its two-unit-high base. Furniture/door materials stay independent. See `scripts/paint_barbarian.py`, `assets/models/barbarian-paint.js` and `assets/previews/barbarian-painted.png`. Source and front/three-quarter/back/above offline authoring views were reviewed; no new browser check was run.
 
 The converter changes print Z-up to browser Y-up and centres on the source's shallow bottom band. Runtime fitting is uniform: miniature bases are about 0.8 squares, furniture fits its quest footprint, and doors span about 1.23 squares. Each sample's internal orientation is independent of its board rotation. Inspecting source geometry identified the barbarian's sideways facing and the orc's backwards facing; their runtime transforms correct these. Decorative overhang does not change occupancy.
 
-`barbarian.html` opens the imported hero in the separate studio, whose camera fits its actual bounds. Exploration has a different camera controller; Home centres the active hero there rather than exiting studio inspection.
+The older barbarian/studio pages have been removed. Use Models to inspect the imported hero; Home on the exploration canvas centres the active hero.
 
 The tomb uses its two supplied source halves. Gargoyle wings remain unassembled, and bookcases remain generated placeholders; the weapons rack now uses the supplied xbeaker sculpt. The stairway uses original tile-sheet artwork on a thin tile. Other prepared components are not automatically game-ready. Preserve source proportions through uniform fitting, and use authoritative grid footprints rather than filenames or mesh bounds. Some complex components stopped above their target triangle budgets; the unused spiral stair remains roughly 122,000 triangles.
 
-`assets/models/README.md` documents offline simplification and local classic-script packing. This preserves direct-file play and introduces no runtime CDN, model parsing, dependency installation or build step. The original handmade studies have been retired to an ignored local directory. Source licence/creator details are unknown beyond Mark's statement that this shared-drive collection is open licence; record that provenance without inventing a specific licence.
+`references/MODEL-SOURCES.md` documents offline simplification and local classic-script packing. This preserves direct-file play and introduces no runtime CDN, model parsing, dependency installation or build step. The original handmade studies have been retired to an ignored local directory. Source licence/creator details are unknown beyond Mark's statement that this shared-drive collection is open licence; record that provenance without inventing a specific licence.
 
 ## Furniture
 
@@ -228,7 +228,7 @@ Downloaded images/scans remain under `references/`; they are never hotlinked dur
 
 ## Shared interface foundation
 
-`ui.css` defines the exploration palette, typography, buttons, fields, panels, checkbox rows, callouts and dialog styles. Setup, Mentor’s briefing, handoff, menu, instructions, attack confirmation, dice results and restart confirmation use native modal dialogs and this common styling. Piece descriptions and local actions live in the anchored non-modal context panel. Keep future character sheets, cards, inventory and combat prompts consistent with those components. The studio retains its compact earlier layout.
+`ui.css` defines the exploration palette, typography, buttons, fields, panels, checkbox rows, callouts and dialog styles. Setup, Mentor’s briefing, handoff, menu, instructions, attack confirmation, dice results and restart confirmation use native modal dialogs and this common styling. Piece descriptions and local actions live in the anchored non-modal context panel. Keep future character sheets, cards, inventory and combat prompts consistent with those components. The standalone studio has been removed; Models owns inspection.
 
 The main table separates turn controls, discovered 3D terrain and an adventure journal. Reachable squares have no filled overlay; hover outlines and path previews indicate reach, while active ownership and movement budget remain in DOM text. Every interactive revealed model (excluding walls) and known tile opens a non-modal action panel beside its selection. Hover and selection share a light-blue silhouette glow when within current movement/action reach, or yellow otherwise, produced in screen space without changing the painted model materials. Relevant disabled actions remain visible with reasons. Roll movement/End turn stay in the sidebar; local move/door/attack actions do not. Rolls and decisions use the shared modal layer. Shift + arrows selects known tiles, [ / ] cycles revealed pieces, and Enter opens their context panel as a keyboard alternative to pointing. Breakpoints collapse the journal/sidebar layout, but mobile/touch layout has not received an approved verification pass yet.
 

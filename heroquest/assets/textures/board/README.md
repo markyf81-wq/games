@@ -11,6 +11,8 @@ The crop `[74,74,1972,1461]` removes the outer black border and yields a 1898 x
 1387 atlas: exactly 73 pixels per square. No painting, rotation, perspective
 warping or recolouring is applied. WebP quality 93 is used for runtime storage.
 The printed white room boundaries remain part of the image beneath the 3D walls.
+Runtime stone footings beneath known wall sections now cover their exposed edges;
+the image/crop itself is unchanged. Door openings and discovery remain intact.
 
 Recipe: `python3 heroquest/scripts/prepare_board_texture.py <source-image>` with
 Pillow. `board.js` embeds `board.webp` as a data URI with original/crop hashes,
