@@ -12,7 +12,12 @@ The crop `[74,74,1972,1461]` removes the outer black border and yields a 1898 x
 warping or recolouring is applied. WebP quality 93 is used for runtime storage.
 The printed white room boundaries remain part of the image beneath the 3D walls.
 Runtime stone footings beneath known wall sections now cover their exposed edges;
-the image/crop itself is unchanged. Door openings and discovery remain intact.
+the image/crop itself is unchanged. The floor shader also covers four decorative
+red blood splashes using small feathered patches sampled from matching floor one
+73-pixel tile away, retaining grout alignment. These fixed marks must not imply
+a monster has died. This display-only cleanup uses pixel coordinates specific to
+this atlas; review the masks if the board image changes. Door openings and
+discovery remain intact.
 
 Recipe: `python3 heroquest/scripts/prepare_board_texture.py <source-image>` with
 Pillow. `board.js` embeds `board.webp` as a data URI with original/crop hashes,

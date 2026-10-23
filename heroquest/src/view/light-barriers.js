@@ -91,9 +91,12 @@
       for(let slot=0;slot<slots;slot++){
         const light=lights[slot];if(light)light.getWorldPosition(position);else position.set(999,999,999);
         origins[slot].copy(position);
-        const key=light?.intensity>0?Math.round(position.x*64)+':'+Math.round(position.z*64)+':'+light.distance:'off';
+        // Torch flames jitter inside their fixture; retain its static room mask
+        // while uniforms still identify the actual displaced point-light source.
+        const anchor=light?.userData.hqBarrierOrigin||position;
+        const key=light?.intensity>0?Math.round(anchor.x*64)+':'+Math.round(anchor.z*64)+':'+light.distance:'off';
         if(keys[slot]===key)continue;keys[slot]=key;changed=true;
-        if(key==='off')pixels.fill(0,slot*width*height,(slot+1)*width*height);else bake(slot,position.x,position.z,light.distance||5);
+        if(key==='off')pixels.fill(0,slot*width*height,(slot+1)*width*height);else bake(slot,anchor.x,anchor.z,light.distance||5);
       }if(changed)texture.needsUpdate=true;
     }
     return Object.freeze({setProjection,bind,update});

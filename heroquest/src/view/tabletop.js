@@ -8,13 +8,13 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;
     renderer.localClippingEnabled=true;
     renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
-    // Flicker changes light intensity, not shadow geometry. Refresh maps only
-    // when pieces/terrain move or the nearest torch shadow light changes.
+    // Geometry changes refresh immediately; the one torch shadow caster also
+    // requests bounded refreshes for its subtle 12 Hz flame-position wobble.
     renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;
     const scene=new T.Scene(),camera=new T.OrthographicCamera(-8,8,6,-6,.1,150),target=new T.Vector3(-10,.3,6);
     const raycaster=new T.Raycaster(),pointer=new T.Vector2(),entities=new Map();
-    const routeLine=new T.Group();scene.add(routeLine);
-    const routeMaterials=[new T.MeshBasicMaterial({color:0x85d1ff,transparent:true,opacity:.95,depthWrite:false}),new T.MeshBasicMaterial({color:0xffc75e,transparent:true,opacity:.95,depthWrite:false})];
+    const routeLine=new T.Group();routeLine.renderOrder=1000;scene.add(routeLine);
+    const routeMaterials=[new T.MeshBasicMaterial({color:0x85d1ff,transparent:true,opacity:.95,depthTest:false,depthWrite:false}),new T.MeshBasicMaterial({color:0xffc75e,transparent:true,opacity:.95,depthTest:false,depthWrite:false})];
     function setRoutePreview(route) {
       while(routeLine.children.length){const mesh=routeLine.children[0];mesh.geometry.dispose();routeLine.remove(mesh);}
       if(!route?.cells.length){requestRender();return;}
@@ -26,17 +26,17 @@
       }
       for(let i=0;i<vertices.length;i++)if(vertices[i].length) {
         const geometry=new T.BufferGeometry();geometry.setAttribute("position",new T.Float32BufferAttribute(vertices[i],3));
-        const mesh=new T.Mesh(geometry,routeMaterials[i]);mesh.renderOrder=3;routeLine.add(mesh);
+        const mesh=new T.Mesh(geometry,routeMaterials[i]);mesh.renderOrder=1000;routeLine.add(mesh);
       }
       const material=routeMaterials[route.reachableSteps===points.length-1?0:1];
-      const end=new T.Mesh(new T.CircleGeometry(.09,20),material);end.rotation.x=-Math.PI/2;end.position.copy(points[points.length-1]);end.renderOrder=3;routeLine.add(end);requestRender();
+      const end=new T.Mesh(new T.CircleGeometry(.09,20),material);end.rotation.x=-Math.PI/2;end.position.copy(points[points.length-1]);end.renderOrder=1000;routeLine.add(end);requestRender();
     }
     const M=HQ.models;let frame=0,contextReady=true,yaw=.1,elevation=.91,halfHeight=4.4,current=null,currentDefeated=null,currentCutawayHero=null,follow=true,gridEnabled=true,activeMark=null,environment=null;
     const reducedMotion=window.matchMedia("(prefers-reduced-motion: reduce)");
     const glow=HQ.createInteractionGlow(renderer);
     let selected=null,hovered=null,interactive=false,keyboardCell=null,keyboardPiece=null,boardChoices=null;
     let knownCells=new Set(),reachableCells=new Set(),pickable=[];
-    const facings=new Map();let spellFocus=null;
+    const facings=new Map();let spellFocus=null,cinematicCameraEnabled=true,attackShots=0;
     const torchLighting=HQ.createTorchLighting();let torchTimer=0,ambientLightLevel=26;
     scene.add(torchLighting.root);
     const wallLayer=HQ.createDungeonWalls();
@@ -79,6 +79,11 @@
       contextReady:()=>contextReady,follow:()=>follow,requestRender,
       invalidateShadows:()=>{renderer.shadowMap.needsUpdate=true;}});
     const spellEffects=HQ.createSpellEffects({scene,entities,reducedMotion,contextReady:()=>contextReady,requestRender});
+    const statusEffects=HQ.createStatusEffects({scene,entities,reducedMotion});
+    const combatImpact=HQ.createCombatImpact({scene,entities,facings,reducedMotion,contextReady:()=>contextReady,requestRender,
+      invalidateShadows:()=>{renderer.shadowMap.needsUpdate=true;}});
+    const treasureEffects=HQ.createTreasureEffects({scene,entities,terrain,ring,reducedMotion,contextReady:()=>contextReady,requestRender,
+      invalidateShadows:()=>{renderer.shadowMap.needsUpdate=true;}});
     const cameraMotion=HQ.createBoardCamera({camera,target,getFraming:()=>({yaw,elevation,halfHeight}),
       aspect:()=>host.clientWidth/Math.max(1,host.clientHeight),reducedMotion,available:()=>contextReady&&document.visibilityState!=="hidden",
       moving:()=>motion.active,requestRender});
@@ -90,8 +95,14 @@
       }});
     function requestRender(){clearTimeout(torchTimer);torchTimer=0;if(!frame&&contextReady&&document.visibilityState!=="hidden")frame=requestAnimationFrame(draw);}
     function updateCamera(){cameraMotion.project();}
+    function setCinematicCameraEnabled(enabled){
+      cinematicCameraEnabled=Boolean(enabled);
+      const button=document.getElementById("action-camera-mode"),label="POV camera: "+(cinematicCameraEnabled?"On":"Off");
+      button.setAttribute("aria-pressed",String(cinematicCameraEnabled));button.setAttribute("aria-label",label);button.title=label;
+      return cinematicCameraEnabled?Promise.resolve():combatCamera.leave();
+    }
     function draw(time){
-      frame=0;const wasMoving=motion.active;motion.update(time);bloodPools.update(time,reducedMotion.matches);spellEffects.update(time,renderer.domElement.height);const cameraMoving=!combatCamera.active&&cameraMotion.update(time);updateCamera();
+      frame=0;const wasMoving=motion.active;motion.update(time);treasureEffects.update(time);combatImpact.update(time);spellEffects.update(time,renderer.domElement.height);const cameraMoving=!combatCamera.active&&cameraMotion.update(time);updateCamera();
       combatCamera.update(time,host.clientWidth/Math.max(1,host.clientHeight));
       const renderCamera=combatCamera.camera,renderTarget=combatCamera.focus;
       const focusModel=currentCutawayHero&&entities.get(currentCutawayHero.id)?.model,focus=spellFocus||(focusModel?.visible?focusModel.position.clone().add(new T.Vector3(0,.65,0)):null);
@@ -99,8 +110,8 @@
       const wallChanged=wallLayer.update(renderCamera,focus,time,reducedMotion.matches,figurePoints),torchChanged=torchLighting.update(renderCamera,renderTarget,time,reducedMotion.matches);
       lightBarriers.update(renderCamera,[...torchLighting.lights,spellEffects.light]);
       if(wallChanged||torchChanged||wasMoving)renderer.shadowMap.needsUpdate=true;
-      combatCamera.render(()=>{renderer.render(scene,renderCamera);glow.render(renderCamera);});if(selected)onAnchor(anchor(selected));
-      if(motion.active||bloodPools.animating||spellEffects.active||combatCamera.animating||wallLayer.animating||cameraMoving)requestRender();else if(torchLighting.active&&!reducedMotion.matches)torchTimer=setTimeout(requestRender,34);
+      combatCamera.render(()=>{statusEffects.update(time,renderer.domElement.width,renderer.domElement.height);renderer.render(scene,renderCamera);glow.render(renderCamera);});if(selected)onAnchor(anchor(selected));
+      if(motion.active||treasureEffects.active||combatImpact.active||spellEffects.active||combatCamera.animating||wallLayer.animating||cameraMoving)requestRender();else if((torchLighting.active||statusEffects.active)&&!reducedMotion.matches)torchTimer=setTimeout(requestRender,34);
     }
     function resize(){renderer.setSize(host.clientWidth,host.clientHeight,false);requestRender();}
     function world(id,y=.075){const [x,row]=Topo.parse(id);return new T.Vector3(x+.5-13,y,row+.5-9.5);}
@@ -168,7 +179,7 @@
       else {model.position.set(item.x+(item.width||1)/2-13,.15+(type==="hero"&&Topo.stairs.has(Topo.key(item.x,item.row))?.05:0),item.row+(item.depth||1)/2-9.5);model.rotation.y=(type==="hero"||type==="monster")?(facings.get(item.id)??item.rotation??0):(item.rotation||0);}
     }
     function setProjection(projection,{defeatedFigure=null,cutawayHero=projection.activeHero,preserveCamera=false}={}) {
-      motion.finish();
+      motion.finish();treasureEffects.finish();combatImpact.finish();
       renderer.shadowMap.needsUpdate=true;
       hovered=null;
       current=projection;currentDefeated=defeatedFigure;currentCutawayHero=cutawayHero;const discovered=knownCells=new Set(projection.discoveredCells);reachableCells=new Set(projection.reachable);
@@ -184,6 +195,7 @@
         entry.item=item;entry.model.visible=true;position(entry.model,item,type);
       }
       for(const [id,entry] of entities)if(!wanted.has(id))entry.model.visible=false;
+      statusEffects.sync(projection);
       bloodPools.sync(projection.fallen||[],defeatedFigure?.id);
       lightBarriers.setProjection(projection);lightBarriers.bind(scene);
       pickable=[...entities].filter(([,entry])=>selectable(entry));
@@ -243,7 +255,7 @@
         if(known({type:"cell",id:next})){keyboardCell=next;if(choiceAllowed({type:"cell",id:next}))setHover({type:"cell",id:next});}return;
       }
       if(!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","+","=","-","Home"].includes(e.key))return;e.preventDefault();if(e.key==="Home"){centre();return;}if(e.key==="+"||e.key==="="){zoom(1.15);return;}if(e.key==="-"){zoom(1/1.15);return;}if(e.key==="ArrowLeft")yaw-=.12;if(e.key==="ArrowRight")yaw+=.12;if(e.key==="ArrowUp")elevation+=.08;if(e.key==="ArrowDown")elevation-=.08;elevation=T.MathUtils.clamp(elevation,.4,Math.PI/2-.001);requestRender();});
-    function finishPresentation(){cameraMotion.finishWait();motion.finish();spellEffects.finish();combatCamera.finish();}
+    function finishPresentation(){cameraMotion.finishWait();motion.finish();treasureEffects.finish();combatImpact.finish();spellEffects.finish();combatCamera.finish();}
     function stopRendering(){clearTimeout(torchTimer);torchTimer=0;if(frame)cancelAnimationFrame(frame);frame=0;}
     canvas.addEventListener("webglcontextlost",e=>{e.preventDefault();contextReady=false;finishPresentation();stopRendering();loading.hidden=false;loading.textContent="Waiting for the browser to restore the graphics…";});
     canvas.addEventListener("webglcontextrestored",()=>{contextReady=true;renderer.shadowMap.needsUpdate=true;loading.hidden=true;requestRender();});
@@ -252,31 +264,70 @@
     window.addEventListener("pagehide",()=>{finishPresentation();stopRendering();});
     window.addEventListener("heroquest-artwork-ready",requestRender);
     setTorchLighting(true);
+    setCinematicCameraEnabled(true);
     new ResizeObserver(resize).observe(host);loading.hidden=true;resize();
-    return Object.freeze({setProjection,async animateMovement(movement){
-        follow=true;target.copy(world(movement.from,.4));await cameraMotion.arrive();
-        return motion.animateMovement(movement);
+    return Object.freeze({setProjection,async animateMovement(movement,{holdView=false}={}){
+        const entry=entities.get(movement.actorId);
+        if(!entry?.model.visible){if(combatCamera.active)await combatCamera.leave();return motion.animateMovement(movement);}
+        const cinematic=cinematicCameraEnabled&&(!movement.visibility||movement.visibility.every(Boolean));
+        if(!cinematic&&combatCamera.active)await combatCamera.leave();
+        follow=true;target.copy(world(movement.from,.4));if(!combatCamera.active)await cameraMotion.arrive();
+        if(cinematic&&movement.path.length){
+          const from=world(movement.from),to=world(movement.path[0]);
+          await combatCamera.enterActor(movement.actorId,{heading:Math.atan2(to.x-from.x,to.z-from.z),track:true});
+        }
+        await motion.animateMovement(movement);
+        if(cinematic&&combatCamera.active){await combatCamera.hold(180);if(!holdView)await combatCamera.leave();}
       },animateAttack(attackerId,defenderId){
         motion.finish();contacts.clear();down=null;pinch=null;canvas.classList.remove("dragging");
-        updateCamera();return combatCamera.enter(attackerId,defenderId);
+        const attacker=entities.get(attackerId),defender=entities.get(defenderId);
+        if(attacker?.model.visible&&defender?.model.visible){const delta=defender.model.position.clone().sub(attacker.model.position),angle=Math.atan2(delta.x,delta.z);facings.set(attackerId,angle);attacker.model.rotation.y=angle;renderer.shadowMap.needsUpdate=true;requestRender();}
+        // Cosmetic cadence only: most attacks remain over the shoulder. Do not
+        // consume game RNG or inspect the already-resolved damage/dice result.
+        const firstPerson=cinematicCameraEnabled&&++attackShots%4===0;
+        updateCamera();return cinematicCameraEnabled?combatCamera.enter(attackerId,defenderId,firstPerson):Promise.resolve();
+      },async animateAction(actorId,targetId,applyVisual){
+        if(!cinematicCameraEnabled){applyVisual?.();return;}
+        const entry=entities.get(targetId),point=entry?.model.visible?entry.model.position.clone().add(new T.Vector3(0,.9,0)):null;
+        await combatCamera.enterActor(actorId,{point});applyVisual?.();
+        await combatCamera.hold();await combatCamera.leave();
       },async animateSpell(report){
         const anchors=spellEffects.locate(report);if(!anchors||!spellEffects.available)return;
         const distance=anchors.from.distanceTo(anchors.to),direction=anchors.to.clone().sub(anchors.from);direction.y=0;
         if(direction.lengthSq()>.001){const angle=Math.atan2(direction.x,direction.z);facings.set(report.attackerId,angle);anchors.caster.model.rotation.y=angle;renderer.shadowMap.needsUpdate=true;}
         spellFocus=anchors.to.clone();follow=false;
-        target.copy(distance<7?anchors.to.clone().lerp(anchors.from,.3):anchors.to);target.y=.4;
-        halfHeight=Math.max(3.1,Math.min(halfHeight,Math.max(3.6,Math.min(distance,7)*.42+1.8)));
+        if(!cinematicCameraEnabled){
+          target.copy(distance<7?anchors.to.clone().lerp(anchors.from,.3):anchors.to);target.y=.4;
+          halfHeight=Math.max(3.1,Math.min(halfHeight,Math.max(3.6,Math.min(distance,7)*.42+1.8)));
+        }
         requestRender();
         try {
-          await cameraMotion.arrive({threshold:.3,timeout:1200});
+          if(cinematicCameraEnabled)await combatCamera.enterActor(report.attackerId,anchors.target===anchors.caster?{}:{point:anchors.to});
+          else await cameraMotion.arrive({threshold:.3,timeout:1200});
           await spellEffects.play(report,anchors);
         } finally {spellFocus=null;requestRender();}
-      },finishSpellEffects:spellEffects.finish,
-      finishAttack:combatCamera.leave,resetCombatCamera:combatCamera.finish,animateDefeat:motion.animateDefeat,setSelection,setInteractive,setBoardChoices,setRoutePreview,centre,explored,reveal,zoom,view,resetFacing(){spellEffects.finish();combatCamera.finish();facings.clear();},
-      setTorchLighting,setAmbientLightLevel,
+      },
+      animateHit:combatImpact.play,animateHealthChanges:combatImpact.playChanges,
+      async animateTreasureHazard(report,changes){
+        const entry=entities.get(report.defenderId);
+        if(entry?.model.visible){
+          if(combatCamera.active)await combatCamera.leave();
+          follow=true;target.copy(entry.model.position);target.y=.4;requestRender();
+          await cameraMotion.arrive({threshold:.3,timeout:1200});
+        }
+        return treasureEffects.play(report,options=>combatImpact.playChanges(changes,report,options));
+      },
+      finishPresentation,finishAttack:combatCamera.leave,resetCombatCamera:combatCamera.finish,
+      animateDefeat(defenderId,attackerId,fallen){
+        if(fallen){bloodPools.sync(fallen);lightBarriers.bind(scene);requestRender();}
+        return motion.animateDefeat(defenderId,attackerId);
+      },
+      get actionCameraActive(){return combatCamera.active;},
+      setSelection,setInteractive,setBoardChoices,setRoutePreview,centre,explored,reveal,zoom,view,resetFacing(){finishPresentation();facings.clear();attackShots=0;},
+      setTorchLighting,setAmbientLightLevel,setCinematicCameraEnabled,
       setWallMode(mode){wallLayer.setMode(mode);renderer.shadowMap.needsUpdate=true;requestRender();},
       cycleWallMode(){const next=wallLayer.modes[(wallLayer.modes.indexOf(wallLayer.mode)+1)%wallLayer.modes.length];wallLayer.setMode(next);renderer.shadowMap.needsUpdate=true;requestRender();},
-      snapshot(){return {yaw,elevation,halfHeight,target:target.toArray(),follow,gridEnabled,wallMode:wallLayer.mode,torchLightingEnabled:torchLighting.enabled,ambientLightLevel,facings:Object.fromEntries(facings)};},
+      snapshot(){return {yaw,elevation,halfHeight,target:target.toArray(),follow,gridEnabled,wallMode:wallLayer.mode,torchLightingEnabled:torchLighting.enabled,ambientLightLevel,cinematicCameraEnabled,facings:Object.fromEntries(facings)};},
       restore(saved) {
         if(!saved||typeof saved!=="object")return;
         combatCamera.finish();
@@ -285,6 +336,8 @@
         if(Number.isFinite(saved.halfHeight))halfHeight=T.MathUtils.clamp(saved.halfHeight,1.8,100);
         if(Array.isArray(saved.target)&&saved.target.length===3&&saved.target.every(n=>Number.isFinite(n)&&Math.abs(n)<1000))target.fromArray(saved.target);
         if(typeof saved.follow==="boolean")follow=saved.follow;
+        if(typeof saved.cinematicCameraEnabled==="boolean")setCinematicCameraEnabled(saved.cinematicCameraEnabled);
+        else if(typeof saved.firstPersonEnabled==="boolean")setCinematicCameraEnabled(saved.firstPersonEnabled);
         if(typeof saved.gridEnabled==="boolean"){gridEnabled=saved.gridEnabled;terrain.setGrid(gridEnabled);}
         if(wallLayer.modes.includes(saved.wallMode))wallLayer.setMode(saved.wallMode);
         else if(saved.wallsEnabled===false)wallLayer.setMode("low");

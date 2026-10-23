@@ -244,3 +244,74 @@ Torch/hearth spread follow-up: torch range increased from 4.8 to 6 squares and
 base intensity 8 to 10; hearth range 5.2 to 6.5 and intensity 10 to 12. The one
 point-shadow camera extends to 6.8. Global ambient is unchanged and every light
 retains the room-boundary mask. Source review only; no new lighting/profile pass.
+
+
+## Solid mortar cores — 23 October 2026
+
+A recessed opaque mortar core closes pinholes through the printing sculpts.
+Ordinary wall sections use a .065-square-deep slab across their exact length;
+blocked squares use an internal .82-square plug. Sculpted join pieces also
+contain .105-wide, .065-deep backing, using their own joint clipping plane.
+All cores reuse one unit-box geometry and stop .12 below the crest. Their
+dark unlit, double-sided material (#24221f) keeps seams dark instead of letting
+torch-lit backing resemble a pinhole. They still cast clipped shadows and share
+the record's live clipping plane with clipShadows enabled. Full/Automatic/Low therefore
+clip the core together with the sculpt. Door openings, discovery boundaries,
+stone relief and full-height room-light barriers are unchanged. No extra lights
+or gameplay blockers are introduced. Source/diff review only; no new browser,
+shadow, cutaway or performance check ran.
+
+## Flame-source shadow flicker — 23 October 2026
+
+The existing nearest/focus torch shadow caster jitters within its flame using
+independent smoothly interpolated hashed noise per axis, offset by fixture phase.
+Local sideways travel is bounded to .0165 squares, vertical to .019 and depth
+to .003: half the previous movement envelope, without slowing the sampling or
+flicker cadence. Fixture rotation makes sideways motion follow the wall, with
+only a tiny movement towards/away from it. Brightness flicker retains its
+existing combined maximum amplitude .145. Cosmetic time hashing never consumes
+gameplay RNG or allocates a new random generator.
+
+Its position is sampled/held at no more than 12 Hz; changed samples request a
+shadow-map refresh. Geometry/light-slot changes and reduced-motion reset refresh
+immediately. Other torch lights retain static positions. No new lights, shadow
+casters, timers, geometry or gameplay RNG are added.
+
+Each torch pool light exposes a stable world-space hqBarrierOrigin at its fixture.
+Room-mask keys/bakes use that anchor, while hqLightOrigins uniforms retain the
+actual displaced light position for shader matching. This prevents flame jitter
+from rebaking room masks, preserving wall/door blocking. Spell/projectile lights
+omit the anchor and retain their existing moving-mask behaviour. Light position
+holds between samples so displayed light agrees with the cached shadow map.
+
+Reduced motion returns to a steady source; disabled/offscreen/hidden rendering
+keeps the existing bounded scheduler. Source/diff review only; no browser or
+performance check was run. Actual GPU cost/smoothness remain for manual assessment.
+
+## Bright seams inside torch shadows — 23 October 2026
+
+Mark supplied a repeatable correlation: bright narrow brick edges appeared with
+cast shadows and changed at nearby camera positions. An isolated Chrome scene
+using the actual sandbox board/wall/torch factories reproduced the seam streaks.
+This diagnostic does not load/save an adventure or use the session controller.
+
+Removing wall specular reflection did not eliminate the streaks. The useful
+combination was a smaller torch receiver normal offset (.005 rather than .035),
+zero point-light depth bias (previously -.00015), and explicit FrontSide shadow
+casting for masonry. The previous offset/depth/back-face combination exposed thin
+relief rims inside the shadow. Normal-bias reduction alone and back/double-sided
+shadow casting retained the problem in the reproduced close view.
+
+walls.js applies shadowSide to its own cloned stone/join/blocked materials and
+shared local cap/footing materials; dark mortar stays visually double-sided but
+casts from its exterior/front faces. Other model materials remain unchanged.
+Only the torch pool's bias settings change; keep one 512px caster, PCF radius 4,
+12Hz flame jitter, original room-light masks and visual cutaway planes.
+
+Review: isolated Chrome/SwiftShader variants distinguished shine, bias and shadow
+face effects, then the actual changed files were inspected in two close camera
+angles. Major bright seam streaks disappeared; soft figure shadows remained.
+No page errors were reported. This is a focused reproduction of the reported
+wall problem, not a full game/lighting/performance regression or a check of
+Mark's current browser/GPU. Existing browser saves were untouched. Diagnostic
+scripts/images remain local under ignored tmp/wall-shadow-*.

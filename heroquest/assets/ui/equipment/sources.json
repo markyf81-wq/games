@@ -1,0 +1,53 @@
+{
+  "source": "references/fan-reference/drathe-system-equipment.pdf",
+  "sha256": "ce7b455e4d8f0dbeec393f6fc7bb0fee6b89dc8a528faf7a9bc0b890d82f2a4e",
+  "recipe": "scripts/prepare_inventory_cards.py",
+  "presentation": "Equipment cards created by drathe; artwork only, not rule authority.",
+  "cards": [
+    {
+      "id": "dagger",
+      "pdfPage": 1,
+      "crop": [
+        1224,
+        53,
+        1762,
+        890
+      ],
+      "size": [
+        400,
+        622
+      ],
+      "sha256": "d7530fe0c675605f747e957d3e8c2d9d24f51badd19c3782f3d692ef405e2068"
+    },
+    {
+      "id": "broadsword",
+      "pdfPage": 1,
+      "crop": [
+        61,
+        920,
+        600,
+        1757
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "04ab2ee19d7ce1af170ebefe140bbb657f0d1418d2de8d3857ae9510b52d902e"
+    },
+    {
+      "id": "shortsword",
+      "pdfPage": 2,
+      "crop": [
+        61,
+        920,
+        600,
+        1757
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "06892a87449bf9f1c6be4eedc9e68a4892a6832b1ae43785584115ea77758296"
+    }
+  ]
+}

@@ -72,7 +72,7 @@
   // the partial endpoint. Use weighted costs for discounted internal stair steps.
   function routePlan(state,actor,to,paths=routes(state,actor,{budget:floor.size})) {
     const path=paths.get(to);if(!path)return null;
-    const from=key(actor.x,actor.row),canMove=state.phase==="hero-turn"&&!state.pending&&!state.movement.closed&&actor.body>0&&!actor.exit&&state.heroes[state.turnIndex]?.id===actor.id;
+    const from=key(actor.x,actor.row),canMove=state.phase==="hero-turn"&&!state.pending&&!state.extraAttack&&!state.movement.closed&&actor.body>0&&!actor.exit&&state.heroes[state.turnIndex]?.id===actor.id;
     const budget=state.movement.rolled?state.movement.remaining:0;
     let here=from,cost=0,reachableSteps=0;
     if(canMove)for(let i=0;i<path.length;i++) {

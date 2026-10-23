@@ -14,6 +14,13 @@ The index's equipment PDF is a fan-made card presentation by drathe. Verify pric
 
 ## Inventory targets
 
+Starting weapons, personal gold and all four base treasure potions are defined
+in data/items.js/rules/inventory.js. Original 24-card searches/deck and The Trial's
+A/B/D/E finds are implemented in data/treasure.js/rules/treasure.js. TREASURE.md
+records the complete visual card audit, negative-note interpretation and limits.
+Trading, equipment acquisition and other decks remain future work; this does
+not certify the remaining targets below.
+
 These targets come from the index, not a completed record-by-record audit:
 
 | Category | Target | Primary source ID |

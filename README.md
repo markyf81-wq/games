@@ -20,7 +20,7 @@ For an HTTP preview with background CPU search, run `python3 -m http.server 8787
 
 ## Structure
 
-HeroQuest has a [combat prototype](heroquest/index.html) of the original North American quest The Trial: 1–4 selected shared-device heroes, movement, discovery, melee combat, CPU monster turns and browser autosave/restore. Searches, spells and quest completion remain planned, so it is not listed in the game catalog. See its [implementation plan](heroquest/docs/PLAN.md).
+HeroQuest has a [gameplay prototype](heroquest/index.html) of the original North American quest The Trial: 1–4 shared-device heroes, CPU monsters, movement/discovery, melee, twelve elemental spells, Treasure searches, inventories/potion sharing, quest exits and local saves with file transfer. Traps, equipment/campaign progression and other base mechanics remain unfinished, so it is not listed in the game catalog. See its [implementation plan](heroquest/docs/PLAN.md).
 
 ```text
 Games/

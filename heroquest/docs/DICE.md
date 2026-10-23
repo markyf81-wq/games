@@ -1,17 +1,24 @@
 # Animated dice and stairway movement
 
-## Dice tray
+## Current sidebar rolls
 
-Movement, attacks and defence use the same native modal and Three.js tray in
-`src/ui/dice.js`. Clicking Roll movement opens the tray and starts the roll
-automatically. Once settled, its recorded result stays open until Continue is
-pressed. Refresh shows the same saved movement result without rerolling. There
-is no auto-close timer.
+One lazy 3D tray in ui/dice.js presents movement, attacks/defence, spell resistance
+and healing potions. Roll movement is the manual trigger; it saves the outcome
+and starts the inline animation directly. There is no movement modal or extra
+Roll click. After settling, input returns automatically and the result remains
+in the sidebar. Attack, hero defence and hero resistance wait for a manual Roll.
+Only an uncommitted attack prompt can Cancel without spending dice/action.
 
-Attacks/hero defence still wait for Roll; CPU stages roll automatically after a
-short pause. Continue advances to defence when needed, then the combat summary.
-Zero skulls skip defence. Only an uncommitted attack prompt can be cancelled;
-committed rolls cannot be dismissed with Escape. No automatic timer decides RNG.
+CPU rolls use a disabled dark-red Zargon's roll button and invoke the callback
+directly after a short pause. They begin only after the Zargon portrait/Continue
+handoff. CPU Pause, hidden-tab and modal guards suspend advancement. Settled
+stages advance through the pacing scheduler; there is no additional Continue
+for each die roll. Zero-skull attacks skip defence.
+
+session/presentation.js hides unrevealed Body/log changes until their dice finish.
+The final stage persists dice=null before shove/recoil/health feedback. Original
+red/white pips and sculpt-derived skull/shield images share ui/die-faces.js;
+participants use cached miniature portraits. See COMBAT.md and SAVES.md.
 
 Movement dice use a blank convex hull of the supplied combat die, preserving its
 rounded silhouette with a red body, white pip geometry and traditional opposite
@@ -39,7 +46,7 @@ The seeded engine alone determines results. Animation uses scripted spins/hops
 and a quaternion mapping the recorded symbol/number onto the upward face; no
 collision, frame rate, click timing or mesh orientation decides the outcome.
 One engine combat command still atomically resolves attack, conditional defence
-and damage. The modal stages reveal those already-recorded rolls. A hero's Roll
+and damage. The sidebar stages reveal those already-recorded rolls. A hero's Roll
 button reveals the saved defence rather than resolving the attack a second time.
 Pending `dice: { reportId, stage: "attack" | "defence", rolled }` in the save
 envelope preserves that presentation sequence. Older saves omit it and show their
@@ -90,45 +97,19 @@ in the visual pass was corrected and the affected flow rechecked.
 This was not a broad regression, mobile, reduced-motion or direct-file pass.
 Screenshots are local ignored authoring evidence under `tmp/dice-*-chrome.png`.
 
-## Later UI polish — source review only
+## Current assets and review limits
 
-`src/ui/die-faces.js` shares red/white pip faces in the sidebar and sculpt-derived
-skull/shield icons across the roll result and combat summary. PNG symbols are
-prepared offline by `scripts/prepare_die_icons.py` from guarded supplied geometry
-and paint labels, rather than approximated SVG symbols. The 3D meshes and outcome
-mapping are unchanged. Accessible names identify every face.
+Numbered dice use assets/models/movement-die-body.js: a 2,366-triangle convex
+outer hull of the combat sculpt. prepare_movement_die.py uses numpy and the
+MIT-licensed QuickHull helper from the local Three 0.186.1 archive offline.
+Source STL/geometry hashes remain with the asset. Decoded hulls and sampled pip
+positions are cached; geometry/animation never determine the engine outcome.
 
-The dice dialog uses a compact heading/portrait header and a shared result/action
-footer. Movement hides the duplicate portrait name/role because the heading
-already identifies the hero. The tray size and hidden result space stay reserved
-across ready/rolling/settled stages, including 3D fallback. Mobile footers place
-the reserved result above the buttons; short windows scroll normally. Redundant “recorded”/button instruction
-text was removed. This later UI revision has not received a browser check; the
-approved check above describes the earlier version.
-
-The model-viewer addition shares `src/view/dice-models.js` between tray and viewer.
-The later movement-die revision replaces its generated cube with
-`assets/models/movement-die-body.js`: a 2,366-triangle convex outer hull of the
-combat sculpt, filling the recessed symbols while retaining its rounded shape.
-`scripts/prepare_movement_die.py` prepares it offline using numpy and Three's
-MIT-licensed QuickHull helper from the locally archived 0.186.1 npm package.
-Run it with `--node /path/to/node` when Node is outside PATH; the archive is
-`tmp/three-0.186.1.tgz`. The source STL/geometry hashes are retained in the asset.
-The runtime caches the decoded hull and samples pip surface positions once with
-raycasts. Face values/orientation, animation and engine outcomes are unchanged.
-This revision has source/diff and offline asset preparation only; no new
-dice/browser checks were run. The approved checks above predate this geometry.
-
-Roll dialogs now include cached portraits from the actual miniature factories: the moving hero or both combatants with Attack/Defence labels. Portrait dimensions reserve space before their images arrive and remain constant across roll stages. This presentation adds no RNG/state/save fields. Source review only for this addition.
-
-## Click reduction and stair correction — 22 October 2026
-
-Source/diff review only for automatic movement rolling and the later removal of
-automatic advancement. No new UI/timer or
-refresh pass was run. A minimal stair diagnostic reproduced the reported reach
-case: back-corner adjacency false, front-square adjacency true; internal routes
-exist with one point and no routes exist with zero points or before rolling.
-Historical checks above cover the superseded shared-space version, not this one.
-
-Latest compact tray layout and shared red/black Body hearts: source/diff review
-only; no new browser or game checks were run.
+The latest sidebar layout, automatic stage pacing, potion stages, disabled CPU
+button, original face icons and health feedback have source/diff review only.
+A minimal 22 October stair diagnostic confirmed back-corner adjacency false,
+front-square adjacency true, internal routes with one move and none with zero
+moves or before rolling. The historical approved pass above used an older shared
+stair-space version; it does not certify the current four-cell reach behaviour.
+No new tests, builds, browser automation, screenshots or benchmarks ran during
+this cleanup. Mark retains manual verification.

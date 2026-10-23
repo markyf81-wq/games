@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const HQ=window.HeroQuest;
-  const turnControls="roll-movement open-spellbook end-turn menu-button model-viewer-button test-room-button restart-game sandbox-tools".split(" ");
+  const turnControls="roll-movement open-spellbook open-inventory open-quest-info search-treasure finish-attacks end-turn menu-button model-viewer-button test-room-button restart-game sandbox-tools action-camera-mode".split(" ");
   // Both animation and board selection suspend the same global actions.
   function lock() {
     const states=turnControls.map(id=>document.getElementById(id)).filter(Boolean).map(button=>[button,button.disabled]);

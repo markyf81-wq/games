@@ -1,11 +1,11 @@
 (function () {
   "use strict";
-  const show=id=>{const dialog=document.getElementById(id);if(!dialog.open)dialog.showModal();};
+  const show=id=>{const dialog=document.getElementById(id);if(!dialog.open){if(dialog.hasAttribute("data-nonmodal"))dialog.show();else dialog.showModal();}};
   const close=id=>{const dialog=document.getElementById(id);if(dialog.open)dialog.close();};
   document.querySelectorAll('[data-close-dialog]').forEach(button=>button.addEventListener('click',()=>close(button.dataset.closeDialog)));
   // Setup/handoff decisions are explicit; Escape must not leave a pending turn
   // hidden behind an interactive board. Native dialogs manage focus and inertness.
-  for(const id of ['setup-dialog','handoff-dialog','briefing-dialog','combat-dialog','quest-outcome-dialog'])
+  for(const id of ['setup-dialog','handoff-dialog','briefing-dialog','quest-outcome-dialog','zargon-dialog'])
     document.getElementById(id).addEventListener('cancel',event=>event.preventDefault());
   // Presentation-only confirmation. Future card/target controls can supply DOM
   // content here; accepted decisions still go through the engine command boundary.

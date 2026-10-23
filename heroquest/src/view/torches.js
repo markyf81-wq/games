@@ -3,13 +3,26 @@
   const HQ=window.HeroQuest,T=window.HQThree;
   // Decorative wall/hearth fire: never add it to occupancy or sight data.
   const items=HQ.placeQuestTorches(HQ.trial,HQ.board);
+  function flameSample(index,seed){
+    let hash=Math.imul(index,374761393)^Math.imul(seed,668265263);
+    hash=Math.imul(hash^(hash>>>13),1274126177);
+    return ((hash^(hash>>>16))>>>0)/4294967295*2-1;
+  }
+  function flameNoise(time,seed){
+    const index=Math.floor(time),fraction=time-index,blend=fraction*fraction*(3-2*fraction);
+    const a=flameSample(index,seed),b=flameSample(index+1,seed);
+    return a+(b-a)*blend;
+  }
   HQ.createTorchLighting=function() {
     const records=new Map(),frustum=new T.Frustum(),matrix=new T.Matrix4(),sphere=new T.Sphere(new T.Vector3(),6);
     // Stable light/shadow counts prevent new shader variants whenever a camera
     // reveals another torch. Reassign eight reusable lights instead.
     const root=new T.Group(),pool=Array.from({length:8},(_,i)=>{
       const light=new T.PointLight(0xffb45d,0,6,2);light.castShadow=i===0;
-      light.shadow.mapSize.set(512,512);light.shadow.radius=4;light.shadow.camera.near=.12;light.shadow.camera.far=6.8;light.shadow.normalBias=.035;light.shadow.bias=-.00015;root.add(light);return light;
+      light.userData.hqBarrierOrigin=new T.Vector3();
+      // The old receiver offset was wider than small brick relief. Together
+      // with a negative depth bias it exposed bright rims inside wall shadows.
+      light.shadow.mapSize.set(512,512);light.shadow.radius=4;light.shadow.camera.near=.12;light.shadow.camera.far=6.8;light.shadow.normalBias=.005;light.shadow.bias=0;root.add(light);return light;
     });
     const flameGeometry=new T.SphereGeometry(1,16,12);
     const vertices=flameGeometry.attributes.position;
@@ -21,7 +34,8 @@
     const particleGeometry=new T.PlaneGeometry(1,1),particleMaterial=new T.MeshBasicMaterial({map:haloTexture,transparent:true,opacity:.9,blending:T.AdditiveBlending,depthWrite:false,toneMapped:false,side:T.DoubleSide});
     const logGeometry=new T.CylinderGeometry(.036,.045,.54,7),logMaterial=HQ.models.material(0x30291f,.97);
     const particlePosition=new T.Vector3(),particleScale=new T.Vector3(),particleRotation=new T.Quaternion(),parentRotation=new T.Quaternion(),particleMatrix=new T.Matrix4(),particleColour=new T.Color();
-    let enabled=true,active=false,shadowId=null;
+    const shadowOffset=new T.Vector3(),shadowWorldOffset=new T.Vector3(),shadowRotation=new T.Quaternion();
+    let enabled=true,active=false,shadowId=null,shadowSampleAt=-Infinity;
     function makeFlame(){
       const flame=new T.Group();
       const outer=new T.Mesh(flameGeometry,orange);outer.scale.set(.085,.19,.085);flame.add(outer);
@@ -36,6 +50,19 @@
       for(let i=0;i<particles.count;i++){
         // Fixed phase offsets/lifetimes: entirely cosmetic, no gameplay RNG.
         const age=((time/1000+phase)/(.75+(i%7)*.071)+i*.61803398875)%1,ember=i%24>=18;
+        if(ember&&!hearth){
+          // Shed a few sparks into the room: a short lift, a falling arc, then
+          // a dim red glow on the floor. Reuse the existing six ember slots.
+          const lifetime=4.8+(i%3)*.43,t=(((time/1000+phase)/lifetime+i*.61803398875)%1)*lifetime;
+          const gravity=1.6,lift=.7,ground=.025,landing=(lift+Math.sqrt(lift*lift+2*gravity*(baseY-ground)))/gravity;
+          const flight=Math.min(t,landing),sway=Math.sin(i*9.31+flight*4.2)*.035*flight;
+          particlePosition.set(Math.sin(i*17.1)*(.035+flight*.16)+sway,
+            Math.max(ground,baseY+lift*flight-gravity*flight*flight*.5),baseZ+.08+flight*(.19+(i%3)*.055));
+          const width=(.018+(i%3)*.004)*(t>landing ? .8 : 1);
+          particleScale.set(width,width,1);particleMatrix.compose(particlePosition,particleRotation,particleScale);particles.setMatrixAt(i,particleMatrix);
+          const fade=Math.min(1,t/.09)*Math.max(0,1-Math.max(0,t-landing)/.65),cool=Math.min(1,t/landing);
+          particleColour.setRGB(fade,fade*(.58-cool*.5),fade*.025);particles.setColorAt(i,particleColour);continue;
+        }
         const sway=Math.sin(i*9.31+age*5.4);
         const emitterX=hearth?(Math.floor(i/24)-1)*.18:0;
         particlePosition.set(emitterX+Math.sin(i*17.1)*.055+sway*age*.06,baseY+age*(ember ? .78 : .42),baseZ+Math.cos(i*7.3)*.035+age*.045);
@@ -99,7 +126,7 @@
         particles.visible=lit&&!steady;if(particles.visible)updateParticles(record,camera,time||0);
         if(lit)nearby.push({id,record,position:sphere.center.clone(),distance:sphere.center.distanceToSquared(target)});
         const t=(time||0)/1000+phase;
-        const flicker=steady?1:1+Math.sin(t*6.1)*.055+Math.sin(t*10.7+.8)*.035+Math.sin(t*17.3)*.018;
+        const flicker=steady?1:1+Math.sin(t*6.1)*.075+Math.sin(t*10.7+.8)*.045+Math.sin(t*17.3)*.025;
         light.intensity=(record.hearth?12:10)*flicker;
         flame.scale.set(1+(flicker-1)*.35,flicker,1+(flicker-1)*.35);flame.rotation.z=steady?0:Math.sin(t*4.7)*.055;
         halo.material.opacity=.48+(flicker-1)*.7;
@@ -107,11 +134,28 @@
       nearby.sort((a,b)=>a.distance-b.distance);
       const previous=nearby.find(entry=>entry.id===shadowId);
       if(previous&&previous.distance<nearby[0].distance*1.3){nearby.splice(nearby.indexOf(previous),1);nearby.unshift(previous);}
-      const nextShadow=nearby[0]?.id||null,changed=shadowId!==nextShadow;shadowId=nextShadow;
+      const nextShadow=nearby[0]?.id||null;let changed=shadowId!==nextShadow;shadowId=nextShadow;
+      // Move only the existing shadow caster, at most 12 times per second.
+      // Hold its position between samples so light and cached shadows agree.
+      // Keep the room mask anchored to the fixture, independent of flame jitter.
+      const now=Number.isFinite(time)?time:0;
+      if(changed||steady||!nextShadow||now<shadowSampleAt||now-shadowSampleAt>=1000/12){
+        const t=now/1000+(nearby[0]?.record.phase||0);
+        const moving=Boolean(nextShadow&&!steady);
+        // Independent smooth noise replaces repeating loops, with about half
+        // the travel. Hashing cosmetic time never touches the game's RNG.
+        const x=moving?flameNoise(t*2.7,11)*.011+flameNoise(t*5.3,12)*.0055:0;
+        const y=moving?flameNoise(t*3.1,23)*.013+flameNoise(t*6.1,24)*.006:0;
+        const z=moving?flameNoise(t*3.8,37)*.003:0;
+        changed=changed||shadowOffset.x!==x||shadowOffset.y!==y||shadowOffset.z!==z;
+        shadowOffset.set(x,y,z);shadowWorldOffset.copy(shadowOffset);
+        if(nextShadow){nearby[0].record.model.getWorldQuaternion(shadowRotation);shadowWorldOffset.applyQuaternion(shadowRotation);}
+        shadowSampleAt=now;
+      }
       root.visible=enabled;root.updateWorldMatrix(true,false);
       for(let i=0;i<pool.length;i++){
         const light=pool[i],entry=nearby[i];light.intensity=entry?entry.record.light.intensity:0;
-        if(entry){root.worldToLocal(light.position.copy(entry.position));light.distance=entry.record.light.distance;}
+        if(entry){light.userData.hqBarrierOrigin.copy(entry.position);light.position.copy(entry.position);if(i===0)light.position.add(shadowWorldOffset);root.worldToLocal(light.position);light.distance=entry.record.light.distance;}
       }
       active=nearby.length>0;return changed;
     }

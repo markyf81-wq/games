@@ -18,19 +18,37 @@ loader, runtime fetch or new dependency is required. Keep file:// compatibility.
 
 session/app.js applies and saves a command before any presentation. It then awaits
 movement/camera/spell/removal promises and renders recorded dice or outcomes.
-Interrupted presentation cannot reroll, recast or advance a turn twice. Schema 5,
-content ID and save keys are unchanged by the presentation/cleanup work; SAVES.md
-records earlier migrations. Sandbox fixtures remain in their separate save slot.
+Interrupted presentation cannot reroll, recast or advance a turn twice. Current
+state schema is 7; content ID and save keys remain unchanged. SAVES.md records
+search/potion state and earlier migrations. Sandbox fixtures remain in their separate save slot.
 
 ## Reusable components
 
 - data/pieces.js: public metadata shared by contexts, Models and the Test room.
-- ui/dialogs.js: common native-dialog focus, close and confirmation flow.
+- ui/dialogs.js: native modal confirmations and nonmodal spell-drawer opening.
+- data/treasure.js, rules/treasure.js: 24 physical cards, source text/art, room
+  search rules, quest overrides, deck returns and wandering-monster placement.
+- data/items.js, rules/inventory.js: source-linked starting equipment/healing
+  potion, personal holdings, eligibility, potion sharing and recorded potion/recovery effects.
+- ui/save-files.js: local file picker/download and import confirmation; storage
+  owns export wrapper parsing and shared save validation. app.js installs only
+  confirmed imports and guards outgoing autosaves before reloading.
+- ui/treasure.js: finite slide/flip card reveal in the shared nonmodal drawer;
+  recorded card only, reduced-motion/interruption completion, no rule or RNG work.
+- ui/inventory.js: per-hero nonmodal drawer using the spell drawer's shared
+  position/finish, grouped possessions, manual Drink & roll and board-selected Give.
+- session/presentation.js: pure derived display snapshots, capped health deltas,
+  pending-roll status masks and held casualties; no DOM/timers/state mutations.
+- session/pacing.js: one cancellable keyed presentation timer, CPU pause and
+  hidden-tab/modal suspension; commands and RNG remain in the engine.
+- ui/dice.js: cached sidebar 3D tray; explicit hero Roll and automatic CPU rolls,
+  with settled notifications driving presentation stages.
+- ui/combat.js: compact board results/Zargon intro, without acknowledgement modals.
 - ui/controls.js: temporary global-action locks with restoration of prior states;
   shared by animation sequencing and modal-to-board target selection.
-- ui/board-choice.js: already-legal public target refs, Cancel/Escape, modal return;
+- ui/board-choice.js: already-legal public target refs, Cancel/Escape, drawer/dialog return;
   no engine command in the picker itself; spell callers dispatch on selection,
-  while cancellation restores the modal.
+  while cancellation restores the same drawer/card.
 - ui/party.js, adventure-hud.js, quest.js: setup/ownership, read-only HUD and outcomes.
 - ui/portraits.js: lazy one-renderer bust capture, cached images and unchanged
   container content; materials remain renderer-local and owned clones.
@@ -39,11 +57,22 @@ records earlier migrations. Sandbox fixtures remain in their separate save slot.
 - view/board-terrain.js: instanced floor atlas and grid strips, rebuilt only when
   the discovery key changes; cached floor meshes also serve picking.
 - view/figure-motion.js: exact recorded route hops/facing and owned removal fades.
+- view/combat-impact.js: finite post-dice melee shove and one reused signed health-change
+  sprite; exact pose restoration, interruption handling and no rule mutations.
+- view/treasure-effects.js: cached arrow/pit hazard presentation after card Continue;
+  owns temporary pit floor/ring/pose restoration and contact-timed health feedback.
+  Terrain exposes one transient floor-instance hole; rules and saves stay unchanged.
 - view/blood-pools.js: shared lit stain resources and per-casualty placement from
   the filtered derived fallen projection; no independent save or gameplay state.
 - view/combat-camera.js: finite attacker-eye flight, projection blend and return.
 - view/spell-effects.js: one reusable 160-particle buffer, projectile core and aura
-  ring. Twelve cosmetic recipes run before result/dice modals, with no game RNG.
+  ring. Twelve cosmetic recipes run before result/dice presentation, with no game RNG.
+- view/spell-flames.js: cached instanced flame volumes with GPU curling/flow.
+- view/spell-objects.js: cached Tempest ribbons, Genie silhouette and instanced
+  Rock Skin fragments, animated through the existing finite spell lifecycle.
+- view/status-effects.js: bounded persistent status sprites, stone instances and
+  cached phasing outlines, rebuilt from filtered flags; follows displayed models
+  and preserves known defender cues while recorded dice are revealed.
 - view/tabletop.js: composes these components, owns displayed entities, input,
   ordinary framing goals and bounded render scheduling.
 - view/walls.js: discovery/door-keyed boundary layouts, protected-area calculation,
@@ -90,3 +119,25 @@ standalone, build-free region marker over immutable imported sculpts. It has no
 game/session dependencies. Cached GPU face IDs constrain brush marks to visible
 surfaces; local drafts and fingerprinted JSON exports stay separate from game
 assets and saves. See [MODEL-PAINTER.md](MODEL-PAINTER.md).
+
+## Current cleanup — 23 October 2026
+
+Session display derivation is separate from command/save/pacing coordination.
+Actor lookup, health deltas, held casualty checks and pending-roll masking share
+presentation.js. One tabletop.finishPresentation method restores all owned
+camera/motion/hazard/health/spell effects on failure, reset and interruption.
+Inventory selection updates card details and pressed states without rebuilding
+its item grid or hero selector. Potion wording is owned by item definitions and
+reused by Treasure cards. Quest objective copy has one renderer helper.
+
+Shared nonmodal drawer layout lives in drawers.css, loaded after ui.css. Retired
+sidebar attack controls and text-card styles are removed. Play loads the painted
+Wizard derivative directly; the painter still loads its immutable original from
+its own source catalog. Authoring recipes/region maps and runtime provenance
+remain versioned; raw scans, source STLs, temporary scripts and preview images
+stay ignored/local. Specific feature guides replace accidental README/agent-guide
+copies, retaining source ledgers and historical verification limits.
+
+No schema, game rule, RNG, external dependency, framework or build step is changed
+by this cleanup. Source/diff review only: no new tests, builds, typechecks, lint,
+browser automation, screenshots or performance benchmark was run.

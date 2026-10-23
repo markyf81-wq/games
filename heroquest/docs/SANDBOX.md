@@ -1,5 +1,16 @@
 # Gameplay sandbox
 
+Inventory fixtures: Prepare inventory / potions gives the selected hero 200
+practice gold, two healing potions and reduced Body. Prepare potion rescue sets
+that hero to 1 Body, adds a potion and prepares an Orc; place it adjacent with
+the existing tools, then run Zargon to exercise a lethal-hit recovery choice.
+These fixtures only affect the sandbox save. See INVENTORY.md; current source
+review only, with manual checks left to Mark.
+
+Unused opponents are zero-health fixtures, not casualties. Opponent setup clears
+their `diedInPlay` markers; only a real kill during play creates a blood pool.
+Legacy saves without markers do not infer blood from omitted monsters.
+
 Open **Gameplay sandbox** in the top bar (`index.html?sandbox=1`). This is a
 separate live practice session using the real engine, rules, dice, spells, CPU,
 3D board and original base-game pieces. The existing **Test room** remains a
@@ -67,8 +78,9 @@ ordering. Restore/group changes are tools, not campaign replenishment. Pass
 Through Rock's broad object/last-step semantics and shared stairs are Mark's
 explicit digital rulings, separate from original card wording.
 
-Quest-event/treasure/trap scenarios remain future work; no unavailable searches,
-potions, gear systems or quest-note effects are presented as testable here.
+Quest-event/treasure/trap scenarios remain future work. Inventory and Healing
+Potions have practice fixtures; other potions, searches, gear changes and quest-note
+effects are not presented as testable here.
 
 ## Camera and performance
 
@@ -87,3 +99,23 @@ compilation stalls; it is not a measured performance result.
 
 No automated checks, browser pass, benchmark, build or lint was run for the
 sandbox, presets, latest camera or lighting changes. Mark is testing manually.
+
+## Treasure practice — 23 October 2026
+
+Treasure practice defaults to Random draw. Choose a specific card only to force
+that test result, then Prepare treasure search. The selected
+hero is placed in the cleared stairway room with a fresh 24-card deck and empty
+search ledger. Prior treasure-derived practice possessions/wanderers are cleared.
+Random draw uses a fresh random seed. Specific-card mode selects a seed whose
+next ordinary shuffle draws that category; Search
+next before rolling or taking another RNG-consuming action. This uses the actual
+SEARCH_TREASURE command, not an alternate result handler or forced-card save flag.
+The adventure slot is untouched. Give all treasure potions adds one of each for
+practice. Prepare potion rescue / Wound heroes can then support lethal-hazard or
+combat practice (resetting the turn does not reset the prepared search deck).
+
+Manual review targets: per-hero once/room, monsters/corridors/used action, reward
+ownership, fixed quest A/B/D/E claims, hazards ending the turn, wandering Orc
+placement/immediate attack/manual defence, subsequent CPU activation, potion
+expiry, Brew second attack/Finish attacks and refresh between each stage.
+Source/diff review only; these new flows have not been run in the engine/browser.

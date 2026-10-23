@@ -2,12 +2,11 @@
   "use strict";
   const HQ = window.HeroQuest, $ = id => document.getElementById(id);
 
-  function render(state) {
-    if(HQ.sandbox.active){$("quest-objective").textContent="Practice spells, movement and combat. Use Sandbox tools to reset or place units.";return;}
-    $("quest-objective").textContent = HQ.quest.objectiveComplete(state)
-      ? "Verag defeated · Return to the stairway."
-      : HQ.trial.objective.description;
+  function objective(state) {
+    if(HQ.sandbox.active)return "Practice spells, movement and combat. Use Sandbox tools to reset or place units.";
+    return HQ.quest.objectiveComplete(state)?"Verag defeated · Return to the stairway.":HQ.trial.objective.description;
   }
+  function render(state){$("quest-objective").textContent=objective(state);}
 
   function showOutcome(state) {
     const completed = state.phase === "victory", retreated = state.phase === "retreat";
@@ -28,6 +27,13 @@
     HQ.dialogs.show("quest-outcome-dialog");
   }
 
+  function showInfo(state) {
+    $("quest-info-heading").textContent=HQ.trial.title;
+    $("quest-info-briefing").textContent=HQ.trial.briefing;
+    $("quest-info-objective").textContent=(HQ.sandbox.active?"Gameplay sandbox · ":"")+objective(state);
+    HQ.dialogs.show("quest-info-dialog");
+  }
+
   async function confirmExit(state) {
     const completed = HQ.quest.objectiveComplete(state);
     return HQ.dialogs.ask({title: completed ? "Return to safety?" : "Leave The Trial early?",
@@ -36,5 +42,5 @@
         : "This hero will retreat without completing The Trial. Other heroes can continue."});
   }
 
-  HQ.questUI = Object.freeze({render, showOutcome, confirmExit});
+  HQ.questUI = Object.freeze({render, showInfo, showOutcome, confirmExit});
 })();

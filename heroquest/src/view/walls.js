@@ -42,10 +42,22 @@
     material.customProgramCacheKey=()=>"heroquest-wall-stone-palette-v1";
   }
   HQ.createDungeonWalls=function () {
-    const records=new Map(),capGeometry=new T.BoxGeometry(1,.025,.15),blockedCapGeometry=new T.BoxGeometry(.99,.025,.99),footingGeometry=new T.BoxGeometry(1,.02,.28);
-    const footingMaterial=HQ.models.material(0x535044,.98);
-    const capMaterial=HQ.models.material(0x98917e,.94),nearPoint=new T.Vector3(),hit=new T.Vector3(),frustum=new T.Frustum(),viewProjection=new T.Matrix4(),rayPool=[];
+    const records=new Map(),capGeometry=new T.BoxGeometry(1,.025,.15),blockedCapGeometry=new T.BoxGeometry(.99,.025,.99),footingGeometry=new T.BoxGeometry(1,.02,.28),coreGeometry=new T.BoxGeometry(1,1,1);
+    const footingMaterial=HQ.models.material(0x535044,.98).clone();
+    const capMaterial=HQ.models.material(0x98917e,.94).clone(),nearPoint=new T.Vector3(),hit=new T.Vector3(),frustum=new T.Frustum(),viewProjection=new T.Matrix4(),rayPool=[];
+    // Cast from the actual stone surface. The default back-face shadow pass
+    // lets narrow relief edges escape their own shadow and flash like seams.
+    footingMaterial.shadowSide=capMaterial.shadowSide=T.FrontSide;
     let mode="cutaway",lastTime=null,animate=false,exploredTargets=[],protectedCells=new Set(),layoutKey=null,layoutItems=null;
+    function addStoneCore(model,plane,width,height,depth){
+      // Printing sculpts have tiny through-gaps between stones. A recessed,
+      // opaque mortar core closes them without lighting up like exposed stone.
+      // It still casts clipped shadows, but never reflects a torch through seams.
+      const material=new T.MeshBasicMaterial({color:0x24221f,side:T.DoubleSide,shadowSide:T.FrontSide,clippingPlanes:[plane],clipShadows:true});
+      const core=new T.Mesh(coreGeometry,material),coreHeight=Math.max(.01,height-.12);
+      core.name="Solid stone mortar core";core.scale.set(width,coreHeight,depth);core.position.y=coreHeight/2;
+      core.castShadow=true;core.raycast=()=>{};model.add(core);
+    }
     function itemsFor(projection,hero=projection.activeHero) {
       const known=new Set(projection.discoveredCells),doors=new Set(projection.doors.map(d=>Topo.edgeKey(...Topo.endpoints(d))));
       const heroCell=hero&&Topo.key(hero.x,hero.row),region=heroCell&&Topo.regions.get(heroCell),inRoom=region&&region!=="corridor";
@@ -123,9 +135,11 @@
           const plane=new T.Plane(new T.Vector3(0,-1,0),10);mesh.userData.jointPlane=plane;
           mesh.traverse(part=>{
             if(!part.isMesh)return;
-            part.material=part.material.clone();part.material.clippingPlanes=[plane];part.material.clipShadows=true;
+            part.material=part.material.clone();part.material.clippingPlanes=[plane];part.material.clipShadows=true;part.material.shadowSide=T.FrontSide;
             stoneAttributes(part.geometry);colourStones(part.material,wallHash("join:"+joint.key));
           });
+          const height=new T.Box3().setFromObject(mesh).max.y/mesh.scale.y;
+          addStoneCore(mesh,plane,.105,height,.065);
           record.model.add(mesh);record.joints.set(joint.key,mesh);
         }
         mesh.position.x=item.axis==="v"?-joint.offset:joint.offset;mesh.userData.wallJoint=joint;
@@ -141,11 +155,12 @@
       let height=0;
       model.traverse(mesh=>{
         if(!mesh.isMesh)return;
-        mesh.material=mesh.material.clone();mesh.material.clippingPlanes=[plane];mesh.material.clipShadows=true;
+        mesh.material=mesh.material.clone();mesh.material.clippingPlanes=[plane];mesh.material.clipShadows=true;mesh.material.shadowSide=T.FrontSide;
         mesh.material.color.setRGB(shade,shade*(.975+warmth*.025),shade*(.94+warmth*.05));
         stoneAttributes(mesh.geometry);colourStones(mesh.material,seed);
         height=Math.max(height,mesh.geometry.boundingBox.max.y*model.scale.y);
       });
+      addStoneCore(model,plane,item.length,height,.065);
       // A stone section face closes the visual cut; the sculpt is clipped,
       // never compressed vertically. Full-height jagged tops retain their shape.
       const cap=new T.Mesh(capGeometry,capMaterial);cap.scale.x=item.length;cap.visible=false;cap.castShadow=true;cap.receiveShadow=true;model.add(cap);
@@ -162,11 +177,12 @@
       const model=HQ.models.make("blocked"),height=model.userData.blockedHeight,plane=new T.Plane(new T.Vector3(0,-1,0),10),seed=wallHash(item.id);
       model.traverse(mesh=>{
         if(!mesh.isMesh)return;
-        const clone=surface=>{const copy=surface.clone();copy.clippingPlanes=[plane];copy.clipShadows=true;
+        const clone=surface=>{const copy=surface.clone();copy.clippingPlanes=[plane];copy.clipShadows=true;copy.shadowSide=T.FrontSide;
           if(mesh.userData.blockedStone)colourStones(copy,seed);return copy;};
         if(mesh.userData.blockedStone)stoneAttributes(mesh.geometry);
         mesh.material=Array.isArray(mesh.material)?mesh.material.map(clone):clone(mesh.material);
       });
+      addStoneCore(model,plane,.82,height,.82);
       const cap=new T.Mesh(blockedCapGeometry,capMaterial);cap.visible=false;cap.castShadow=true;cap.receiveShadow=true;model.add(cap);
       const current=mode==="full"?height:lowHeight,block={...item,cutawayGroup:item.id};
       records.set(item.id,{model,plane,cap,height,current,item:block,joints:new Map(),worldBounds:new T.Box3()});return model;

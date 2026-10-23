@@ -9,7 +9,7 @@
     let movement = null, figureEffect = null;
     function direction(from,to){const [x,row]=Topo.parse(from),[nextX,nextRow]=Topo.parse(to);return Math.atan2(nextX-x,nextRow-row);}
     function placeMovingHero(point) {
-      if(follow()){target.x=point.x;target.y=.4;target.z=point.z;}
+      if(follow()&&movement.model.visible){target.x=point.x;target.y=.4;target.z=point.z;}
       movement.model.position.copy(point);if(movement.movesRing)ring.position.set(point.x,.162,point.z);
     }
     function finishMovement() {

@@ -19,8 +19,17 @@ notices and other games. CODE-STRUCTURE.md maps current component boundaries.
   doors, discovery, optional realistic LOS, melee and deterministic CPU turns.
 - Twelve original elemental spells, original card artwork/full text, inertial hand,
   board target selection, used-card removal and spell-specific saved effects.
+- Persistent status visuals for all seven spell statuses and three potion buffs,
+  derived from saved flags/current movement and bounded independently of casts.
+- Zargon portrait modal with explicit Continue before the CPU queue begins.
 - Separate gameplay sandbox with twelve spell presets and turn/opponent fixtures.
-- Autosave/restore, recorded dice stages, schema 5 with guarded older migrations.
+- Autosave/restore, local JSON save export/import, recorded dice stages, schema 7
+  with guarded older migrations. Menu transfer and setup import confirm replacement
+  and keep adventure/sandbox files separate; see SAVES.md.
+- Per-hero inventories, personal gold, starting equipment, one-use healing
+  potions with sidebar dice and an explicit lethal-hit potion recovery choice.
+  Original 24-card room searches now grant gold/potions and resolve hazards/Orcs.
+  The Trial's fixed/empty quest finds and per-hero room limits are persisted.
 - Sliding/hopping figures, attacker-eye camera, finite spell particles/projectiles,
   defeated-piece removal and gliding focus on movement/discovery.
 - Painted furniture/doors/rubble, supplied board/stair art, tall walls/cutaway,
@@ -46,6 +55,14 @@ scaled before implementation; no automatic encounter/stat scaling exists yet.
 2. **Original searches/treasure and remaining core actions.** Audit sources first;
    implement per-hero/per-room rules, persisted decks/consumption and explicit
    pending decisions. Do not approximate unavailable card effects.
+   Original Treasure stack/search/card faces are now implemented; see TREASURE.md
+   for mechanics, source interpretation, migration and manual-review limits.
+   Potion sharing on the giver’s turn is implemented through the board picker.
+   Remaining work includes traps/secret-door searches, gold/equipment trading and
+   equipment acquisition.
+   Secret doors should blend into tall masonry before discovery, then expose a
+   passage through a sliding/pivoting stone panel with matching frame/clipping.
+   Confirm printed reveal/opening timing before implementation.
 3. **Quest events, traps and death recovery.** Source-linked trigger IDs, scope and
    fired-state persistence; emergency healing/potions need deliberate queues and
    a new migration if stored fields change. No hidden information in target hints.
@@ -74,5 +91,5 @@ Terrain/layout caches must invalidate on discovery/known-door changes; cutaway
 protection still follows the active/defending hero and actual displayed camera.
 
 No online multiplayer, account service, expansions, quest editor or skeletal
-animation is part of the current scope. Export/import and multiple adventure slots
-remain future work. No audio system is implemented.
+animation is part of the current scope. Save export/import is implemented; multiple
+adventure slots remain future work. No audio system is implemented.

@@ -1,7 +1,9 @@
 # Elemental spells — original North American rules
 
 All twelve elemental cards now have executable effects and their original scanned
-card faces. The spellbook shows a fanned hand with previous/next, card selection,
+card faces. The current UI is a nonmodal drawer with an inertial carousel; used
+cards leave the hand and choosing a glowing board target casts immediately.
+Historical implementation/check sections below retain their original scope. The spellbook shows a fanned hand with previous/next, card selection,
 left/right/Home/End keys, held mouse/pen drags and thumb swipes. Cast cards leave
 the hand, with used status retained in the save. The selected card's full printed
 description, target and Cast button sit below the hand. Short rule summaries
@@ -42,7 +44,7 @@ suggestion of Fire for the Wizard's first choice and Earth for the Elf.
 Casting checks the individual caster's centre-to-centre grid sight with figure
 occlusion, independent of the combined party display sight, remembered monsters
 and the realistic-LOS presentation checkbox. It retains the existing grid corner
-and user-requested shared-stair-space conventions. Targets exposed in the modal
+and user-requested four-square stair footprint. Targets exposed by the board picker
 come from live heroes or the filtered revealed-monster projection; an unseen
 monster's coordinates never appear as a target hint. The engine validates again. Legal spell targets join the existing light-blue
 action-reach outlines and enable the model context action.
@@ -57,7 +59,7 @@ No normal combat defence is added to the fire spells' stated red-die resistance.
 `data/spells.js` holds stable IDs, source locators and summaries. `rules/spells.js`
 owns loadouts, individual sight, legality and effects. `CAST_SPELL` is the engine
 boundary; resolution records outcomes once before display. `ui/spells.js` owns
-the cancellable card/target modal and sends commands, never dice or damage.
+the cancellable card drawer/board picker and sends commands, never dice or damage.
 
 Schema 4 stores hero `spellGroups`, `spellsUsed`, `effects.rockSkin` and monster
 `effects.tempest`. Base stats remain canonical: effective defence adds Rock Skin
@@ -138,7 +140,7 @@ rolled movement remaining, hover/click black space to show one invisible grid
 square and a route ribbon; no floor/room is rendered until discovered. Shift +
 arrows/Enter works for these squares too. The direction-planner button/modal and
 MOVE_THROUGH_ROCK command have been removed. Hidden cells all have identical
-passability/cost in previews; never query hidden floor, furniture or units there.
+passability/cost in previews; use only the public playable mask; never preview hidden furniture or units.
 Normal routes pause when new ground/rooms/entities are discovered.
 
 Mark explicitly chose a digital ruling on 2026-10-22: this spell phases through
@@ -225,17 +227,17 @@ Sleep activation checks are not new casts and do not replay the casting effect.
 | Spell | Cosmetic effect |
 | --- | --- |
 | Ball of Flame | Orange projectile, spherical outward explosion and falling embers |
-| Fire of Wrath | Compact red-orange motes rise in a narrow target-centred flame column |
+| Fire of Wrath | Cached curling flame volumes and rising embers at the target |
 | Heal Body | Green motes rise and converge from the feet into the chest |
 | Water of Healing | Falling turquoise rain with repeated expanding floor ripples |
 | Rock Skin | Irregular angular stone fragments settle around the body |
-| Tempest | Fast upward flow through a widening wind funnel |
+| Tempest | Three rotating wind ribbons plus rising funnel particles |
 | Courage | Small gold sparks pulse outwards around the body |
 | Swift Wind | Low horizontal pale air streams pass around the hero |
 | Pass Through Rock | Fine stone-coloured dust sweeps across the body |
 | Veil of Mist | A broad, low blue-green fog bank billows outwards |
 | Sleep | Small violet stars hover and drift near the head |
-| Genie | Curved incoming cyan wisps become three strands orbiting the upper body; intensity varies for door/attack mode |
+| Genie | Incoming indigo/cyan wisps resolve into a translucent Genie silhouette with flowing body, arms and eyes |
 
 A reused 160-particle capacity, with 48–120 active motes per recipe, a core mesh
 and ring keep allocation bounded. Effects use normal alpha blending, retain
@@ -277,3 +279,23 @@ crimson, emerald/lime, cobalt/cyan, limestone, ice blue, gold, mint, bronze, tea
 violet/pink and indigo palettes, with matching local illumination. This later
 revision has source/diff review only for spell UI, colours and timing; earlier
 Chrome spell checks predate it.
+
+## Current persistent cues and presentation
+
+status-effects.js derives cues from the filtered projection: Sleep Zs, Tempest
+swirls, Rock Skin stone fragments, Courage gold sparks, Strength red sparks,
+Defense blue shields, Heroic Brew amber spirals, Swift Wind mint streams, Veil
+teal mist and Pass Through Rock cyan shells/dust. Consumed movement magic stays
+visible through its movement phase; pending dice mask status changes until their
+recorded reveal. No dead/hidden/exited target or extra light/RNG is introduced.
+Cues follow displayed models/hops and hide with the temporary eye-view sculpt.
+Reduced motion uses static cues; hidden/context loss uses the shared finish path.
+
+Finite casts now combine cached particles and spell objects. Fire of Wrath adds
+18 curling flame tongues; Tempest uses three ribbons; Genie adds a spirit after
+its incoming wisps; Rock Skin uses 16 fragments. All twelve recipes have distinct
+motion/colour and one shared non-shadow light, masked by dungeon barriers.
+Geometry/particles finish before recorded resistance dice or compact outcome
+feedback. Later colour/shape/status revisions have source/diff review only;
+earlier approved effect checks do not certify these additions. See
+CODE-STRUCTURE.md for component/lifecycle ownership.

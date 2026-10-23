@@ -3,7 +3,9 @@
   const HQ=window.HeroQuest,$=id=>document.getElementById(id);
   HQ.createSpellbook=function({getState,onCast,onChooseTarget}) {
     let chosen=null,preferred=null,targetId=null,book=[],buttons=[],gesture=null,ignoreClickUntil=0,position=0,frame=0;
-    const cards=$("spell-cards"),targets=$("spell-target"),cast=$("cast-spell"),mode=$("spell-mode");
+    const cards=$("spell-cards"),cast=$("cast-spell"),mode=$("spell-mode");
+    $("canvas-host").append($("spell-dialog"));
+    const showDrawer=()=>{HQ.dialogs.show("spell-dialog");$("open-spellbook").setAttribute("aria-expanded","true");};
     const reduced=window.matchMedia("(prefers-reduced-motion: reduce)"),wrap=value=>((value%book.length)+book.length)%book.length;
     const offset=value=>wrap(value+book.length/2)-book.length/2;
     const state=()=>getState(),caster=()=>HQ.exploration.active(state());
@@ -16,9 +18,7 @@
       const s=state(),hero=caster(),card=HQ.spellData.byId[chosen],legal=card?figures(card).filter(target=>!HQ.spells.reason(s,hero,card,target,choiceMode())):[],target=legal.find(f=>f.id===targetId);
       const busy=Boolean(frame||gesture?.locked),reason=HQ.spells.reason(s,hero,card,target,choiceMode());
       cast.disabled=busy||!legal.length||Boolean(reason);cast.textContent=target?"Cast "+card.name:legal.length?"Choose target":"Cast spell";
-      targets.disabled=busy||!legal.length;targets.textContent=target?target.name+" · Change target":"Choose on board";
-      $("spell-target-note").textContent=reason||(!legal.length?"No legal target.":target?"":"Select a glowing target on the board.");
-      HQ.portraits.set($("spell-target-portrait"),target?.kind?[{...target,role:"Target"}]:[]);
+      $("spell-detail-status").textContent=reason||(!legal.length?"No legal target.":target?target.name:"Select a glowing target on the board.");
     }
     function populateTargets() {
       const s=state(),hero=caster(),card=HQ.spellData.byId[chosen],legal=card?figures(card).filter(target=>!HQ.spells.reason(s,hero,card,target,choiceMode())):[];
@@ -26,19 +26,19 @@
       updateTarget();
     }
     async function chooseTarget() {
-      if(targets.disabled||frame||gesture?.locked)return;
+      if(cast.disabled||frame||gesture?.locked)return;
       const card=HQ.spellData.byId[chosen],legal=figures(card).filter(target=>!HQ.spells.reason(state(),caster(),card,target,choiceMode()));
       const selected=await onChooseTarget({dialogId:"spell-dialog",reopenOnPick:false,title:card.name+" · Choose "+(card.id==="genie"&&choiceMode()==="door"?"a door":"a "+card.target),targets:legal.map(target=>({type:"piece",id:target.id,label:target.name}))});
-      if(selected){targetId=selected.id;populateTargets();if(castSelected())return;HQ.dialogs.show("spell-dialog");}
+      if(selected){targetId=selected.id;populateTargets();if(castSelected())return;showDrawer();}
       else populateTargets();
-      targets.focus({preventScroll:true});
+      $("open-spellbook").setAttribute("aria-expanded",String($("spell-dialog").open));cast.focus({preventScroll:true});
     }
     function castSelected() {
       const card=HQ.spellData.byId[chosen],target=card&&figures(card).find(figure=>figure.id===targetId);
       if(!target||HQ.spells.reason(state(),caster(),card,target,choiceMode()))return false;
       const command={type:"CAST_SPELL",spellId:chosen,targetId,mode:choiceMode()};
       HQ.dialogs.close("spell-dialog");
-      if(onCast(command)===false){HQ.dialogs.show("spell-dialog");populateTargets();return false;}
+      if(onCast(command)===false){showDrawer();populateTargets();return false;}
       return true;
     }
     function layout() {
@@ -64,7 +64,7 @@
       $("spell-detail-description").textContent=card?.description||(hasBook?"All spells have been cast this quest.":"Start a new adventure to choose spell groups.");
       $("spell-detail-status").textContent=card?HQ.spells.reason(s,hero,card):"";
       $("spell-mode-field").hidden=id!=="genie";
-      targets.closest(".spell-target-area").hidden=!card;cast.hidden=!card;
+      cast.hidden=!card;
       if(changed){targetId=null;mode.value=id==="genie"&&HQ.trial.doors.some(door=>door.id===preferred)?"door":"attack";}
       populateTargets();
     }
@@ -75,7 +75,7 @@
       stopMotion();if(!book.length){commitSelection();return;}
       if(reduced.matches){position=target??Math.round(position);layout();commitSelection(focus);return;}
       let previous=performance.now(),elapsed=0,goal=target;
-      cards.classList.add("is-moving");cast.disabled=targets.disabled=true;
+      cards.classList.add("is-moving");cast.disabled=true;
       function tick(now) {
         const dt=Math.min(.032,Math.max(0,(now-previous)/1000));previous=now;elapsed+=dt;
         if(goal===null&&Math.abs(velocity)>.8&&elapsed<.7) {
@@ -136,7 +136,7 @@
       $("spell-previous").disabled=$("spell-next").disabled=book.length<2;
       const usable=book.filter(card=>!HQ.spells.reason(s,hero,card)),target=[...s.heroes,...s.monsters,...HQ.trial.doors].find(f=>f.id===initialTargetId);
       const first=target?usable.find(card=>!HQ.spells.reason(s,hero,card,target,card.id==="genie"&&HQ.trial.doors.some(d=>d.id===initialTargetId)?"door":"attack")):null;
-      selectCard(first?.id||usable[0]?.id||book[0]?.id||null,{instant:true});HQ.dialogs.show("spell-dialog");
+      selectCard(first?.id||usable[0]?.id||book[0]?.id||null,{instant:true});showDrawer();
     }
     $("spell-previous").addEventListener("click",()=>cycle(-1));$("spell-next").addEventListener("click",()=>cycle(1));
     cards.addEventListener("keydown",event=>{if(["ArrowLeft","ArrowRight","Home","End"].includes(event.key)){event.preventDefault();if(event.key==="Home"||event.key==="End")selectCard(book[event.key==="Home"?0:book.length-1]?.id,{focus:true});else cycle(event.key==="ArrowLeft"?-1:1,true);}});
@@ -161,17 +161,18 @@
       position=gesture.from-dx/gesture.step;
       const now=performance.now();gesture.samples.push({time:now,position});
       while(gesture.samples.length>2&&now-gesture.samples[0].time>90)gesture.samples.shift();
-      cast.disabled=targets.disabled=true;layout();
+      cast.disabled=true;layout();
     });
     cards.addEventListener("pointerup",event=>{if(gesture?.id===event.pointerId)finishGesture(true);});
     cards.addEventListener("pointercancel",event=>{if(gesture?.id===event.pointerId)finishGesture();});
     cards.addEventListener("lostpointercapture",event=>{if(gesture?.id===event.pointerId)finishGesture();});
     cards.addEventListener("pointerleave",()=>{if(gesture&&!gesture.locked)finishGesture();});
-    $("spell-dialog").addEventListener("close",cancelInteraction);
+    $("spell-dialog").addEventListener("close",()=>{cancelInteraction();$("open-spellbook").setAttribute("aria-expanded",String($("spell-dialog").open));});
+    $("spell-dialog").addEventListener("keydown",event=>{if(event.key==="Escape"){event.preventDefault();event.stopPropagation();HQ.dialogs.close("spell-dialog");$("open-spellbook").focus({preventScroll:true});}});
     window.addEventListener("blur",cancelInteraction);window.addEventListener("resize",cancelInteraction);
     reduced.addEventListener("change",cancelInteraction);
     document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")cancelInteraction();});
-    mode.addEventListener("change",()=>{targetId=null;populateTargets();});targets.addEventListener("click",chooseTarget);
+    mode.addEventListener("change",()=>{targetId=null;populateTargets();});
     cast.addEventListener("click",()=>{if(cast.disabled)return;if(!targetId){chooseTarget();return;}castSelected();});
     return Object.freeze({show,close:()=>HQ.dialogs.close("spell-dialog")});
   };

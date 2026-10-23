@@ -8,9 +8,12 @@
 .hq-button--primary:hover:not(:disabled){background:#e0c48e;border-color:#e0c48e}
 .hq-button--quiet{background:transparent;border-color:transparent;color:#abb7a2}
 .hq-button:disabled{opacity:.35;cursor:default}
+#dice-roll.is-cpu-roll{background:linear-gradient(#792b2b,#4c181d);border-color:#a04a4a;color:#f4d9cf;opacity:1;cursor:default;box-shadow:inset 0 1px 0 #ffffff12}
 .hq-panel{padding:20px;border:1px solid var(--hq-border);border-radius:var(--hq-radius);background:#101a1240}
 .hq-field{display:flex;flex-direction:column;gap:8px;color:#d4d9c9;font-size:12px}
 .hq-field input,.hq-field select{width:100%;min-height:42px;padding:10px 12px;border:1px solid #8f9c7e40;border-radius:4px;background:#121b15;color:var(--hq-paper);font:13px Arial,sans-serif}
+.hq-field select{appearance:none;padding-inline-end:40px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 6 5 5 5-5' fill='none' stroke='%23e8dec7' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:14px 14px}
+@media(forced-colors:active){.hq-field select{appearance:auto;background-image:none}}
 .hq-field input:focus,.hq-field select:focus{border-color:var(--hq-gold)}
 .hq-check{display:flex;align-items:flex-start;gap:13px;padding:15px 0;cursor:pointer}
 .hq-check input{flex:0 0 auto;accent-color:var(--hq-gold);width:17px;height:17px;margin:1px 0}
@@ -48,6 +51,9 @@
 .handoff-dialog h2{font-size:39px}
 .menu-actions{display:grid;gap:10px;margin-top:22px}
 .menu-actions .hq-button{width:100%}
+.save-file-actions{display:flex;gap:10px;margin-top:20px}
+.save-file-actions .hq-button{flex:1;min-width:0;justify-content:center}
+.save-file-status{color:var(--hq-danger)}
 .help-steps{padding-left:22px;color:#b7c1ad;font-size:13px;line-height:1.8}
 .help-steps li{padding-left:6px;margin:12px 0}
 .exploration-app .topbar{max-width:none}
@@ -59,11 +65,18 @@
 .adventure-brand h1 span{color:var(--hq-gold)}
 .adventure-brand .eyebrow{font-size:8px;margin-bottom:10px}
 .quest-title{font:15px Georgia,serif;color:#93a38c;margin:13px 0 0}
+.quest-info-link{display:block;border:0;background:none;padding:4px 0;text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:4px}
+.quest-info-link:hover:not(:disabled){color:var(--hq-gold)}
+.quest-info-link:focus-visible{outline:2px solid var(--hq-gold);outline-offset:4px;border-radius:2px}
+.quest-info-link:disabled{cursor:default;opacity:.5}
+#quest-info-dialog .hq-panel h3{margin:0 0 8px;font:19px Georgia,serif}
+#quest-info-objective{margin:0;font-size:14px;line-height:1.6}
 .turn-panel{padding:17px}
-.turn-panel .section-heading{margin-bottom:19px}
+.turn-panel .section-heading{margin-bottom:16px}
 .active-owner{font-size:10px;color:var(--hq-gold);margin:0 0 8px}
 .active-name{font:26px Georgia,serif;margin:0 0 20px;font-weight:normal}
 .turn-panel>.hq-button{width:100%;margin-top:10px}
+.turn-panel>.hq-button--primary{justify-content:center}
 .dice-row{display:flex;align-items:center;gap:7px;margin:0 0 12px;min-height:45px}
 .d6{height:37px;width:35px;flex:0 0 auto;border:1px solid #c16c5377;border-radius:6px;background:linear-gradient(135deg,#74372c,#452921);display:grid;place-items:center;font:21px Georgia,serif;color:#ead8b8;box-shadow:inset 0 1px #ffffff10,0 2px 5px #0002}
 .dice-row>div{padding-left:5px}
@@ -150,35 +163,17 @@
 .hq-dialog::backdrop{backdrop-filter:none}
 }
 /* Combat shares the existing modal and panel components. */
-.hero-combat-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:-5px 0 18px;font-size:10px;color:var(--hq-soft)}
-.hero-combat-stats strong{color:var(--hq-paper);font-weight:500}
-.hero-combat-stats .weapon-name{grid-column:1/-1;font-size:10px;color:var(--hq-gold)}
-.attack-controls{margin:15px 0;padding:14px 0 7px;border-block:1px solid var(--hq-border)}
-.attack-controls .hq-field{font-size:10px}
-.attack-controls .hq-button{width:100%;margin-top:8px}
-.hq-button--attack{border-color:#a45e4966;background:#7a38232b;color:#e5c4ad}
-.hq-button--attack:hover:not(:disabled){background:#9c4b3b44}
-.action-status{font-size:9px;color:#9ca98e;line-height:1.6;margin:8px 0}
+.hero-combat-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 6px;margin:0 0 12px;font-size:10px;color:var(--hq-soft)}
+.hero-stat{display:flex;flex-direction:column;gap:5px;min-width:0;padding:8px 6px;border-radius:4px;background:#c7a66c08}
+.hero-stat>span{font-size:9px}
+.hero-combat-stats strong{color:var(--hq-paper);font-size:12px;font-weight:500;line-height:1.3}
+.hero-combat-stats .weapon-name{grid-column:1/-1;font-size:10px;color:var(--hq-gold);line-height:1.5}
+.hero-stat-effect{grid-column:1/-1;color:var(--hq-gold);font-size:9px}
+.action-status{font-size:9px;color:#9ca98e;line-height:1.6;margin:14px 0 0;padding-top:11px;border-top:1px solid var(--hq-border)}
 .party-button:disabled{opacity:.45}
 .party-button .hero-health{color:#b6ad8c}
-.combat-dialog{width:min(680px,calc(100% - 32px))}
-.combat-dialog h2{font-size:29px}
-.combat-rolls{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:25px 0}
-.combat-roll{padding:16px;border:1px solid var(--hq-border);border-radius:5px;background:#101a1240}
-.combat-roll h3{font:14px Georgia,serif;font-weight:normal;margin:0 0 14px}
-.combat-roll p{font-size:11px;line-height:1.6;color:var(--hq-soft);margin:14px 0 0}
-.combat-dice{display:flex;flex-wrap:wrap;gap:6px;min-height:43px;align-items:center}
 .combat-die{display:inline-grid;place-items:center;width:43px;height:43px;color:#282923;background:#e9dec6;border:1px solid #aa9571;border-radius:7px;box-shadow:inset 0 1px #fff9,0 3px 6px #0003}
-.combat-no-roll{font-size:11px;color:#93a087}
-.combat-outcome{padding:18px;border-left:2px solid var(--hq-gold);background:#d0b17a09}
-.combat-outcome strong{font:25px Georgia,serif;color:var(--hq-paper);font-weight:normal}
-.combat-outcome p{font-size:12px;line-height:1.7;color:var(--hq-soft);margin:9px 0 0}
-@media(max-width:500px){
-.combat-rolls{grid-template-columns:1fr}
-.combat-dialog h2{font-size:25px}
-.combat-roll{padding:13px}
-}
-/* Board selections are non-modal; rolls and decisions use the shared dialogs. */
+/* Anchored selections use left-click actions. */
 .board-controls-hint{font-size:10px;line-height:1.8;color:#9ba990;margin:0;padding-top:16px;border-top:1px solid var(--hq-border)}
 .board-context{position:absolute;z-index:5;width:260px;max-width:calc(100% - 24px);max-height:calc(100% - 88px);padding:17px;background:linear-gradient(140deg,#2a352cf7,#17231dfc);border-color:#d7b87599;box-shadow:0 12px 40px #0009,0 0 22px #c7a66c12;overflow:auto;backdrop-filter:blur(10px)}
 .context-title-row{display:flex;justify-content:space-between;gap:12px;align-items:start}
@@ -191,18 +186,9 @@
 .context-action .hq-button{width:100%;min-height:40px}
 .context-action small{display:block;font-size:10px;line-height:1.6;margin:5px 1px 0;color:#a3ae98}
 .context-action .hq-button:disabled{opacity:.48;cursor:not-allowed}
-/* A compact stable tray: identity above, result and action together below. */
-.dice-dialog{width:min(660px,calc(100% - 24px));padding:24px;text-align:left}
+/* Shared dice render surface. */
 .dice-header{display:flex;align-items:center;justify-content:space-between;gap:14px 24px;flex-wrap:wrap;min-height:92px;margin-bottom:18px}
 .dice-heading-copy{flex:1 1 220px;min-width:0}
-.dice-dialog #dice-kicker{min-height:14px;font:10px/1.4 Arial,sans-serif;letter-spacing:1.5px;margin:0 0 7px;overflow-wrap:anywhere}
-.dice-dialog h2{font-size:29px;line-height:1.2;min-height:35px;margin:0 0 7px;overflow-wrap:anywhere}
-.dice-dialog .dialog-lead{font:13px/1.5 Arial,sans-serif;min-height:20px;margin:0;color:var(--hq-soft)}
-.dice-dialog .roll-participants{align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:12px;min-height:56px;margin:0;max-width:100%}
-.dice-dialog .roll-participants .miniature-portrait{width:52px;height:56px}
-.dice-dialog .roll-participants .miniature-reference strong{font-size:14px;overflow-wrap:anywhere}
-.dice-dialog .roll-participants .miniature-reference small{margin-top:4px}
-.dice-dialog[data-roll-type=movement] .miniature-reference>span:not(.miniature-portrait){display:none}
 .dice-stage{position:relative;height:clamp(160px,32svh,260px);border:6px solid #513d29;border-radius:10px;background:#223b2c;box-shadow:inset 0 0 35px #0008,0 5px 20px #0005;overflow:hidden}
 .dice-stage canvas{display:block;width:100%;height:100%}
 .dice-stage-note{position:absolute;bottom:10px;left:16px;right:16px;pointer-events:none;text-align:center;font:9px Arial,sans-serif;letter-spacing:4px;color:#ddcf9d66}
@@ -213,11 +199,6 @@
 .dice-result[hidden]{display:flex!important;visibility:hidden}
 .dice-result .combat-die{width:36px;height:36px}
 .dice-result .combat-die img{width:30px;height:30px}
-.dice-dialog .dialog-actions{display:grid;grid-template-columns:auto auto;align-items:center;gap:8px;flex:0 0 auto;margin:0;padding:0;border:0;min-height:44px}
-.dice-dialog .dialog-actions .hq-button{height:44px;min-width:0;justify-content:center;white-space:nowrap}
-.dice-dialog .dialog-actions .hq-button--primary{min-width:144px}
-.dice-dialog #dice-cancel{grid-column:1;grid-row:1}
-.dice-dialog #dice-roll,.dice-dialog #dice-continue{grid-column:2;grid-row:1}
 @media(max-width:700px){
 .board-controls-hint{grid-column:1/-1}
 .board-context{width:245px;padding:15px}
@@ -227,20 +208,12 @@
 .numbered-die svg{display:block;width:31px;height:31px;fill:#fff9ed;filter:drop-shadow(0 1px 0 #7c182b80)}
 .combat-die{flex:0 0 auto;background:linear-gradient(140deg,#fffaea,#eee4ce 65%,#d5c6a7);border-color:#cabd9e;box-shadow:inset 1px 2px 2px #fff9,inset -1px -2px 2px #a8936c55,0 3px 5px #0004}
 .combat-die img{display:block;width:36px;height:36px;object-fit:contain}
-.combat-dialog #combat-content{min-height:310px}
 @media(max-width:500px){
-.dice-dialog{padding:18px}
 .dice-header{gap:10px 12px;min-height:82px;margin-bottom:14px}
 .dice-heading-copy{flex-basis:180px}
-.dice-dialog h2{font-size:25px;min-height:30px}
-.dice-dialog .roll-participants{justify-content:flex-start;gap:10px}
-.dice-dialog .roll-participants .miniature-portrait{width:44px;height:48px}
 .dice-stage{height:clamp(150px,30svh,230px);border-width:5px}
 .dice-footer{margin-top:14px;padding-top:14px;flex-wrap:wrap}
 .dice-result{font-size:22px;flex-basis:100%;height:44px;justify-content:center}
-.dice-dialog .dialog-actions{margin-left:auto}
-.dice-dialog .dialog-actions .hq-button--primary{min-width:120px}
-.combat-dialog #combat-content{min-height:360px}
 }
 /* Compact main-view controls; labels/tooltips retain the current state. */
 .scene-view-controls{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-shrink:0}
@@ -248,19 +221,22 @@
 .scene-view-controls .scene-icon-button:hover{background:#344133;border-color:var(--hq-gold)}
 .scene-view-controls .scene-icon-button:focus-visible{outline:2px solid var(--hq-gold);outline-offset:3px}
 .scene-icon-button svg{display:block;width:24px;height:24px;pointer-events:none}
+.scene-icon-button .pov-label{font:700 11px/1 Arial,sans-serif;letter-spacing:.03em;pointer-events:none}
 .scene-view-controls .view-switch{gap:4px;padding:0;border:0;background:none}
 .scene-view-controls .view-switch button[aria-pressed=true]{background:#cfbd9526;color:#e2d4af;border-color:var(--hq-gold)}
+.scene-view-controls #action-camera-mode[aria-pressed=true]{background:#cfbd9526;color:#e2d4af;border-color:var(--hq-gold)}
+.scene-view-controls .scene-icon-button:disabled{opacity:.4;cursor:default}
 .wall-mode-button .wall-icon{display:none}
 .wall-mode-button[data-mode=full] [data-wall-icon=full],.wall-mode-button[data-mode=cutaway] [data-wall-icon=cutaway],.wall-mode-button[data-mode=low] [data-wall-icon=low]{display:block}
 .dynamic-lighting-button[aria-pressed=false] .bulb-rays{display:none}
 @media(max-width:700px){
 .scene-view-controls{gap:6px}
-.adventure-tabletop .scene-heading{max-width:calc(100% - 190px)}
+.adventure-tabletop .scene-heading{max-width:calc(100% - 235px)}
 }
 @media(max-width:400px){
 .scene-view-controls{gap:4px}
 .scene-view-controls .scene-icon-button{width:36px;height:36px;min-width:36px;min-height:36px;padding:5px}
-.adventure-tabletop .scene-heading{max-width:calc(100% - 165px)}
+.adventure-tabletop .scene-heading{max-width:calc(100% - 210px)}
 }
 .hq-range-setting{margin:18px 0;padding:14px 16px;border:1px solid #c7a66c44;border-radius:4px}
 .hq-range-setting label{display:flex;justify-content:space-between;gap:16px;font-weight:bold}
@@ -307,39 +283,17 @@
 .miniature-reference{display:inline-flex;align-items:center;gap:10px;text-align:left;min-width:0}
 .miniature-reference strong{display:block;font:16px Georgia,serif;color:var(--hq-paper);font-weight:normal}
 .miniature-reference small{display:block;color:var(--hq-soft);font-size:10px;margin-top:5px}
-.active-figure{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.active-figure{display:flex;align-items:center;gap:10px;margin-bottom:16px}
 .active-figure>div:last-child{min-width:0}
-.active-figure .active-name{margin-bottom:0;font-size:23px}
+.active-figure .active-name{margin-bottom:0;font-size:21px;overflow-wrap:anywhere}
 .active-figure .active-owner{overflow-wrap:anywhere}
-.active-figure .miniature-portrait{width:58px;height:64px}
+.active-figure .miniature-portrait{width:50px;height:56px}
 .party-button{gap:8px}
 .party-button .miniature-portrait{width:38px;height:44px;border-radius:5px}
 .party-button .turn-number{min-width:10px;font-size:12px}
 .party-button>span:not(.turn-number):not(.miniature-portrait):not(.active-mark){min-width:0;overflow-wrap:anywhere}
-.combat-figure{display:flex;align-items:center;gap:12px;min-height:58px;margin-bottom:14px}
-.combat-roll .combat-figure h3{margin:0;line-height:1.5}
 .roll-participants{display:flex;justify-content:center;gap:28px;min-height:56px;margin:0 0 16px}
 .roll-participants .miniature-reference{flex:0 1 auto}
-/* Spell outcomes need a compact result card, rather than the combat tray's reserve. */
-.combat-dialog[data-report-type="spell"]{width:min(600px,calc(100% - 32px));padding:28px}
-.combat-dialog[data-report-type="spell"] #combat-content{min-height:0}
-.combat-dialog[data-report-type="spell"] h2{font-size:27px;margin-bottom:22px}
-.spell-result{display:grid;gap:18px}
-.spell-result-participants{display:flex;align-items:center;flex-wrap:wrap;gap:16px 28px}
-.spell-result-participants .miniature-reference{flex:0 1 auto}
-.spell-result-participants .miniature-portrait{width:52px;height:56px}
-.spell-result-participants .miniature-reference>span:last-child{min-width:0;overflow-wrap:anywhere}
-.spell-result-outcome{padding:16px 18px}
-.spell-result-outcome strong{display:block;font:17px/1.55 Arial,sans-serif;font-weight:500;overflow-wrap:anywhere}
-.spell-result-outcome p{margin-top:8px}
-.combat-dialog[data-report-type="spell"] .dialog-actions{margin-top:22px;padding-top:18px}
-@media(max-width:500px){
-.combat-dialog[data-report-type="spell"]{padding:22px}
-.combat-dialog[data-report-type="spell"] h2{font-size:24px}
-.spell-result-participants{gap:14px}
-.spell-result-outcome{padding:14px}
-.spell-result-outcome strong{font-size:15px}
-}
 .context-portrait{float:right;margin:0 0 10px 12px}
 .context-portrait .miniature-portrait{width:64px;height:72px}
 .context-actions{clear:both}
@@ -369,44 +323,26 @@
 @media(max-width:700px){
 .quest-objective{grid-column:1/-1}
 }
-/* Spell cards share the existing modal palette and native keyboard controls. */
+/* Original spell-card artwork and accessible carousel. */
 .hq-muted{color:var(--hq-soft);font-size:12px;line-height:1.7}
 .spell-setup{border:1px solid var(--hq-border);border-radius:4px;margin:20px 0;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .spell-setup legend{font:17px Georgia,serif;color:var(--hq-gold)}
 .spell-setup>p{grid-column:1/-1;margin:0}
-.spell-dialog{width:min(810px,calc(100% - 32px))}
-.spell-dialog #spell-note{min-height:42px;margin:0 0 15px}
-.spell-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:40svh;overflow:auto;padding:3px}
-.spell-card{display:flex;flex-direction:column;align-items:start;gap:9px;text-align:left;border:1px solid var(--hq-border);border-radius:5px;padding:16px;color:var(--hq-paper);background:#101a1240;font:12px/1.6 Arial,sans-serif}
-.spell-card strong{font:20px Georgia,serif;font-weight:normal}
-.spell-card small{color:var(--hq-gold)}
 .spell-card[aria-pressed=true]{border-color:var(--hq-gold);background:#c7a66c14}
 .spell-card:disabled{opacity:.5;cursor:default}
 .spell-card:focus-visible{outline:2px solid var(--hq-gold);outline-offset:1px}
-.spell-target-area{min-height:144px;padding:18px 3px 0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 18px;align-items:center}
-.spell-target-area>.hq-field{grid-column:2}
-.spell-target-area>div{grid-column:1;grid-row:1/3}
-.spell-target-area>p{grid-column:2;min-height:22px;margin:0}
-.spell-target-area .miniature-portrait{width:76px;height:76px}
-.spell-dialog .dialog-actions{margin-top:10px}
 @media(max-width:550px){
-.spell-cards{grid-template-columns:1fr;max-height:36svh}
 .spell-setup{grid-template-columns:1fr}
-.spell-target-area{grid-template-columns:1fr}
-.spell-target-area>.hq-field,.spell-target-area>p{grid-column:1}
-.spell-target-area>div{display:none}
-.spell-card{padding:12px}
 .spell-dialog{padding:22px}
 }
 /* Original scanned cards form a selectable hand; rules stay readable below. */
 .spell-dialog{width:min(890px,calc(100% - 24px));padding:26px 32px}
-.spell-dialog #spell-note{min-height:0;margin-bottom:8px}
+.spell-dialog #spell-note{min-height:0;margin:0 0 8px}
 .spell-cards{--card-width:180px;--fan-step:calc(var(--card-width)*.9);position:relative;display:block;height:320px;max-height:none;overflow:hidden;touch-action:pan-y;padding:0}
 .spell-card{position:absolute;left:50%;top:12px;width:var(--card-width);height:auto;aspect-ratio:480/754;display:block;padding:0;border:0;border-radius:7px;background:#f4ecd9;overflow:hidden;box-shadow:0 4px 14px #0008;transform-origin:50% 100%;transform:translateX(calc(-50% + var(--fan-offset)*var(--fan-step))) translateY(calc(var(--fan-distance)*10px)) rotate(calc(var(--fan-offset)*7deg)) scale(calc(1 - var(--fan-distance)*.045));z-index:calc(20 - var(--fan-distance));transition:none;cursor:pointer}
-.spell-card img{display:block;width:100%;height:100%;object-fit:fill;pointer-events:none}
+.spell-card img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
 .spell-card.is-centred{outline:2px solid var(--hq-gold);outline-offset:3px;box-shadow:0 7px 25px #000a;background:#f4ecd9}
 .spell-card.is-away{opacity:0;pointer-events:none}
-.spell-card>span{position:absolute;bottom:12px;left:8px;right:8px;padding:6px;background:#1b251eef;color:var(--hq-paper);text-align:center;font:11px Arial,sans-serif}
 .spell-deck-controls{display:flex;align-items:center;justify-content:center;gap:20px;margin:-3px 0 16px}
 .spell-deck-controls .hq-button{min-height:34px;justify-content:center}
 .spell-deck-controls>span{font-size:11px;color:var(--hq-soft);min-width:40px;text-align:center}
@@ -415,7 +351,6 @@
 .spell-details h3{font:25px Georgia,serif;margin:0 0 10px}
 .spell-details>#spell-detail-description{font:14px/1.6 Georgia,serif;min-height:45px;margin:0}
 .spell-details>#spell-detail-status{margin:8px 0;min-height:20px}
-.spell-target-area{min-height:100px;padding-top:6px}
 .spell-details #spell-mode-field{margin:10px 0}
 .spell-dialog .dialog-actions{margin-top:16px}
 .spell-dialog .dialog-title-row{margin-bottom:0}
@@ -426,7 +361,6 @@
 .spell-details{padding:14px}
 .spell-details h3{font-size:23px}
 .spell-details>#spell-detail-description{min-height:68px}
-.spell-target-area{min-height:100px}
 .spell-deck-controls{margin-bottom:12px}
 }
 @media(prefers-reduced-motion:reduce){
@@ -434,8 +368,7 @@
 }
 .dice-row{flex-wrap:wrap}
 .dice-row>div{flex:1 1 100px}
-.spell-card img{object-fit:contain}
-/* Keep the deck modal stable as card rules and Genie controls change. */
+/* Reserve card/detail space as card rules and Genie controls change. */
 .spell-dialog[open]{display:flex;flex-direction:column;height:min(920px,calc(100svh - 24px));overflow:hidden}
 .spell-dialog .dialog-title-row,.spell-dialog #spell-note,.spell-dialog .dialog-actions,.spell-deck-controls{flex:0 0 auto}
 .spell-cards{--card-width:clamp(120px,17svh,180px);flex:0 0 clamp(210px,31svh,300px);height:clamp(210px,31svh,300px)}
@@ -450,7 +383,6 @@
 .spell-cards.is-dragging{cursor:grabbing}
 .spell-cards.is-dragging .spell-card{transition:none}
 .spell-details>#spell-detail-description{white-space:pre-line}
-.zargon-portrait{display:block;width:min(100%,480px);height:auto;max-height:48svh;object-fit:contain;margin:16px auto;border:1px solid var(--hq-border);border-radius:8px}
 .sandbox-dialog{width:min(760px,calc(100% - 28px))}
 .sandbox-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}
 .sandbox-fields select{min-width:0}
@@ -466,7 +398,6 @@
 .board-choice p{margin:0 0 5px;color:var(--hq-paper);font:20px Georgia,serif}
 .board-choice small{font-size:11px;color:var(--hq-soft)}
 .board-choice .hq-button{white-space:nowrap}
-.spell-target-area #spell-target{justify-content:flex-start;min-width:0;white-space:normal;text-align:left}
 @media(max-width:600px){
 .board-choice{bottom:12px;flex-direction:column;align-items:stretch;gap:10px;width:calc(100% - 28px);padding:14px}
 .board-choice p{font-size:17px}
@@ -478,9 +409,65 @@
 .health-heart{display:block;width:16px;height:16px;flex:0 0 auto;stroke-width:1.3;stroke-linejoin:round}
 .health-heart--full{fill:#d34643;stroke:#ee8676}
 .health-heart--empty{fill:#080b09;stroke:#67705e}
-.hero-combat-stats>.body-hearts{grid-column:1/-1;margin-bottom:3px}
+.hero-combat-stats>.body-hearts{grid-column:1/-1;gap:3px;margin-bottom:3px}
+.hero-combat-stats>.body-hearts .health-heart{width:14px;height:14px}
 .party-button .body-hearts{gap:2px}
 .party-button .health-heart{width:12px;height:12px}
 .context-details{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
-.combat-outcome .body-summary{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}
-.body-summary .health-heart{width:18px;height:18px}
+
+/* Rolls live at the table; hero Roll buttons stay explicit. */
+.inline-dice{margin:14px 0;border-top:1px solid var(--hq-border);padding-top:14px}
+.inline-dice .dice-header{display:block;min-height:0;margin-bottom:10px}
+.inline-dice #dice-kicker{font:9px/1.4 Arial,sans-serif;letter-spacing:1px;color:var(--hq-gold);margin:0 0 5px}
+.inline-dice h3{font:19px/1.3 Georgia,serif;margin:0 0 5px}
+.inline-dice #dice-instructions{font:11px/1.5 Arial,sans-serif;color:var(--hq-soft);margin:0}
+.inline-dice .roll-participants{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+.inline-dice .miniature-portrait{width:34px;height:38px}
+.inline-dice .miniature-reference strong{font-size:11px}
+.inline-dice .miniature-reference small{font-size:9px}
+.inline-dice[data-roll-type=movement] .roll-participants{display:none}
+.inline-dice .dice-stage{height:155px;border-width:3px;border-radius:6px}
+.inline-dice .dice-footer{display:block;min-height:42px;margin-top:9px;padding-top:0;border:0}
+.inline-dice .dice-result{font-size:19px;min-height:34px;justify-content:center;gap:4px}
+.inline-dice .dice-result[hidden]{display:none!important}
+.inline-dice .dice-result .combat-die{width:28px;height:28px}
+.inline-dice .dice-result .combat-die img{width:24px;height:24px}
+.inline-dice .dialog-actions{display:flex;gap:7px;border:0;padding:0;margin:8px 0 0}
+.inline-dice .dialog-actions:has(button:not([hidden])){min-height:42px}
+.inline-dice .dialog-actions .hq-button{flex:1;min-width:0;justify-content:center}
+.cpu-controls{display:flex;align-items:center;gap:10px;margin-top:12px}
+.cpu-controls img{width:52px;height:43px;object-fit:cover;border-radius:4px}
+.cpu-controls button{flex:1;justify-content:center}
+.cpu-controls button[aria-pressed=true]{border-color:var(--hq-gold)}
+.action-feedback{position:absolute;z-index:4;bottom:20px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);padding:14px 18px;background:#18231af2;box-shadow:0 8px 24px #0005;pointer-events:none;text-align:center}
+.action-feedback .eyebrow{font-size:9px;line-height:1.5;min-height:20px;padding-inline:24px;margin:0 0 5px;overflow-wrap:anywhere}
+.action-feedback h2{font:20px/1.3 Georgia,serif;margin:0 0 10px}
+.action-feedback .roll-participants{display:flex;justify-content:center;gap:12px;margin:0 0 10px;flex-wrap:wrap}
+.action-feedback .miniature-portrait{width:38px;height:42px}
+.action-feedback .miniature-reference strong{font-size:12px}
+.action-feedback .miniature-reference small{display:none}
+.feedback-result{display:block;font:17px/1.45 Georgia,serif;max-width:430px;margin-bottom:8px}
+.action-feedback p{font-size:11px;margin:6px 0 0}
+.zargon-dialog{width:min(380px,calc(100% - 32px));text-align:center}
+.zargon-portrait{display:block;width:min(240px,100%);height:auto;max-height:35svh;object-fit:contain;margin:20px auto 0;border-radius:6px}
+.zargon-dialog .dialog-actions{justify-content:center}
+/* The one shared-device handoff stays explicit but compact. */
+#handoff-dialog{padding:22px;width:min(370px,calc(100% - 24px))}
+#handoff-dialog .dialog-ornament{display:none}
+#handoff-dialog h2{font-size:27px;margin-bottom:12px}
+#handoff-dialog .handoff-portrait{margin:0 auto 10px}
+#handoff-dialog .dialog-lead{margin-bottom:12px;font-size:16px}
+#handoff-dialog .dialog-actions{margin-top:14px;padding-top:14px}
+
+.dice-row{min-height:0;margin-bottom:8px}
+.dice-row #movement-remaining{font-size:13px;color:var(--hq-paper)}
+@media(max-width:700px){
+.spell-drawer .spell-cards{--card-width:100px;flex-basis:170px;height:170px}
+}
+
+.action-feedback #dismiss-feedback{position:absolute;top:7px;right:7px;pointer-events:auto;min-width:27px;min-height:27px;font-size:20px}
+.action-feedback h2{padding-inline:18px}
+
+
+.recovery-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;pointer-events:auto;margin-top:12px}
+.recovery-actions .hq-button{min-height:38px;padding:8px 12px;font-size:12px}

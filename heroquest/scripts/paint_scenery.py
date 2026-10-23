@@ -4,7 +4,8 @@ Requires numpy; --preview also needs Pillow. Original imports/STLs stay intact.
 Seam cuts interpolate source normals without moving the surface or fitting frame.
 """
 from pathlib import Path
-import argparse,base64,hashlib,json
+import argparse,base64,hashlib,heapq,json
+from functools import lru_cache
 import numpy as np
 from paint_furniture import cut
 import paint_workshop as workshop
@@ -44,7 +45,8 @@ def door_leaf(p):
 
 def fields(key):
  if key in ['closed-door','open-door']:
-  result=[(4,lambda p:15.05-p[:,1])]
+  # Match the lower plinth to the arch's limestone instead of a display base.
+  result=[(6,lambda p:15.05-p[:,1])]
   if key=='closed-door':
    def hardware(p):
     x,y,z=p.T
@@ -77,22 +79,78 @@ def fields(key):
  return [(5,lambda p:np.minimum.reduce([10.37-np.abs(p[:,2]),(22.0 if key=='blocked-2x1'else 10.4)-np.abs(p[:,0]),p[:,1]-2.72])),
          (6,lambda p:np.minimum.reduce([10.35-np.abs(p[:,2]),(21.8 if key=='blocked-2x1'else 10.35)-np.abs(p[:,0]),p[:,1]-3.04]))]
 
-def stone_tints(key,p):
+def door_stone_tints(key,p,faces):
+ # Separate the raised stone faces above the sculpt's recessed joints. Welding
+ # positions here joins normal/UV duplicates without changing runtime geometry.
+ points,welded=np.unique(np.round(p,4),axis=0,return_inverse=True)
+ # The legs thicken toward the plinth. Follow that profile so the lower
+ # stones do not merge into one seed island and receive one uniform colour.
+ threshold=1.95+np.clip(35-points[:,1],0,20)*.035
+ parent=np.arange(len(points));raised=(np.abs(points[:,2])>threshold)&(points[:,1]>15.05)
+ if key=='closed-door':raised&=door_leaf(points)<0
+ def root(i):
+  while parent[i]!=i:parent[i]=parent[parent[i]];i=parent[i]
+  return i
+ for face in welded[faces]:
+  for a,b in [(face[0],face[1]),(face[1],face[2]),(face[2],face[0])]:
+   if raised[a] and raised[b] and points[a,2]*points[b,2]>0:parent[root(a)]=root(b)
+ ids=np.array([root(i) for i in range(len(points))]);islands,counts=np.unique(ids[raised],return_counts=True)
+ # Use the walls' six stone families with stronger contrast for these smaller
+ # warmly lit arch stones. Bake actual colours on a white material,
+ # so pale stones are not clipped to the old grey material's maximum colour.
+ palette=np.array([[.40,.52,.70],[1.15,.88,.53],[.55,.67,.43],[.48,.36,.28],[1.50,1.42,1.20],[.76,.80,.81]])
+ srgb=np.array([164,156,139])/255
+ base=np.where(srgb<=.04045,srgb/12.92,((srgb+.055)/1.055)**2.4)
+ linear=np.tile(base,(len(points),1));tones={};owner=np.full(len(points),-1);distance=np.full(len(points),np.inf);queue=[]
+ stones=[]
+ for island,count in zip(islands,counts):
+  if count>=18:
+   mask=raised&(ids==island);centre=points[mask].mean(0);x,y,z=centre
+   progress=y-15.05 if y<35.45 and x<0 else 20.4+np.pi*12+35.45-y if y<35.45 else 20.4+(np.pi-np.arctan2(y-35.45,x))*12
+   stones.append((z>0,progress,int(island),mask,centre))
+ for order,(_,_,island,mask,centre) in enumerate(sorted(stones,key=lambda stone:stone[:2])):
+  seed=int(round((centre[0]+16)*137+(centre[1]+1)*311))
+  hashed=(seed*2654435761)&0xffffffff
+  tones[island]=base*palette[[4,0,2,3,1,5][order%len(palette)]]*(.90+((hashed>>8)%1000)/999*.16)
+  for i in np.flatnonzero(mask):owner[i]=island;distance[i]=0;heapq.heappush(queue,(0,int(i)))
+ # Colour the complete stone surface, rather than just the small raised tips.
+ # Surface-distance propagation meets in recessed seams; it cannot jump across
+ # the open doorway or through a wooden leaf to an unrelated stone.
+ allowed=points[:,1]>15.05
+ if key=='closed-door':allowed&=door_leaf(points)<0
+ neighbors=[{} for _ in points]
+ for face in welded[faces]:
+  for a,b in [(face[0],face[1]),(face[1],face[2]),(face[2],face[0])]:
+   if allowed[a] and allowed[b]:
+    length=float(np.linalg.norm(points[a]-points[b]));neighbors[a][b]=length;neighbors[b][a]=length
+ while queue:
+  travelled,a=heapq.heappop(queue)
+  if travelled!=distance[a]:continue
+  for b,length in neighbors[a].items():
+   candidate=travelled+length
+   if candidate<distance[b]:distance[b]=candidate;owner[b]=owner[a];heapq.heappush(queue,(candidate,int(b)))
+ for island,tone in tones.items():linear[owner==island]=tone
+ linear=linear[welded]
+ return np.rint(np.clip(1.055*np.power(linear,1/2.4)-.055,0,1)*255).astype(np.uint8)
+
+def stone_tints(key,p,faces=None):
+ if key=='open-door':return door_stone_tints(key,p,faces)
+ if key=='closed-door':
+  # Both derivatives contain the exact same arch/base surface. Reuse its
+  # canonical vertex paint, rather than reseeding colours around a wooden leaf.
+  shared=door_stone_colours()
+  return np.array([shared.get(tuple(point),(164,156,139))for point in np.round(p,4)],np.uint8)
  # Smooth source-space tints avoid jagged material boundaries across a block.
  # Palette multipliers are linear-light values, packed as sRGB vertex colours.
  x,y,z=p.T
- if key in ['closed-door','open-door']:
-  phase=y*.66+np.sin(x*.22)*1.9
-  weight=(np.sin(phase)+np.sin(x*.47-y*.13)*.45)/2.9+.5
- else:
-  phase=x*.49+np.sin(z*.48)*1.4
-  weight=(np.sin(phase)+np.cos(z*.75-x*.22)*.5)/3.+.5
+ phase=x*.49+np.sin(z*.48)*1.4
+ weight=(np.sin(phase)+np.cos(z*.75-x*.22)*.5)/3.+.5
  warm=(np.sin(x*.24+z*.33+y*.12)+1)*.5
  grey=.76+.23*weight
  linear=np.stack([grey*(.98+.02*warm),grey*(.98+.02*(1-warm)),grey*(.94+.04*(1-warm))],axis=1)
  return np.rint((1.055*np.power(linear,1/2.4)-.055)*255).astype(np.uint8)
 
-def build(key,art=False):
+def painted_triangles(key):
  asset,tris=load(key);labels=np.full(len(tris),1 if key=='cupboard'else 4 if key.startswith('blocked')else 6,np.uint8)
  # Partition long, flat faces at box edges before the compound masks; a face
  # can cross a narrow paint region without any of its original corners in it.
@@ -102,6 +160,24 @@ def build(key,art=False):
  for material,field in fields(key):tris,labels=cut(tris,labels,material,field)
  keep=np.linalg.norm(np.cross(tris[:,1,:3]-tris[:,0,:3],tris[:,2,:3]-tris[:,0,:3]),axis=1)>1e-9
  tris,labels=tris[keep],labels[keep];labels[labels==6]=7
+ return asset,tris,labels
+
+@lru_cache(maxsize=1)
+def door_stone_colours():
+ _,tris,_=painted_triangles('open-door')
+ points,inverse=np.unique(np.round(tris[:,:,:3].reshape(-1,3),7),axis=0,return_inverse=True)
+ colours=door_stone_tints('open-door',points,inverse.reshape(-1,3))
+ return {tuple(point):colour for point,colour in zip(np.round(points,4),colours)}
+
+def build(key,art=False):
+ asset,tris,labels=painted_triangles(key)
+ if key=='closed-door':
+  # Use one sculpt for the unchanged stonework in both door states. Retain the
+  # closed sculpt's authored leaf/iron surfaces, with original imports intact.
+  _,stone,stone_labels=painted_triangles('open-door')
+  leaf=np.isin(labels,[0,2])
+  tris=np.concatenate([stone,tris[leaf]])
+  labels=np.concatenate([stone_labels,labels[leaf]])
  p=tris[:,:,:3];c=p.mean(1);side=np.argmax(np.abs(np.cross(p[:,1]-p[:,0],p[:,2]-p[:,0])),axis=1)
  uv=p[:,:,[0,1]]*np.array([.12,.055]);use=side==0;uv[use]=p[use][:,:,[2,1]]*np.array([.12,.055]);use=side==1;uv[use]=p[use][:,:,[0,2]]*.08
  unique,inv=np.unique(np.round(np.concatenate([tris,uv],axis=2).reshape(-1,8),7),axis=0,return_inverse=True)
@@ -109,12 +185,21 @@ def build(key,art=False):
  lo=p.min(0);extent=np.ptp(p,axis=0);q=np.rint((p-lo)/extent*65535).astype('<u2');normal=np.rint(np.clip(n,-1,1)*32767).astype('<i2')
  faces=inv.reshape(-1,3).astype('<u2'if len(p)<=65535 else '<u4');b64=lambda a:base64.b64encode(a.tobytes()).decode();used=np.unique(labels);packed=np.searchsorted(used,labels).astype(np.uint8)
  data={k:v for k,v in asset.items()if k not in ['positions','normals','indices','minimum','extent','vertices','triangles','indexBytes','geometrySha256']}
- data.update(sourceGeometrySha256=SOURCES[key],inputTriangles=asset['triangles'],vertices=len(p),triangles=len(faces),minimum=lo.tolist(),extent=extent.tolist(),indexBytes=faces.dtype.itemsize,positions=b64(q),normals=b64(normal),indices=b64(faces),uvs=b64(unique[:,6:].astype('<f4')),colours=b64(stone_tints(key,p)),materials=[MATERIALS[int(i)]for i in used],faceMaterials=b64(packed),geometrySha256=hashlib.sha256(q.tobytes()+normal.tobytes()+faces.tobytes()).hexdigest(),modifications='Authored paint seams and physical-axis UVs; original sculpt frame/surface retained. See SCENERY.md.')
+ tints=stone_tints(key,p,faces)
+ materials=[dict(MATERIALS[int(i)])for i in used]
+ if key in ['closed-door','open-door']:
+  for material in materials:
+   if material.get('vertexColours'):material['colour']='#ffffff'
+ data.update(sourceGeometrySha256=SOURCES[key],inputTriangles=asset['triangles'],vertices=len(p),triangles=len(faces),minimum=lo.tolist(),extent=extent.tolist(),indexBytes=faces.dtype.itemsize,positions=b64(q),normals=b64(normal),indices=b64(faces),uvs=b64(unique[:,6:].astype('<f4')),colours=b64(tints),materials=materials,faceMaterials=b64(packed),geometrySha256=hashlib.sha256(q.tobytes()+normal.tobytes()+faces.tobytes()).hexdigest(),modifications='Authored paint seams and physical-axis UVs; original sculpt frame/surface retained. See SCENERY.md.')
+ if key=='closed-door':
+  data['sharedStoneGeometrySha256']=SOURCES['open-door']
+  data['modifications']='Open-door arch/base with identical vertex paint and UVs, plus closed-door wooden leaf/iron fittings. Original imports intact. See SCENERY.md.'
  dest=ROOT/'assets/models/furniture'/f'{key}.js';dest.write_text('// Supplied sculpt; creator/licence unknown. See SCENERY.md. Paint: scripts/paint_scenery.py.\nwindow.HeroQuest.stlAssets = window.HeroQuest.stlAssets || {};\nwindow.HeroQuest.stlAssets['+json.dumps(key)+'] = '+json.dumps(data,separators=(',',':'))+';\n')
  print(key,len(faces),'triangles;',len(p),'vertices;',dest.stat().st_size,'bytes',flush=True)
  if art:
-  workshop.MATERIALS=MATERIALS
-  workshop.preview(key,p,n,faces,labels,stone_tints(key,p))
+  workshop.MATERIALS=[dict(material)for material in MATERIALS]
+  if key in ['closed-door','open-door']:workshop.MATERIALS[7]['colour']='#ffffff'
+  workshop.preview(key,p,n,faces,labels,tints)
 
 if __name__=='__main__':
  parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--only',nargs='+',choices=list(SOURCES),default=list(SOURCES));parser.add_argument('--preview',action='store_true');args=parser.parse_args()

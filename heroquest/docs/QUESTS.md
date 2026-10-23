@@ -6,7 +6,7 @@
 - `system-instruction-booklet`, PDF page 2, rotated 180 degrees, printed page 23, **Ending The Quest**: success requires achieving the goal and returning to the stairway. Players may end early by returning before completing the quest; all heroes dying also ends it.
 - The same printed page's **What Happens Between Quests?** describes recovery, restored spells and shopping. Those campaign systems are not implemented by this milestone.
 
-Runtime source locators are `trial.objective.source` and `trial.endingSource`. No reward is invented: The Trial lists treasure in room notes, but no separate completion payment. Treasure searches, cards, spells, healing and campaign progression remain unfinished. An ending screen does not make this a complete implementation of the original quest.
+Runtime source locators are `trial.objective.source` and `trial.endingSource`. No reward is invented: The Trial lists treasure in room notes, but no separate completion payment. Treasure searches/cards and potions are now implemented in TREASURE.md; campaign progression, traps/secret doors and equipment remain unfinished. An ending screen does not make this a complete implementation of the original quest.
 
 ## Engine behaviour
 
@@ -39,3 +39,14 @@ Mark approved the focused checks on 2026-10-22. All 17 engine/save checks passed
 One isolated Chrome pass at a separate localhost origin covered solo setup/briefing, exit confirmation cancellation and disabled off-stair action, manual movement dice, movement/door discovery, hero attack and automatic monster defence, defeated-piece removal, refresh after combat, CPU attack and manual hero defence, restart with the same party, confirmed retreat, refresh of the terminal outcome and return to setup. Participant portraits, board and 3D dice rendered; no console warnings/errors were reported. Mark's normal browser save was untouched.
 
 Victory, mixed-party endings and legacy migration were checked in the engine/save diagnostic, not through a full browser quest playthrough. Direct-file operation, mobile layout, exact animation timings, reduced motion/context loss, gallery/studio and broad regressions were not checked in this pass. No build or lint run was performed.
+
+## Rereading quest information
+
+The sidebar quest title includes a Quest info link. It opens a read-only modal
+with the same original Mentor briefing and current public objective (including
+returning to the stairs after Verag is defeated). Sandbox shows its practice
+objective. Hidden room notes, monster positions and treasure placements are
+never included. Closing or Escape returns to the existing turn without changing
+the initial briefing screen, rules, RNG or save. Existing modal guards suspend
+CPU progression while reading. The link shares temporary animation/target locks.
+Source/diff review only; no browser checks were run.

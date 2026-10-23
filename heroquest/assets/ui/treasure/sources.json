@@ -1,0 +1,187 @@
+{
+  "source": "references/original-na/system-treasure.pdf",
+  "sha256": "a33a1c06005e89a21c2cdfd17d8f3abefe2a03fd264a918bc73e9677b60182fe",
+  "recipe": "scripts/prepare_treasure_cards.py",
+  "cards": [
+    {
+      "id": "gem",
+      "pdfPage": 1,
+      "crop": [
+        44,
+        37,
+        450,
+        666
+      ],
+      "size": [
+        400,
+        620
+      ],
+      "sha256": "43dda3ae130481b820d52849490f4fb3a9368fffb88f23495a7beda45468bd0d"
+    },
+    {
+      "id": "gold-15",
+      "pdfPage": 1,
+      "crop": [
+        480,
+        37,
+        885,
+        666
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "bf4868aff0211bd902f71aa8418a81e51dbc1676b843b28c11b72640f675cab3"
+    },
+    {
+      "id": "gold-25",
+      "pdfPage": 1,
+      "crop": [
+        915,
+        37,
+        1321,
+        666
+      ],
+      "size": [
+        400,
+        620
+      ],
+      "sha256": "60c46ecab850dbcd4eaa5ef506fa1e76c8bb7de9dfaa422dbadfd1cb54c82357"
+    },
+    {
+      "id": "hazard-arrow",
+      "pdfPage": 1,
+      "crop": [
+        1351,
+        37,
+        1756,
+        666
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "8ab32fafac32a211f233956e01014bf288ad8338480d04a0c0eff9c2a81bf378"
+    },
+    {
+      "id": "hazard-pit",
+      "pdfPage": 2,
+      "crop": [
+        44,
+        37,
+        450,
+        666
+      ],
+      "size": [
+        400,
+        620
+      ],
+      "sha256": "23f5639fc3de7ff084d56610fb01557a65118250f82e3edf9ff12f475a944b27"
+    },
+    {
+      "id": "heroic-brew",
+      "pdfPage": 2,
+      "crop": [
+        480,
+        37,
+        885,
+        666
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "ee98ce5aed17d6be0c8b6d842eac7f80e42500f52e6cfe613e4013bc1656e4ab"
+    },
+    {
+      "id": "jewels",
+      "pdfPage": 2,
+      "crop": [
+        915,
+        37,
+        1321,
+        666
+      ],
+      "size": [
+        400,
+        620
+      ],
+      "sha256": "10f12c8111356a2ba3551996f3759799d7daf3aac93af270832e10aca012bc8e"
+    },
+    {
+      "id": "potion-of-healing",
+      "pdfPage": 2,
+      "crop": [
+        1351,
+        37,
+        1756,
+        666
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "90289bfddcf06f2eda43d7f3dcfe8743c10a9153214cf71a421fd9e86454436e"
+    },
+    {
+      "id": "potion-of-defense",
+      "pdfPage": 2,
+      "crop": [
+        915,
+        689,
+        1321,
+        1318
+      ],
+      "size": [
+        400,
+        620
+      ],
+      "sha256": "0570459c041dec41ae1967b55c04359187d23c4e0ac19a2e3b1816b878cc21e3"
+    },
+    {
+      "id": "potion-of-strength",
+      "pdfPage": 3,
+      "crop": [
+        44,
+        689,
+        450,
+        1318
+      ],
+      "size": [
+        400,
+        620
+      ],
+      "sha256": "26e6945715688b30dd9a05fffcca87375136c5f410bb7fa093d0f24d293064b0"
+    },
+    {
+      "id": "wandering-monster",
+      "pdfPage": 3,
+      "crop": [
+        480,
+        37,
+        885,
+        666
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "3bce566e699e69508e6da383ab4a4808402f93ae95d33ae39a6542729135312f"
+    },
+    {
+      "id": "back",
+      "pdfPage": 4,
+      "crop": [
+        59,
+        54,
+        436,
+        653
+      ],
+      "size": [
+        400,
+        636
+      ],
+      "sha256": "78224460fb8b80a8dfbaf7d30c4d3a445b16ca22bee3ddfc5ba7c7932e1f70c2"
+    }
+  ]
+}

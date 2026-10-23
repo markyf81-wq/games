@@ -20,11 +20,19 @@ surface/normals, with physical-axis UVs and no alteration to proportions/origin.
 The cupboard's long flat faces are partitioned before paint masks so its trim
 boundary stays straight. Both door faces have separate fitting-depth thresholds.
 
-Doors have warm walnut panels, forged iron hinges/rings, limestone arches and
-charcoal bases. Cupboard panels/frame use matching walnut, iron fittings and an
-ivory skull. Rubble has dark joints, limestone and a charcoal moulded rim.
-Smooth deterministic source-space vertex tints vary the stone without jagged
-triangle colour boundaries. Only the flagged stone material reads these tints;
+Doors have warm walnut panels, forged iron hinges/rings, and matching warm-grey
+limestone arches and bases. Cupboard panels/frame use matching walnut, iron
+fittings and an ivory skull. Rubble has dark joints, limestone and a charcoal moulded rim.
+Door arches use the wall bricks' stone colour families with deliberately stronger
+contrast: cool grey, sandstone, sage-grey, taupe and pale limestone. The darker
+stones stay distinct under warm lighting. Raised
+stone islands seed surface-distance colour propagation across each whole stone;
+the earlier raised-tip-only tint was too faint. Raised-face thresholds follow
+the thickening legs to keep their stones separated. A balanced sequence spreads
+the palette around each arch. Colours are baked on a white
+stone material so the old grey material cannot cap their brightness. Bases
+retain a uniform matching limestone tone. Rubble uses smooth
+deterministic source-space tints. Only the flagged stone material reads these tints;
 wood and fittings use their own colours. Grain/stone maps are the existing cached
 authored finishes. No photographic UV scan, pigment wash, baked lighting or
 per-frame material/geometry preparation is added.
@@ -43,3 +51,19 @@ Offline four-angle previews in `assets/previews/*-painted.png` informed boundary
 refinement. They show source-normal shaded colours, omitting runtime grain,
 metal reflections and torch lighting. No browser, gameplay/save, performance,
 automated test, build or lint check was run; Mark is testing manually.
+
+## Shared door stonework — 23 October 2026
+
+The closed derivative now combines the open source's complete arch/base with
+only the closed source's wood/iron surfaces. Both variants therefore use the
+exact same stone geometry, normals, physical-axis UVs and vertex colours, including
+the lower plinth. The closed asset records the open source fingerprint as
+`sharedStoneGeometrySha256` in addition to its primary closed source. Original
+imports/STLs remain intact. The source sculpts were slightly different meshes,
+so independently painting them could not guarantee a matching transition.
+
+The open arch is the canonical colour field. Closed-door stone vertices copy
+that field by shared source position, without rerunning island/palette ordering
+against a different leaf topology. Runtime fitting remains the same width for
+both states. Four-angle offline authoring previews show the shared stone colours
+and retained leaf/fittings; no browser or gameplay check was run.

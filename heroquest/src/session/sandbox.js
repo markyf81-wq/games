@@ -19,11 +19,11 @@
     for(const hero of state.heroes)if(C.inPlay(hero)&&T.unsafe(state,hero)) {
       const cell=nearest(state,hero);if(cell)[hero.x,hero.row]=T.parse(cell);
     }
-    state.turnIndex=state.heroes.findIndex(hero=>hero.id===heroId);state.phase="hero-turn";state.pending=null;state.lastReport=null;state.monsterTurn=null;state.actionUsed=false;state.movement=freshMove();
+    state.turnIndex=state.heroes.findIndex(hero=>hero.id===heroId);state.phase="hero-turn";state.pending=null;state.lastReport=null;state.monsterTurn=null;state.actionUsed=false;state.extraAttack=false;state.movement=freshMove();
     const hero=E.active(state);hero.body=Math.max(1,hero.body);hero.exit=null;hero.trapped=false;
   }
   function opponent(state,kind) {
-    for(const monster of state.monsters){monster.body=0;monster.effects=HQ.spells.monsterEffects();}
+    for(const monster of state.monsters){monster.body=0;monster.diedInPlay=false;monster.effects=HQ.spells.monsterEffects();}
     const monster=state.monsters.find(m=>m.kind===kind);
     if(monster){const cell=nearest(state,monster);[monster.x,monster.row]=T.parse(cell);monster.body=monster.maxBody;}
     state.monsterMemory={};if(monster)state.monsterMemory[monster.id]={id:monster.id,x:monster.x,row:monster.row};
@@ -70,10 +70,52 @@
     button("Reset turn / switch hero",()=>apply(s=>turn(s,hero.value)));
     button("Give 12 movement",()=>apply(s=>{turn(s,hero.value);s.movement={...freshMove(),rolled:true,dice:[6,6],remaining:12};}));
     button("Restore heroes & spells",()=>apply(s=>{
-      for(const h of s.heroes){h.body=h.maxBody;h.exit=null;h.trapped=false;h.spellsUsed=[];h.effects=HQ.spells.heroEffects();}
+      for(const h of s.heroes){h.body=h.maxBody;h.exit=null;h.trapped=false;h.spellsUsed=[];h.effects={...HQ.spells.heroEffects(),...HQ.inventory.effects()};}
       const elf=s.heroes.find(h=>h.id==="elf"),wizard=s.heroes.find(h=>h.id==="wizard");elf.spellGroups=[group.value];wizard.spellGroups=HQ.spellData.groups.filter(g=>g!==group.value);turn(s,hero.value);
     }));
     button("Wound heroes for healing",()=>apply(s=>{for(const h of s.heroes.filter(C.inPlay))h.body=Math.max(1,h.maxBody-2);}));
+    button("Prepare inventory / potions",()=>apply(s=>{
+      turn(s,hero.value);const h=E.active(s);h.body=Math.max(1,h.maxBody-3);h.inventory.gold=200;
+      h.inventory.items=h.inventory.items.filter(item=>item.kind!=="potion-of-healing");
+      for(let i=0;i<2;i++)h.inventory.items.push({id:"practice-healing-"+h.id+"-"+s.nextEventId++,kind:"potion-of-healing"});
+      note.textContent=h.name+" has 200 practice gold, two healing potions and reduced Body. Open Inventory to drink; these supplies exist only in practice.";
+    }));
+    button("Prepare potion rescue",()=>apply(s=>{
+      turn(s,hero.value);const h=E.active(s);h.body=1;opponent(s,"orc");
+      h.inventory.items.push({id:"practice-healing-"+h.id+"-"+s.nextEventId++,kind:"potion-of-healing"});
+      note.textContent=h.name+" has 1 Body and a healing potion. Place the Orc beside this hero, then run Zargon’s turn; a lethal hit should offer recovery.";
+    }));
+    const treasure=select("Treasure practice",[["random","Random draw"],...HQ.treasureData.cards.map(card=>[card.id,card.name+(card.category==="gold"?" · "+card.gold+" gold":card.id==="hazard-arrow"?" · Arrow":card.id==="hazard-pit"?" · Shallow hole":"")])]);
+    button("Prepare treasure search",()=>apply(s=>{
+      turn(s,hero.value);const h=E.active(s);
+      // Restore all physical cards and remove earlier practice draws/items.
+      for(const figure of s.heroes)figure.inventory.items=figure.inventory.items.filter(item=>!item.id.startsWith("treasure-"));
+      s.lastItemUse=null;s.treasure=HQ.treasure.fresh(s.heroes);
+      const chosen=HQ.treasureData.instances.filter(card=>card.kind===treasure.value).map(card=>card.id);
+      // Select a seed for the next normal shuffle; no forced-card command,
+      // partial deck or fixture flag enters the production rules/save format.
+      s.monsters=s.monsters.filter(monster=>!monster.id.startsWith("wanderer-"));
+      for(const monster of s.monsters){monster.body=0;monster.diedInPlay=false;}
+      s.monsterMemory={};s.discoveredEntities=s.discoveredEntities.filter(id=>!id.startsWith("wanderer-"));
+      [h.x,h.row]=[3,16];h.body=Math.max(1,h.maxBody-2);
+      if(treasure.value==="random") {
+        const seed=new Uint32Array(1);window.crypto.getRandomValues(seed);s.rng=seed[0]||0x4845524f;
+        note.textContent="Random treasure search ready. This resets the practice deck and search history; each new draw is random.";
+        return;
+      }
+      const base=s.rng;let prepared=false;
+      for(let attempt=0;attempt<1024;attempt++) {
+        s.rng=((base+attempt)>>>0)||1;
+        const candidate=E.applyCommand(s,{type:"SEARCH_TREASURE"});
+        if(candidate.ok&&chosen.includes(candidate.state.lastReport.search.cardId)){prepared=true;break;}
+      }
+      note.textContent=prepared?HQ.treasureData.byId[treasure.value].name+" test prepared. The deck has been reset to draw this card next. Search before rolling or taking another action.":"Search room prepared; the next card is random.";
+    }));
+    button("Give all treasure potions",()=>apply(s=>{
+      turn(s,hero.value);const h=E.active(s);
+      for(const definition of Object.values(HQ.itemData.byId).filter(item=>item.category==="potion"))h.inventory.items.push({id:"practice-potion-"+h.id+"-"+s.nextEventId++,kind:definition.id});
+      note.textContent="One of every base treasure potion added to this hero’s practice inventory.";
+    }));
     button("Set / revive opponent",()=>apply(s=>{turn(s,hero.value);opponent(s,enemy.value);}));
     async function place(isHero) {
       const state=getState();if(!state)return;

@@ -75,6 +75,13 @@
     startingPlacement:"Digital choice: four individual stairway squares for placement, reach and sight. Internal steps are free only with rolled movement remaining; entering or leaving costs one movement. This movement adaptation was requested by Mark, not confirmed in the printed rules.",
     // Quest notes are authoritative future content, never shown as reveal hints.
     notes:Object.freeze({A:{effect:"empty-weapons-rack"},B:{effect:"empty-chest"},C:{attackDice:4},D:{gold:84},E:{gold:120}}),
-    limitations:"Gameplay prototype: exploration, melee combat, CPU turns, stairway exits and quest outcomes. All twelve elemental spells are available. Searches, potions, thrown weapons and campaign progression are not implemented. Progress autosaves in this browser."
+    treasureRooms:Object.freeze({
+      "room-18":Object.freeze({note:"A",description:"The weapons on this weapons rack are chipped, rusted and broken. There is nothing here that the Heroes would want."}),
+      "room-19":Object.freeze({note:"B",description:"This treasure chest is empty."}),
+      "room-3":Object.freeze({note:"D",gold:84,description:"The first Hero who searches for treasure will find 84 gold coins in this treasure chest."}),
+      "room-11":Object.freeze({note:"E",gold:120,description:"The first Hero who searches for treasure will find 120 gold coins in this treasure chest."})
+    }),
+    wanderingMonster:Object.freeze({kind:"orc",name:"Orc",source:Object.freeze({sourceId:"system-quest-book",pdfPage:5,region:"Quest 1 footer",reviewStatus:"visually-reviewed"})}),
+    limitations:"Gameplay prototype: exploration, melee, twelve elemental spells, treasure searches, potions, CPU turns and quest outcomes. Trap/secret-door searches, thrown weapons and campaign progression remain unfinished."
   });
 })();
