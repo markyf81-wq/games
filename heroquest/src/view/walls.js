@@ -42,7 +42,7 @@
     material.customProgramCacheKey=()=>"heroquest-wall-stone-palette-v1";
   }
   HQ.createDungeonWalls=function () {
-    const records=new Map(),capGeometry=new T.BoxGeometry(1,.025,.15),blockedCapGeometry=new T.BoxGeometry(.99,.025,.99),footingGeometry=new T.BoxGeometry(1,.02,.28),coreGeometry=new T.BoxGeometry(1,1,1);
+    const records=new Map(),secretRoots=new Map(),secretSections=new Map(),capGeometry=new T.BoxGeometry(1,.025,.15),blockedCapGeometry=new T.BoxGeometry(.99,.025,.99),footingGeometry=new T.BoxGeometry(1,.02,.28),coreGeometry=new T.BoxGeometry(1,1,1);
     const footingMaterial=HQ.models.material(0x535044,.98).clone();
     const capMaterial=HQ.models.material(0x98917e,.94).clone(),nearPoint=new T.Vector3(),hit=new T.Vector3(),frustum=new T.Frustum(),viewProjection=new T.Matrix4(),rayPool=[];
     // Cast from the actual stone surface. The default back-face shadow pass
@@ -59,29 +59,37 @@
       core.castShadow=true;core.raycast=()=>{};model.add(core);
     }
     function itemsFor(projection,hero=projection.activeHero) {
-      const known=new Set(projection.discoveredCells),doors=new Set(projection.doors.map(d=>Topo.edgeKey(...Topo.endpoints(d))));
+      const known=new Set(projection.discoveredCells),blocked=new Set(HQ.trial.blocked),solid=new Set(projection.blocked||HQ.trial.blocked);
+      // Fallen blocks add independent scenery. Keep the original masonry
+      // partition so springing a trap cannot remove or regroup adjacent walls.
+      // Keep concealed stone in the same masonry partition before/after a search.
+      // Only discovered doors become interactive; reserved slots render as walls.
+      const secrets=HQ.dungeonData.layouts[projection.dungeonLayout||"trial"].doors;
+      const secretEdges=new Map(secrets.map(door=>[Topo.edgeKey(...Topo.endpoints(door)),door]));
+      const foundSecrets=new Set(projection.doors.filter(door=>door.secret).map(door=>door.id));
+      const doors=new Set(projection.doors.filter(door=>!door.secret).map(door=>Topo.edgeKey(...Topo.endpoints(door))));
       const heroCell=hero&&Topo.key(hero.x,hero.row),region=heroCell&&Topo.regions.get(heroCell),inRoom=region&&region!=="corridor";
-      protectedCells=new Set(heroCell&&known.has(heroCell)?inRoom?[...known].filter(id=>Topo.regions.get(id)===region&&!Topo.blocked.has(id)):[heroCell]:[]);
+      protectedCells=new Set(heroCell&&known.has(heroCell)?inRoom?[...known].filter(id=>Topo.regions.get(id)===region&&!solid.has(id)):[heroCell]:[]);
       // Only the current hero's room needs its floor opened up. A corridor
       // protects the hero point below, rather than every explored corridor tile.
       exploredTargets=inRoom?[...protectedCells].map(id=>{const [x,row]=Topo.parse(id);return new T.Vector3(x+.5-13,floorHeight+.03,row+.5-9.5);}):[];
-      const key=projection.discoveredCells.join("|")+";"+projection.doors.map(door=>door.id).join("|");
+      const key=(projection.dungeonLayout||"trial")+";"+projection.discoveredCells.join("|")+";"+projection.doors.map(door=>door.id).join("|")+";"+[...blocked].join("|");
       if(layoutKey===key)return layoutItems;
       const edges=new Map(),runs=new Map();
       for(const id of known) {
         // Revealed rubble supplies the corridor stop; do not back it with a
         // redundant tall wall. Rules already block entry and sight through it.
-        if(Topo.blocked.has(id))continue;
+        if(blocked.has(id))continue;
         const [x,row]=Topo.parse(id);
         for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]) {
           const other=Topo.key(x+dx,row+dy),edge=Topo.edgeKey(id,other);
           // Only known boundaries: no unseen door or hidden-room metadata leaks.
-          if(edges.has(edge)||doors.has(edge)||(known.has(other)&&Topo.blocked.has(other))||(Topo.floor.has(other)&&Topo.regions.get(id)===Topo.regions.get(other)))continue;
+          if(edges.has(edge)||doors.has(edge)||(known.has(other)&&blocked.has(other))||(Topo.floor.has(other)&&Topo.regions.get(id)===Topo.regions.get(other)))continue;
           const axis=dx?"v":"h",line=dx?x+(dx>0?1:0):row+(dy>0?1:0),start=dx?row:x;
           const cells=[id,...(known.has(other)?[other]:[])];
           const negative=axis==="h"?Topo.key(start,line-1):Topo.key(line-1,start),positive=axis==="h"?Topo.key(start,line):Topo.key(line,start);
           const sides=[negative,positive].map(cell=>known.has(cell)?Topo.regions.get(cell):"unexplored").join("|");
-          edges.set(edge,{axis,line,start,cells,sides});
+          edges.set(edge,{axis,line,start,cells,sides,secret:secretEdges.get(edge)});
         }
       }
       for(const edge of edges.values()) {
@@ -99,10 +107,10 @@
         }
         for(let i=0;i<edges.length;i++) {
           const first=edges[i],next=edges[i+1];
-          const length=next?.start===first.start+1&&next.cutawayGroup===first.cutawayGroup&&(wallHash(first.axis+":"+first.line+":"+first.start)&3)!==0?2:1;
+          const length=!first.secret&&!next?.secret&&next?.start===first.start+1&&next.cutawayGroup===first.cutawayGroup&&(wallHash(first.axis+":"+first.line+":"+first.start)&3)!==0?2:1;
           const cells=[...new Set([...first.cells,...(length===2?next.cells:[])])];
           const x=first.axis==="h"?first.start:first.line,row=first.axis==="v"?first.start:first.line;
-          const item={id:"wall-"+first.axis+"-"+x+"-"+row+"-"+length,kind:"wall",name:"Stone wall",axis:first.axis,x,row,length,cells,cutawayGroup:first.cutawayGroup.id};
+          const item={id:"wall-"+first.axis+"-"+x+"-"+row+"-"+length,kind:"wall",name:"Stone wall",axis:first.axis,x,row,length,cells,cutawayGroup:first.cutawayGroup.id,secretId:first.secret?.id};
           if(records.has(item.id))records.get(item.id).item=item;
           items.push(item);
           if(length===2)i++;
@@ -122,8 +130,18 @@
         const owner=connections.slice().sort((a,b)=>a.item.id.localeCompare(b.item.id))[0];
         owner.item.joints.push({key,offset:owner.offset-owner.item.length/2,walls:connections.map(c=>c.item.id)});
       }
-      for(const item of items)if(records.has(item.id))syncJoints(records.get(item.id),item);
-      layoutKey=key;layoutItems=items;return items;
+      const replacements=new Map(items.filter(item=>item.secretId&&foundSecrets.has(item.secretId)).map(item=>[item.id,item.secretId]));
+      for(const item of items){
+        // Keep join ownership/position stable; only its active neighbour ID changes.
+        for(const joint of item.joints)joint.walls=joint.walls.map(id=>replacements.get(id)||id);
+        if(item.secretId)secretSections.set(item.secretId,{...item,id:item.secretId,appearanceId:item.id});
+        if(records.has(item.id))syncJoints(records.get(item.id),item);
+        if(item.secretId&&records.has(item.secretId)){
+          records.get(item.secretId).item=secretSections.get(item.secretId);
+          syncJoints(records.get(item.secretId),secretSections.get(item.secretId));
+        }
+      }
+      layoutKey=key;layoutItems=items.filter(item=>!item.secretId||!foundSecrets.has(item.secretId));return layoutItems;
     }
     function syncJoints(record,item) {
       const wanted=new Set(item.joints.map(j=>j.key));
@@ -147,7 +165,7 @@
     }
     function make(item) {
       if(records.has(item.id))return records.get(item.id).model;
-      const model=HQ.models.make(item.length===2?"wall-two":"wall-one"),plane=new T.Plane(new T.Vector3(0,-1,0),10),seed=wallHash(item.id);
+      const model=HQ.models.make(item.length===2?"wall-two":"wall-one"),plane=new T.Plane(new T.Vector3(0,-1,0),10),seed=wallHash(item.appearanceId||item.id);
       // Transform only the sculpt: joins/caps retain their exact grid frame.
       // Mirroring and turning expose four versions of the original stonework.
       const sculpt=model.children[0];sculpt.rotation.y=(seed&1)?Math.PI:0;sculpt.scale.x=(seed&2)?-1:1;
@@ -172,6 +190,55 @@
       const record={model,plane,cap,height,current,item,joints:new Map(),worldBounds:new T.Box3()};
       records.set(item.id,record);syncJoints(record,item);return model;
     }
+    function makeSecretBorder(panel,record){
+      const border=new T.Group(),bounds=new T.Box3().setFromObject(panel),geometry=new T.PlaneGeometry(1,1);
+      // These opaque markings must write depth so later stone draws cannot
+      // paint over them. Foreground scenery still occludes them normally.
+      const material=new T.MeshBasicMaterial({color:0xffffff,toneMapped:false});
+      border.name="Secret door inset borders";border.userData.faces=[];
+      for(const sign of [-1,1]){
+        const face=new T.Group();face.position.z=sign<0?bounds.min.z-.004:bounds.max.z+.004;face.rotation.y=sign<0?Math.PI:0;
+        for(let i=0;i<4;i++){
+          const stroke=new T.Mesh(geometry,material);stroke.userData.visualEffect=true;stroke.raycast=()=>{};face.add(stroke);
+        }
+        border.add(face);border.userData.faces.push(face);
+      }
+      record.secretBorder=border;return border;
+    }
+    function fitSecretBorder(record){
+      const border=record.secretBorder;if(!border?.visible)return;
+      const width=.78,thickness=.02,bottom=.08,top=Math.max(bottom+.04,record.current-.08),height=top-bottom;
+      for(const face of border.userData.faces){
+        const [lower,upper,left,right]=face.children;
+        lower.position.set(0,bottom,0);lower.scale.set(width,thickness,1);
+        upper.position.set(0,top,0);upper.scale.set(width,thickness,1);
+        left.position.set(-width/2,(top+bottom)/2,0);left.scale.set(thickness,height+thickness,1);
+        right.position.set(width/2,(top+bottom)/2,0);right.scale.set(thickness,height+thickness,1);
+      }
+    }
+    function makeSecret(item){
+      let root=secretRoots.get(item.id);
+      if(!root){
+        const section=secretSections.get(item.id)||{...item,length:1,cutawayGroup:item.id,joints:[]};
+        root=new T.Group();const panel=make({...section,kind:"wall"});
+        const previous=records.get(section.appearanceId),record=records.get(item.id);
+        if(previous?.model.visible)record.current=previous.current;
+        // Only searched-for doors reach this factory; hidden walls stay unchanged.
+        panel.traverse(mesh=>{if(mesh.material?.isMeshStandardMaterial){
+          // Caps/footings are otherwise shared by ordinary walls.
+          if(mesh.material===capMaterial||mesh.material===footingMaterial)mesh.material=mesh.material.clone();
+          mesh.material.color.multiplyScalar(.48);mesh.material.roughness=1;
+        }});
+        panel.name="Discovered secret stone panel";root.add(panel);
+        root.userData.border=makeSecretBorder(panel,record);root.add(root.userData.border);
+        root.userData.panel=panel;panel.position.x=item.open?1.02:0;secretRoots.set(item.id,root);
+      }
+      // Cached panels may retain their open position after a sandbox reset.
+      // Closed doors appear shut immediately; only opening is animated.
+      if(!item.open)root.userData.panel.position.x=0;
+      root.userData.border.visible=!item.open;fitSecretBorder(records.get(item.id));
+      root.userData.open=Boolean(item.open);root.userData.panel.visible=!item.open||root.userData.panel.position.x<1.02;return root;
+    }
     function makeBlocked(item) {
       if(records.has(item.id))return records.get(item.id).model;
       const model=HQ.models.make("blocked"),height=model.userData.blockedHeight,plane=new T.Plane(new T.Vector3(0,-1,0),10),seed=wallHash(item.id);
@@ -183,13 +250,24 @@
         mesh.material=Array.isArray(mesh.material)?mesh.material.map(clone):clone(mesh.material);
       });
       addStoneCore(model,plane,.82,height,.82);
-      const cap=new T.Mesh(blockedCapGeometry,capMaterial);cap.visible=false;cap.castShadow=true;cap.receiveShadow=true;model.add(cap);
+      const surface=HQ.models.material(0xffffff,1).clone();surface.map=HQ.componentTextures.get("falling-block");
+      const cap=new T.Mesh(blockedCapGeometry,surface);cap.visible=false;cap.castShadow=true;cap.receiveShadow=true;model.add(cap);
+      // Permanent blocked passages and sprung traps share the printed rubble
+      // artwork on the full-height top and the lowered cutaway cap.
+      const face=new T.Mesh(new T.PlaneGeometry(.94,.94),surface);face.rotation.x=-Math.PI/2;face.position.y=height+.002;face.receiveShadow=true;model.add(face);model.userData.blockedArtwork=face;
       const current=mode==="full"?height:lowHeight,block={...item,cutawayGroup:item.id};
       records.set(item.id,{model,plane,cap,height,current,item:block,joints:new Map(),worldBounds:new T.Box3()});return model;
     }
     function update(camera,focus,time,steady=false,figures=[]) {
       const dt=lastTime===null?1/60:Math.min(.05,Math.max(0,(time-lastTime)/1000));lastTime=time;
       let changed=false;animate=false;
+      for(const root of secretRoots.values())if(root.visible){
+        const panel=root.userData.panel,wanted=root.userData.open?1.02:0,previous=panel.position.x;
+        panel.position.x=steady?wanted:previous+(wanted-previous)*(1-Math.exp(-dt*2.5));
+        if(Math.abs(wanted-panel.position.x)<.002)panel.position.x=wanted;else animate=true;
+        if(previous!==panel.position.x)changed=true;
+        panel.visible=!root.userData.open||panel.position.x!==1.02;
+      }
       frustum.setFromProjectionMatrix(viewProjection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
       const roomFigures=figures.filter(point=>protectedCells.has(Topo.key(Math.floor(point.x+13),Math.floor(point.z+9.5))));
       const sightTargets=[...exploredTargets,...roomFigures,...(focus?[focus]:[])].filter(point=>frustum.containsPoint(point));
@@ -234,6 +312,8 @@
         if(Math.abs(previous-record.current)>.0001)changed=true;
         plane.constant=floorHeight+record.current;
         cap.position.y=record.current;cap.visible=record.current<height-.04;
+        if(model.userData.blockedArtwork)model.userData.blockedArtwork.visible=!cap.visible;
+        fitSecretBorder(record);
       }
       for(const record of records.values())if(record.model.visible)for(const mesh of record.joints.values()) {
         const neighbours=mesh.userData.wallJoint.walls.map(id=>records.get(id)).filter(r=>r?.model.visible);
@@ -251,7 +331,7 @@
       if(button){button.dataset.mode=mode;button.setAttribute("aria-label","Walls: "+labels[mode]+". Click to change.");button.title=labels[mode]+" (click to change)";}
     }
     setMode(mode);
-    return Object.freeze({itemsFor,make,makeBlocked,update,setMode,
+    return Object.freeze({itemsFor,make,makeSecret,makeBlocked,update,setMode,
       get mode(){return mode;},get animating(){return animate;},modes
     });
   };

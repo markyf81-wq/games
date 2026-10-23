@@ -10,15 +10,22 @@
   function ids(values,allowed){return Array.isArray(values)&&new Set(values).size===values.length&&values.every(id=>allowed.has(id));}
   function validate(snapshot) {
     expect(object(snapshot)&&snapshot.version===version&&object(snapshot.state));
-    const s=snapshot.state,heroIds=new Set(HQ.heroes.map(h=>h.id)),originalMonsterIds=new Set(Q.monsters.map(m=>m.id));
+    const s=snapshot.state;
+    const preDungeon=[2,3,4,5,6,7].includes(s.schemaVersion);
+    if(preDungeon)s.dungeon=HQ.dungeon.fresh();
+    expect(object(s.dungeon)&&Object.hasOwn(HQ.dungeonData.layouts,s.dungeon.layout)&&(slot==="sandbox"||s.dungeon.layout==="trial")&&object(s.dungeon.traps));
+    const trapDefinitions=HQ.dungeon.traps(s),trapIds=new Set(trapDefinitions.map(trap=>trap.id)),searchAreaCount=Q.rooms.length+trapDefinitions.filter(trap=>trap.kind==="pit").length;
+    expect(Object.keys(s.dungeon.traps).length===trapIds.size&&Object.keys(s.dungeon.traps).every(id=>trapIds.has(id)));
+    for(const trap of trapDefinitions){const entry=s.dungeon.traps[trap.id];expect(object(entry)&&["hidden","found","sprung","disarmed"].includes(entry.status)&&integer(entry.foundRound,0,s.round)&&integer(entry.foundTurn,0,3));}
+    const heroIds=new Set(HQ.heroes.map(h=>h.id)),originalMonsterIds=new Set(Q.monsters.map(m=>m.id));
     const preTreasure=[2,3,4,5,6].includes(s.schemaVersion);
-    expect(Array.isArray(s.monsters)&&s.monsters.length>=Q.monsters.length&&s.monsters.length<=Q.monsters.length+HQ.heroes.length*Q.rooms.length);
+    expect(Array.isArray(s.monsters)&&s.monsters.length>=Q.monsters.length&&s.monsters.length<=Q.monsters.length+HQ.heroes.length*searchAreaCount);
     const monsterIds=new Set(s.monsters.map(monster=>monster?.id));
     expect(monsterIds.size===s.monsters.length&&[...originalMonsterIds].every(id=>monsterIds.has(id)));
     expect(s.monsters.every(monster=>originalMonsterIds.has(monster.id)||!preTreasure&&/^wanderer-[1-9][0-9]*$/.test(monster.id)&&monster.kind===Q.wanderingMonster.kind));
-    const entityIds=new Set([...monsterIds,...Q.furniture.map(f=>f.id)]),doorIds=new Set(Q.doors.map(d=>d.id));
+    const entityIds=new Set([...monsterIds,...Q.furniture.map(f=>f.id)]),doorIds=new Set(HQ.dungeon.doors(s).map(d=>d.id));
     const legacy=s.schemaVersion===2,preSpells=legacy||s.schemaVersion===3,oldEffects=preSpells||s.schemaVersion===4,preInventory=oldEffects||s.schemaVersion===5;
-    expect((preTreasure||s.schemaVersion===7)&&s.contentVersion===Q.id&&["hero-turn","monster-turn","defeat", "victory", "retreat"].includes(s.phase));
+    expect((preDungeon||s.schemaVersion===8)&&s.contentVersion===Q.id&&["hero-turn","monster-turn","defeat", "victory", "retreat"].includes(s.phase));
     if(legacy)expect(["hero-turn","monster-turn","defeat"].includes(s.phase));
     expect(Array.isArray(s.heroes)&&s.heroes.length>=1&&s.heroes.length<=4&&ids(s.heroes.map(h=>h?.id),heroIds));
     if(preTreasure)expect(s.monsters.length===Q.monsters.length);
@@ -29,6 +36,7 @@
       if(hero&&oldEffects)actor.trapped=false;
       const phasing=!oldEffects&&hero&&s.phase==="hero-turn"&&s.heroes[s.turnIndex]?.id===actor.id&&object(s.movement)&&s.movement.rolled&&s.movement.remaining>0&&!s.movement.closed&&T.magic(s,actor,"passThroughRock")&&actor.body>0&&!actor.exit&&s.pending===null;
       expect(hero&&actor.trapped?actor.body===0:phasing||T.floor.has(T.key(actor.x,actor.row))&&!T.blocked.has(T.key(actor.x,actor.row))&&!T.furniture.has(T.key(actor.x,actor.row)));
+      if(actor.body>0&&HQ.dungeon.blocked(s).includes(T.key(actor.x,actor.row)))expect(phasing||hero&&s.pending?.type==="report"&&s.lastReport?.type==="trap"&&s.lastReport.defenderId===actor.id&&s.lastReport.fallingFrom&&!s.lastReport.escaped);
       expect(actor.kind===definition.kind&&typeof actor.name==="string"&&actor.name.length>0&&integer(actor.body,0,stats.body)&&actor.maxBody===stats.body);
       for(const field of ["defend","mind",...(hero?[]:["movement"])])expect(actor[field]===stats[field]);
       expect(actor.attack===(!hero&&definition.note==="C"?Q.notes.C.attackDice:stats.attack));
@@ -37,7 +45,7 @@
         if(preInventory)actor.inventory=HQ.inventory.fresh(actor);
         expect(object(actor.inventory)&&integer(actor.inventory.gold)&&Array.isArray(actor.inventory.items)&&actor.inventory.items.length<=2048);
         expect(actor.inventory.items.every(item=>object(item)&&typeof item.id==="string"&&/^[a-z0-9-]{1,80}$/.test(item.id)&&Object.hasOwn(HQ.itemData.byId,item.kind)));
-        expect(actor.inventory.items.filter(item=>item.kind===actor.weapon).length===1&&actor.inventory.items.every(item=>HQ.itemData.byId[item.kind].category==="potion"||item.kind===actor.weapon));
+        expect(actor.inventory.items.filter(item=>item.kind===actor.weapon).length===1&&actor.inventory.items.every(item=>HQ.itemData.byId[item.kind].category==="potion"||item.kind===actor.weapon||item.kind==="tool-kit"));
         if(legacy){expect(actor.exit===undefined||actor.exit===null);actor.exit=null;}
         expect([null,"completed","retreated"].includes(actor.exit));
         if(actor.exit)expect(actor.body>0&&T.stairs.has(T.key(actor.x,actor.row)));
@@ -61,12 +69,12 @@
     const elf=s.heroes.find(hero=>hero.id==="elf"),wizard=s.heroes.find(hero=>hero.id==="wizard");
     const itemIds=s.heroes.flatMap(hero=>hero.inventory.items.map(item=>item.id));expect(new Set(itemIds).size===itemIds.length);
     if(preTreasure){s.treasure=HQ.treasure.fresh(s.heroes);s.extraAttack=false;}
-    const treasure=s.treasure,cardIds=new Set(HQ.treasureData.instances.map(card=>card.id)),roomIds=new Set(Q.rooms);
+    const treasure=s.treasure,cardIds=new Set(HQ.treasureData.instances.map(card=>card.id)),roomIds=new Set([...Q.rooms,...trapDefinitions.filter(trap=>trap.kind==="pit").map(trap=>"pit:"+trap.id)]);
     expect(object(treasure)&&ids(treasure.deck,cardIds)&&ids(treasure.removed,cardIds)&&treasure.deck.length+treasure.removed.length===cardIds.size&&new Set([...treasure.deck,...treasure.removed]).size===cardIds.size);
     expect(treasure.removed.every(id=>["gold","potion"].includes(HQ.treasureData.byId[HQ.treasureData.instancesById[id].kind].category)));
     expect(object(treasure.searched)&&Object.keys(treasure.searched).length===s.heroes.length&&s.heroes.every(hero=>ids(treasure.searched[hero.id],roomIds)));
     expect(ids(treasure.claimed,new Set(Object.keys(Q.treasureRooms)))&&treasure.claimed.every(id=>s.heroes.some(hero=>treasure.searched[hero.id].includes(id))));
-    expect(integer(treasure.nextMonster,1,HQ.heroes.length*Q.rooms.length+1)&&s.monsters.filter(monster=>!originalMonsterIds.has(monster.id)).every(monster=>integer(Number(monster.id.slice(9)),1,treasure.nextMonster-1)));
+    expect(integer(treasure.nextMonster,1,HQ.heroes.length*searchAreaCount+1)&&s.monsters.filter(monster=>!originalMonsterIds.has(monster.id)).every(monster=>integer(Number(monster.id.slice(9)),1,treasure.nextMonster-1)));
     expect(boolean(s.extraAttack)&&(!s.extraAttack||s.phase==="hero-turn"&&s.actionUsed));
     for(const hero of s.heroes)for(const item of hero.inventory.items)if(item.id.startsWith("treasure-"))expect(treasure.removed.includes(item.id)&&HQ.treasureData.instancesById[item.id]?.kind===item.kind);
     if(elf&&wizard)expect(!elf.spellGroups.some(group=>wizard.spellGroups.includes(group)));
@@ -120,6 +128,15 @@
         expect(r.bodyAfter===r.bodyBefore-r.damage&&[0,1].includes(r.damage)&&r.defeated===(r.bodyAfter===0)&&r.endTurn===(r.damage===1));
         expect(object(r.search));
       }
+      else if(r.type==="dungeon-search")expect(heroIds.has(r.attackerId)&&["traps","doors"].includes(r.searchKind)&&integer(r.found,0,trapIds.size+HQ.dungeon.layout(s).doors.length)&&typeof r.detail==="string");
+      else if(r.type==="trap") {
+        const owner=s.heroes.find(hero=>hero.id===r.attackerId),definition=trapDefinitions.find(trap=>trap.id===r.trapId);
+        expect(owner&&(definition||r.operation==="jump"&&r.trapId===null&&r.trapKind==="clear")&&r.defenderId===owner.id&&r.defenderName===owner.name&&r.trapKind===(definition?.kind||"clear")&&["hidden","found","sprung","clear"].includes(r.statusBefore)&&["spring","jump","disarm"].includes(r.operation)&&typeof r.detail==="string");
+        expect(Array.isArray(r.rolls)&&r.rolls.length<=2&&r.rolls.every(group=>object(group)&&typeof group.label==="string"&&typeof group.description==="string"&&Array.isArray(group.faces)&&group.faces.length>=1&&group.faces.length<=3&&group.faces.every(face=>Data.faces.includes(face))));
+        expect(integer(r.bodyBefore,1,owner.maxBody)&&integer(r.bodyAfter,0,owner.maxBody)&&r.maxBody===owner.maxBody&&r.damage===r.bodyBefore-r.bodyAfter&&r.defeated===(r.bodyAfter===0)&&boolean(r.endTurn));
+        if(r.jumpFrom!==undefined)expect(T.floor.has(r.jumpFrom)&&T.floor.has(r.jumpTo));
+        if(r.fallingFrom!==undefined)expect(definition?.kind==="falling-block"&&T.neighbors(HQ.dungeon.cell(definition)).includes(r.fallingFrom)&&(r.escaped===undefined||boolean(r.escaped)));
+      }
       else if(r.type==="monster-skip")expect(monsterIds.has(r.attackerId)&&r.reason==="Tempest · misses this turn");
       else expect(r.type==="monster-move"&&integer(r.steps,0,10));
       if(r.search!==undefined) {
@@ -138,7 +155,7 @@
       }
       if(r.recovery!==undefined) {
         const owner=s.heroes.find(hero=>hero.id===r.defenderId),use=s.lastItemUse;
-        expect(["combat","treasure"].includes(r.type)&&object(r.recovery)&&r.defeated&&r.bodyAfter===0&&owner&&integer(r.recovery.itemUseId,1,s.nextCombatId-1)&&integer(r.recovery.bodyAfter,1,owner.maxBody)&&r.recovery.healed===r.recovery.bodyAfter);
+        expect(["combat","treasure","trap"].includes(r.type)&&object(r.recovery)&&r.defeated&&r.bodyAfter===0&&owner&&integer(r.recovery.itemUseId,1,s.nextCombatId-1)&&integer(r.recovery.bodyAfter,1,owner.maxBody)&&r.recovery.healed===r.recovery.bodyAfter);
         if(use?.id===r.recovery.itemUseId)expect(use.heroId===owner.id&&use.bodyBefore===0&&use.bodyAfter===r.recovery.bodyAfter);
       }
     }
@@ -150,7 +167,7 @@
     else expect(s.monsterTurn===null);
     const outcome=HQ.quest.outcome(s);
     expect(HQ.quest.isEnded(s.phase)?outcome===s.phase:outcome===null||Boolean(HQ.inventory.recoveryHero(s)));
-    const awaitingOwnDefeat=s.pending?.type==="report"&&s.lastReport?.defeated&&!s.lastReport.recovery&&s.lastReport.defenderId===s.heroes[s.turnIndex]?.id&&["combat","treasure","stone-move"].includes(s.lastReport.type);
+    const awaitingOwnDefeat=s.pending?.type==="report"&&s.lastReport?.defeated&&!s.lastReport.recovery&&s.lastReport.defenderId===s.heroes[s.turnIndex]?.id&&["combat","treasure","stone-move","trap"].includes(s.lastReport.type);
     if(s.phase==="hero-turn")expect(HQ.combat.inPlay(s.heroes[s.turnIndex])||awaitingOwnDefeat);
     if(s.pending!==null) {
       expect(object(s.pending));
@@ -167,7 +184,8 @@
       if(d.stage==="item")expect(s.lastItemUse?.redDice.length&&d.reportId===s.lastItemUse.id&&d.rolled&&!HQ.quest.isEnded(s.phase));
       else {
         expect(s.pending?.type==="report"&&d.reportId===s.lastReport.id);
-        if(d.stage==="spell")expect(["spell","sleep-check"].includes(s.lastReport.type)&&s.lastReport.redDice.length>0);
+        if(d.stage==="trap")expect(s.lastReport.type==="trap"&&integer(d.part,0,s.lastReport.rolls.length-1));
+        else if(d.stage==="spell")expect(["spell","sleep-check"].includes(s.lastReport.type)&&s.lastReport.redDice.length>0);
         else {expect(s.lastReport.type==="combat"&&["attack","defence"].includes(d.stage));if(d.stage==="defence")expect(s.lastReport.defendDice.length>0);}
       }
     }
@@ -178,7 +196,12 @@
     // Legacy migrations add unexited status, empty books/inactive effects and
     // the already-equipped starting weapon, zero gold and no free potions.
     // Never replenish a quest's spells or reroll/replay an existing report.
-    s.schemaVersion=7;
+    // Retain the old field for schema compatibility, but all discovered figures
+    // now stay visible. Replace stale sight-mode memories with displayed positions.
+    s.settings.realisticLOS=false;
+    s.monsterMemory=Object.fromEntries(s.monsters.filter(monster=>monster.body>0&&s.discoveredEntities.includes(monster.id))
+      .map(monster=>[monster.id,{id:monster.id,x:monster.x,row:monster.row}]));
+    s.schemaVersion=8;
     return snapshot;
   }
   function load() {

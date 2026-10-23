@@ -3,7 +3,7 @@
   const HQ=window.HeroQuest;
   const actors=state=>[...state.heroes,...state.monsters];
   const pendingReport=state=>state?.pending?.type==="report"?state.lastReport:null;
-  const casualtyTypes=new Set(["combat","spell","stone-move","treasure"]);
+  const casualtyTypes=new Set(["combat","spell","stone-move","treasure","trap"]);
   function defeatedReport(state) {
     const report=pendingReport(state);
     return report&&casualtyTypes.has(report.type)&&report.defeated&&!report.recovery?report:null;
@@ -42,9 +42,11 @@
     const prefix=report.type==="sleep-check"?report.attackerName+":":card?report.attackerName+" casts "+card.name:
       report.type==="combat"?report.attackerName+" attacks "+report.defenderName+":":report.attackerName+":";
     const index=state.log.findLastIndex(event=>event.text.startsWith(prefix));
-    const restore=figures=>figures.map(figure=>figure.id===report.defenderId&&Number.isFinite(report.bodyBefore)?{...figure,body:report.bodyBefore}:figure);
+    const restore=figures=>figures.map(figure=>figure.id===report.defenderId&&Number.isFinite(report.bodyBefore)?{...figure,body:report.bodyBefore,
+      ...(report.type==="trap"&&report.jumpFrom?{x:HQ.topology.parse(report.jumpFrom)[0],row:HQ.topology.parse(report.jumpFrom)[1]}:{})}:figure);
     const phase=HQ.quest.isEnded(state.phase)?report.attackerSide==="monster"?"monster-turn":"hero-turn":state.phase;
-    return {...state,phase,heroes:restore(state.heroes),monsters:restore(state.monsters),log:index<0?state.log:state.log.slice(0,index)};
+    const dungeon=report.type==="trap"&&report.trapId?{...state.dungeon,traps:{...state.dungeon.traps,[report.trapId]:{...state.dungeon.traps[report.trapId],status:report.statusBefore}}}:state.dungeon;
+    return {...state,phase,dungeon,heroes:restore(state.heroes),monsters:restore(state.monsters),log:index<0?state.log:state.log.slice(0,index)};
   }
   HQ.sessionPresentation=Object.freeze({actors,pendingReport,defeatedReport,defeatedFigure,healthChanges,nextHeroTurn,statuses,unrevealed});
 })();

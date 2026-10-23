@@ -1,4 +1,4 @@
-"""Prepare the three carried weapon cards from the local equipment reference.
+"""Prepare carried weapon and tool kit cards from the local equipment reference.
 
 Offline artwork only. Rules remain sourced from the original North American
 Armoury; drathe's equipment-card layout is not an original base-game deck.
@@ -12,7 +12,7 @@ SOURCE=ROOT/'references/fan-reference/drathe-system-equipment.pdf'
 OUT=ROOT/'assets/ui/equipment'
 # Normalized against the visually reviewed 1500px page renderings.
 CARDS={1:{'dagger':(765,33,1101,556),'broadsword':(38,575,375,1098)},
-       2:{'shortsword':(38,575,375,1098)}}
+       2:{'shortsword':(38,575,375,1098),'tool-kit':(401,575,738,1098)}}
 
 def prepare():
  OUT.mkdir(parents=True,exist_ok=True)

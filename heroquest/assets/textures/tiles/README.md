@@ -1,4 +1,4 @@
-# Original stairway artwork
+# Original component artwork
 
 `stairway.png` is the actual printed stair tile cropped from the retained
 [original North American tile sheet](https://north-american.yeoldeinn.com/downloads/system/system-tiles.pdf),
@@ -18,3 +18,18 @@ Recipe: `python3 heroquest/scripts/prepare_component_artwork.py` with pypdf/Pill
 ordinary deferred scripts work without a fetch or file-origin WebGL restrictions.
 The image is mapped onto a thin 2x2 tile that receives normal lights/shadows.
 Source crop inspected during asset preparation; no new browser check run.
+
+## Sprung trap tiles
+
+`pit-trap.png` and `falling-block.png` are the first-row original printed trap
+faces from the same embedded page-1 tile sheet. Source-image crops are respectively
+`[449,0,581,132]` and `[299,0,431,132]`, both 132×132, excluding white gutters.
+`traps.js` embeds their source IDs, source/output hashes and unchanged cropped
+pixels for file-compatible loading. The pit artwork lines its recessed bottom;
+the falling-block art caps both permanent blocked passages and sprung falling-block
+stone plugs at full or cutaway height. Both receive
+scene lighting. Unsprung traps remain pointers, not revealed tiles. Secret doors
+use deliberately darker stone panels after discovery, without a printed marker.
+
+These retain the source artwork’s copyright; no open licence is asserted.
+Crops were inspected as offline asset authoring, not a browser/gameplay check.

@@ -2,20 +2,20 @@
   "use strict";
   const HQ=window.HeroQuest,T=HQ.topology,C=HQ.combat,D=HQ.treasureData;
   const fresh=heroes=>({deck:D.instances.map(card=>card.id),removed:[],searched:Object.fromEntries(heroes.map(hero=>[hero.id,[]])),claimed:[],nextMonster:1});
-  const room=hero=>T.regions.get(C.cell(hero));
+  const room=(hero,state)=>state&&HQ.dungeon.pitRoom(state,hero)||T.regions.get(C.cell(hero));
   function reason(state,hero) {
     if(state.phase!=="hero-turn"||state.pending||!C.inPlay(hero)||state.heroes[state.turnIndex]?.id!==hero.id)return "Wait for your hero’s turn.";
     if(state.actionUsed)return "Your action has already been used this turn.";
     if(T.unsafe(state,hero))return "Move into a free square before searching.";
-    const id=room(hero);
-    if(!HQ.trial.rooms.includes(id))return "Treasure can only be searched for in rooms.";
+    const id=room(hero,state);
+    if(!id.startsWith("pit:")&&!HQ.trial.rooms.includes(id))return "Treasure can only be searched for in rooms.";
     if(state.monsters.some(monster=>C.alive(monster)&&T.regions.get(C.cell(monster))===id))return "A monster remains in this room.";
     if(state.treasure.searched[hero.id].includes(id))return "This hero has already searched this room.";
     return "";
   }
   function spawn(state,hero) {
-    const from=C.cell(hero),[hx,hr]=T.parse(from),id=room(hero);
-    const free=HQ.trial.floor.filter(cell=>T.regions.get(cell)===id&&!T.solid(cell)&&!T.furniture.has(cell)&&!T.occupiedHero(state,cell,null)&&!T.monsterAt(state,cell));
+    const from=C.cell(hero),[hx,hr]=T.parse(from),id=T.regions.get(C.cell(hero));
+    const free=HQ.trial.floor.filter(cell=>T.regions.get(cell)===id&&!T.solid(cell,state)&&!T.furniture.has(cell)&&!T.occupiedHero(state,cell,null)&&!T.monsterAt(state,cell));
     // CPU policy: a legal adjacent square first; otherwise the nearest free
     // square in this room. Never move or attack when adjacency is impossible.
     const adjacent=free.filter(cell=>T.connected(from,cell,state));
@@ -28,7 +28,7 @@
     return {monster,adjacent:adjacent.includes(cell)};
   }
   function resolve(state,hero,randomInt) {
-    const id=room(hero),before=hero.body,search={heroId:hero.id,roomId:id,cardId:null,specialId:null,gold:0,itemId:null,wanderingId:null,immediateAttack:false};
+    const id=room(hero,state),before=hero.body,search={heroId:hero.id,roomId:id,cardId:null,specialId:null,gold:0,itemId:null,wanderingId:null,immediateAttack:false};
     state.treasure.searched[hero.id].push(id);state.actionUsed=true;state.extraAttack=false;
     if(state.movement.started){state.movement.closed=true;state.movement.remaining=0;}
     let detail="",endTurn=false;

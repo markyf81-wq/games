@@ -5,6 +5,8 @@
   const definitions={};
   for(const [id,name,attack] of [["broadsword","Broadsword",3],["shortsword","Shortsword",2],["dagger","Dagger",1]])
     definitions[id]=Object.freeze({id,name,category:"equipment",artwork:"assets/ui/equipment/"+id+".jpg",description:attack+" combat "+(attack===1?"die":"dice")+" when attacking.",source:HQ.combatData.sources.equipment});
+  definitions["tool-kit"]=Object.freeze({id:"tool-kit",name:"Tool Kit",category:"equipment",price:250,artwork:"assets/ui/equipment/tool-kit.jpg",
+    description:"Disarm a discovered, unsprung trap. Roll one combat die: either shield disarms it; a skull springs it. The Dwarf uses his own improved disarming roll.",summary:"Disarm from the trap’s context panel.",source:HQ.combatData.sources.equipment});
   definitions["potion-of-healing"]=Object.freeze({id:"potion-of-healing",name:"Potion of Healing",category:"potion",healingDice:1,
     description:"In a bundle of rags, you find a small bottle of bluish liquid. You can drink this healing potion at any time, restoring the number of Body Points equal to a roll of one red die. You cannot, however, exceed your starting number of Body Points. This may only be used once. Do not return this card to the deck.",
     summary:"Drink to restore 1–6 Body. Single use.",source:source("system-treasure",2,"top right Potion of Healing; two further copies on PDF pages 2–3")});

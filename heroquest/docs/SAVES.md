@@ -4,7 +4,7 @@
 
 Adventure uses localStorage key heroquest.session.v1; Gameplay sandbox uses
 heroquest.sandbox.v1 only when index.html?sandbox=1. Envelope version 1, state
-schema 7, content ID the-trial-combat-v1. Other games and the model painter have
+schema 8, content ID the-trial-combat-v1. Other games and the model painter have
 independent keys. New adventure/restart replaces only its own game slot after
 confirmation. Opening setup alone does not discard a save.
 
@@ -24,8 +24,9 @@ inventories; it adds no saved transfer/picker field and no RNG draw.
 ## Presentation stages
 
 screen is null, briefing or movement. dice is null or {reportId, stage, rolled},
-with attack, defence, spell or item stages tied to the corresponding saved record.
+with attack, defence, spell, trap or item stages tied to the corresponding saved record.
 Restore committed rolls settled; unrolled human stages still wait for Roll.
+Trap stages also store part, the saved die-group index.
 CPU stages auto-roll through modal/pause guards. Never reroll or apply damage on
 load. An uncommitted attack prompt is not a spent action and is not saved.
 
@@ -47,7 +48,10 @@ Full/Automatic/Low wall mode, lighting toggle/ambient percentage, POV toggle and
 cached actor facing. cinematicCameraEnabled defaults true; restoring also accepts
 the older firstPersonEnabled field. Lighting phase/particle positions/shadows are
 rebuilt. Camera changes save on hide/page exit or the next game action; explicit
-view settings save immediately. Realistic LOS is an engine setting.
+view settings save immediately. The retired engine settings.realisticLOS boolean
+remains accepted for schema compatibility. Loading normalizes it to false and
+refreshes remembered positions for discovered living monsters; all revealed
+miniatures now remain visible. The LOS removal alone requires no schema bump.
 
 ## Validation and migrations
 
@@ -66,6 +70,10 @@ Wanderers have bounded unique IDs and the quest's canonical monster type.
   add lastItemUse and validate independent healing/recovery rolls.
 - Schema 6 to 7: fresh physical Treasure deck/search ledger and inactive potion
   buffs, preserving existing possessions/progress/RNG. No shuffle occurs on load.
+- Schema 7 to 8: empty Trial dungeon layout/trap records. Preserve the existing
+  adventure, RNG, deck and pending reports; do not insert practice traps.
+  Schema-8 trap reports, grouped dice, pit searches, Tool Kits and secret doors
+  are validated; practice layouts are sandbox-only. See TRAPS.md.
 
 Additive diedInPlay defaults false for old monster records. A validated recorded
 killing report can recover its casualty's provenance; zero Body alone cannot.

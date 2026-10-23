@@ -16,14 +16,14 @@ notices and other games. CODE-STRUCTURE.md maps current component boundaries.
 
 - The Trial's source-linked map, briefing, monsters/Verag and individual stair exits.
 - Actual 1–4-hero parties, ownership, handoff, movement/action order, discounted four-square stairs,
-  doors, discovery, optional realistic LOS, melee and deterministic CPU turns.
+  doors, discovery, persistent revealed miniatures, melee and deterministic CPU turns.
 - Twelve original elemental spells, original card artwork/full text, inertial hand,
   board target selection, used-card removal and spell-specific saved effects.
 - Persistent status visuals for all seven spell statuses and three potion buffs,
   derived from saved flags/current movement and bounded independently of casts.
 - Zargon portrait modal with explicit Continue before the CPU queue begins.
 - Separate gameplay sandbox with twelve spell presets and turn/opponent fixtures.
-- Autosave/restore, local JSON save export/import, recorded dice stages, schema 7
+- Autosave/restore, local JSON save export/import, recorded dice stages, schema 8
   with guarded older migrations. Menu transfer and setup import confirm replacement
   and keep adventure/sandbox files separate; see SAVES.md.
 - Per-hero inventories, personal gold, starting equipment, one-use healing
@@ -34,6 +34,9 @@ notices and other games. CODE-STRUCTURE.md maps current component boundaries.
   defeated-piece removal and gliding focus on movement/discovery.
 - Painted furniture/doors/rubble, supplied board/stair art, tall walls/cutaway,
   deterministic room torches, fireplace fire and bounded pooled lighting.
+- Separate trap/secret-door searches, jump/disarm/manual rolls, persistent pits,
+  spear/block/furniture consequences and concealed sliding stone doors.
+  Five invented exploration practice scenarios; The Trial placements unchanged.
 - Models and invented 36-type Test room, separate from live gameplay practice.
 
 Latest painting, targeting/sandbox/camera and cleanup changes have source/offline
@@ -58,12 +61,12 @@ scaled before implementation; no automatic encounter/stat scaling exists yet.
    Original Treasure stack/search/card faces are now implemented; see TREASURE.md
    for mechanics, source interpretation, migration and manual-review limits.
    Potion sharing on the giver’s turn is implemented through the board picker.
-   Remaining work includes traps/secret-door searches, gold/equipment trading and
+   Traps/secret-door searches and disarming/jumping now have practice scenarios;
+   see TRAPS.md for sources, interpretations and manual review limits.
+   Remaining work includes gold/equipment trading and
    equipment acquisition.
-   Secret doors should blend into tall masonry before discovery, then expose a
-   passage through a sliding/pivoting stone panel with matching frame/clipping.
-   Confirm printed reveal/opening timing before implementation.
-3. **Quest events, traps and death recovery.** Source-linked trigger IDs, scope and
+   Secret doors now remain masonry until searched for, then slide open on request.
+3. **Quest events, trap exceptions and death recovery.** Source-linked trigger IDs, scope and
    fired-state persistence; emergency healing/potions need deliberate queues and
    a new migration if stored fields change. No hidden information in target hints.
 4. **Complete The Trial and then original campaign.** Genuine quest exceptions,

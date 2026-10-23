@@ -65,7 +65,7 @@
       $("spell-detail-status").textContent=card?HQ.spells.reason(s,hero,card):"";
       $("spell-mode-field").hidden=id!=="genie";
       cast.hidden=!card;
-      if(changed){targetId=null;mode.value=id==="genie"&&HQ.trial.doors.some(door=>door.id===preferred)?"door":"attack";}
+      if(changed){targetId=null;mode.value=id==="genie"&&HQ.dungeon.doors(s).some(door=>door.id===preferred)?"door":"attack";}
       populateTargets();
     }
     function stopMotion() {
@@ -134,8 +134,8 @@
         button.addEventListener("click",event=>{if(event.detail===0||performance.now()>=ignoreClickUntil)selectCard(card.id);});cards.append(button);buttons.push(button);
       }
       $("spell-previous").disabled=$("spell-next").disabled=book.length<2;
-      const usable=book.filter(card=>!HQ.spells.reason(s,hero,card)),target=[...s.heroes,...s.monsters,...HQ.trial.doors].find(f=>f.id===initialTargetId);
-      const first=target?usable.find(card=>!HQ.spells.reason(s,hero,card,target,card.id==="genie"&&HQ.trial.doors.some(d=>d.id===initialTargetId)?"door":"attack")):null;
+      const usable=book.filter(card=>!HQ.spells.reason(s,hero,card)),target=[...s.heroes,...s.monsters,...HQ.dungeon.doors(s)].find(f=>f.id===initialTargetId);
+      const first=target?usable.find(card=>!HQ.spells.reason(s,hero,card,target,card.id==="genie"&&HQ.dungeon.doors(s).some(d=>d.id===initialTargetId)?"door":"attack")):null;
       selectCard(first?.id||usable[0]?.id||book[0]?.id||null,{instant:true});showDrawer();
     }
     $("spell-previous").addEventListener("click",()=>cycle(-1));$("spell-next").addEventListener("click",()=>cycle(1));

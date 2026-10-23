@@ -6,7 +6,7 @@
 - `system-instruction-booklet`, PDF page 2, rotated 180 degrees, printed page 23, **Ending The Quest**: success requires achieving the goal and returning to the stairway. Players may end early by returning before completing the quest; all heroes dying also ends it.
 - The same printed page's **What Happens Between Quests?** describes recovery, restored spells and shopping. Those campaign systems are not implemented by this milestone.
 
-Runtime source locators are `trial.objective.source` and `trial.endingSource`. No reward is invented: The Trial lists treasure in room notes, but no separate completion payment. Treasure searches/cards and potions are now implemented in TREASURE.md; campaign progression, traps/secret doors and equipment remain unfinished. An ending screen does not make this a complete implementation of the original quest.
+Runtime source locators are `trial.objective.source` and `trial.endingSource`. No reward is invented: The Trial lists treasure in room notes, but no separate completion payment. Treasure searches/cards and potions are now implemented in TREASURE.md; trap/secret-door mechanics now exist in isolated sandbox scenarios (TRAPS.md); The Trial has none. Campaign progression and equipment acquisition remain unfinished. An ending screen does not make this a complete implementation of the original quest.
 
 ## Engine behaviour
 

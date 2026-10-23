@@ -23,7 +23,7 @@
     for(const f of Q.furniture)if(rooms.has(T.regions.get(T.key(f.x,f.row)))||visible.has(T.key(f.x,f.row)))entities.add(f.id);
     for(const [id,memory] of Object.entries(state.monsterMemory))if(visible.has(T.key(memory.x,memory.row))&&!state.monsters.some(m=>m.id===id&&C.alive(m)&&C.cell(m)===T.key(memory.x,memory.row)))delete state.monsterMemory[id];
     for(const m of state.monsters.filter(C.alive))if(entities.has(m.id)||rooms.has(T.regions.get(C.cell(m)))||seenFigures.has(m.id)) {
-      if(!state.settings.realisticLOS||seenFigures.has(m.id)||!entities.has(m.id))state.monsterMemory[m.id]={id:m.id,x:m.x,row:m.row};
+      state.monsterMemory[m.id]={id:m.id,x:m.x,row:m.row};
       entities.add(m.id);
     }
     for(const door of Q.doors)if(T.endpoints(door).some(id=>visible.has(id)||rooms.has(T.regions.get(id))))doors.add(door.id);
@@ -39,7 +39,7 @@
     if(!Array.isArray(heroIds)||heroIds.length<1||heroIds.length>4||new Set(heroIds).size!==heroIds.length||heroIds.some(id=>!heroNames.has(id)))
       throw new Error("Choose between one and four different heroes.");
     const selected=new Set(heroIds),spellGroups=HQ.spells.groups(config,heroIds);
-    const state={schemaVersion:7,contentVersion:"the-trial-combat-v1",phase:"hero-turn",round:1,turnIndex:0,extraAttack:false,
+    const state={schemaVersion:8,contentVersion:"the-trial-combat-v1",phase:"hero-turn",round:1,turnIndex:0,extraAttack:false,
       rng:(seed>>>0)||0x4845524f,pending:null,actionUsed:false,monsterTurn:null,lastReport:null,lastItemUse:null,nextCombatId:1,
       heroes:HQ.heroes.filter(h=>selected.has(h.id)).map(h=>({...h,...Data.heroes[h.id],name:h.name,maxBody:Data.heroes[h.id].body,exit:null,
         spellGroups:spellGroups[h.id]||[],spellsUsed:[],effects:{...HQ.spells.heroEffects(),...HQ.inventory.effects()},trapped:false,inventory:HQ.inventory.fresh({id:h.id,weapon:Data.heroes[h.id].weapon}),
@@ -47,8 +47,8 @@
       monsters:Q.monsters.map(m=>({id:m.id,kind:m.kind,x:m.x,row:m.row,...Data.monsters[m.kind],
         maxBody:Data.monsters[m.kind].body,name:m.name||monsterNames[m.kind],effects:HQ.spells.monsterEffects(),diedInPlay:false,
         ...(m.note==="C"?{attack:Q.notes.C.attackDice,overrideSource:Data.sources.guardian}:{})})),
-      movement:freshMovement(),openDoors:[],discoveredCells:[],discoveredRooms:[Q.startingRoom],
-      discoveredEntities:[],discoveredDoors:[],monsterMemory:{},settings:{realisticLOS:Boolean(config.realisticLOS)},log:[],nextEventId:1};
+      dungeon:HQ.dungeon.fresh(),movement:freshMovement(),openDoors:[],discoveredCells:[],discoveredRooms:[Q.startingRoom],
+      discoveredEntities:[],discoveredDoors:[],monsterMemory:{},settings:{realisticLOS:false},log:[],nextEventId:1};
     state.treasure=HQ.treasure.fresh(state.heroes);
     discover(state);log(state,"The party enters the stairway room. Choose your route together.");return state;
   }
@@ -93,10 +93,10 @@
   }
   function applyCommand(state,command) {
     if(!state||state.contentVersion!=="the-trial-combat-v1")return reject(state,"Start a new adventure first.");
-    const allowed=["ROLL_MOVEMENT","MOVE","OPEN_DOOR","ATTACK","FINISH_ATTACKS","CAST_SPELL","SEARCH_TREASURE","USE_ITEM","GIVE_ITEM","END_TURN","EXIT_QUEST","ACK_HANDOFF","RESOLVE_MONSTER","ACK_REPORT","SET_REALISTIC_LOS"];
+    const allowed=["ROLL_MOVEMENT","MOVE","OPEN_DOOR","ATTACK","FINISH_ATTACKS","CAST_SPELL","SEARCH_TREASURE","SEARCH_TRAPS","SEARCH_SECRET_DOORS","DISARM_TRAP","JUMP_TRAP","ESCAPE_FALLING_BLOCK","USE_ITEM","GIVE_ITEM","END_TURN","EXIT_QUEST","ACK_HANDOFF","RESOLVE_MONSTER","ACK_REPORT"];
     if(!command||!allowed.includes(command.type))return reject(state,"That action is not available.");
-    if(state.pending&&!['ACK_HANDOFF','ACK_REPORT','RESOLVE_MONSTER','SET_REALISTIC_LOS','USE_ITEM'].includes(command.type))return reject(state,"Finish the current handoff or result first.");
-    if(["ROLL_MOVEMENT","MOVE","OPEN_DOOR","ATTACK","FINISH_ATTACKS","CAST_SPELL","SEARCH_TREASURE","END_TURN","EXIT_QUEST"].includes(command.type)&&(state.phase!=="hero-turn"||!C.inPlay(active(state))))return reject(state,"Wait for a living hero’s turn.");
+    if(state.pending&&!['ACK_HANDOFF','ACK_REPORT','RESOLVE_MONSTER','USE_ITEM','ESCAPE_FALLING_BLOCK'].includes(command.type))return reject(state,"Finish the current handoff or result first.");
+    if(["ROLL_MOVEMENT","MOVE","OPEN_DOOR","ATTACK","FINISH_ATTACKS","CAST_SPELL","SEARCH_TREASURE","SEARCH_TRAPS","SEARCH_SECRET_DOORS","DISARM_TRAP","JUMP_TRAP","END_TURN","EXIT_QUEST"].includes(command.type)&&(state.phase!=="hero-turn"||!C.inPlay(active(state))))return reject(state,"Wait for a living hero’s turn.");
     if(state.extraAttack&&["ROLL_MOVEMENT","MOVE"].includes(command.type))return reject(state,"Take your second attack or choose Finish attacks before moving.");
     if(["OPEN_DOOR","ATTACK","CAST_SPELL","EXIT_QUEST"].includes(command.type)&&T.magic(state,active(state),"passThroughRock")&&T.unsafe(state,active(state)))return reject(state,"Move into a free square before acting.");
     const next=JSON.parse(JSON.stringify(state)),hero=active(next);let motion=null;
@@ -117,21 +117,28 @@
           const monster=T.monsterAt(next,id);
           if(monster&&!rock&&!T.magic(next,hero,"veilOfMist")){if(!next.discoveredEntities.includes(monster.id))next.discoveredEntities.push(monster.id);interrupted=true;break;}
           const cost=T.movementCost(C.cell(hero),id),[x,row]=T.parse(id);beginMove(next,hero,cost);hero.x=x;hero.row=row;next.movement.remaining-=cost;if(cost)next.movement.started=true;motion.path.push(id);
-          const added=discover(next);if((added.cells||added.entities||added.rooms)&&(rock||T.canStop(next,id,hero.id))){interrupted=true;break;}
+          const added=discover(next),trap=HQ.dungeon.at(next,id);
+          if(trap&&(!T.occupiedHero(next,id,hero.id)||T.stairs.has(id))) {
+            const previous=motion.path.length>1?motion.path.at(-2):motion.from;
+            next.lastReport=HQ.dungeon.spring(next,hero,trap,die,previous);next.pending={type:"report",reportId:next.lastReport.id};
+            log(next,hero.name+": "+next.lastReport.detail);
+            if(!HQ.inventory.recoveryHero(next))finishQuest(next);discover(next);break;
+          }
+          if((added.cells||added.entities||added.rooms)&&(rock||T.canStop(next,id,hero.id))){interrupted=true;break;}
         }
         // A newly encountered blocker must not strand a hero on a friend or a
         // rock transit cell. Back up only the occupied tail of the actual path.
-        while(!rock&&motion.path.length&&!T.canStop(next,C.cell(hero),hero.id)) {
+        while(!rock&&next.pending?.type!=="report"&&motion.path.length&&!T.canStop(next,C.cell(hero),hero.id)) {
           const from=C.cell(hero);motion.path.pop();const to=motion.path.at(-1)||motion.from;
           next.movement.remaining+=T.movementCost(to,from);[hero.x,hero.row]=T.parse(to);
         }
         if(motion.path.length){const spent=T.routeCost(motion.from,motion.path);log(next,spent?hero.name+" moves "+spent+" space"+(spent===1?"":"s")+".":hero.name+" moves within the stairway.");}
         if(interrupted)log(next,"New ground comes into view. Review the reveal before continuing your movement.");
-        if(rock&&next.movement.remaining===0&&T.unsafe(next,hero))trapped(next,hero);
+        if(rock&&!next.pending&&next.movement.remaining===0&&T.unsafe(next,hero))trapped(next,hero);
         break;
       }
       case "OPEN_DOOR": {
-        const door=Q.doors.find(d=>d.id===command.id);
+        const door=HQ.dungeon.doors(next).find(d=>d.id===command.id);
         if(!door||!next.discoveredDoors.includes(door.id))return reject(state,"Select a discovered closed door.");
         if(next.openDoors.includes(door.id))return reject(state,"That door is already open.");
         if(!T.endpoints(door).includes(C.cell(hero)))return reject(state,"Move next to the door to open it.");
@@ -151,7 +158,7 @@
         if(!next.extraAttack)return reject(state,"There is no extra attack to finish.");
         next.extraAttack=false;log(next,hero.name+" finishes attacking.");break;
       case "CAST_SPELL": {
-        const card=HQ.spellData.byId[command.spellId],doorMode=card?.id==="genie"&&command.mode==="door",target=(doorMode?Q.doors:[...next.heroes,...next.monsters]).find(f=>f.id===command.targetId);
+        const card=HQ.spellData.byId[command.spellId],doorMode=card?.id==="genie"&&command.mode==="door",target=(doorMode?HQ.dungeon.doors(next):[...next.heroes,...next.monsters]).find(f=>f.id===command.targetId);
         if(!target)return reject(state,"Choose a spell target.");
         if(command.mode!==undefined&&!["attack","door"].includes(command.mode))return reject(state,"Choose a valid spell mode.");
         if(command.mode==="door"&&!doorMode)return reject(state,"Only Genie can open a door.");
@@ -177,8 +184,49 @@
         const item=HQ.inventory.give(owner,target,command.itemId);
         log(next,owner.name+" gives "+HQ.itemData.byId[item.kind].name+" to "+target.name+".");break;
       }
+      case "SEARCH_TRAPS":
+      case "SEARCH_SECRET_DOORS": {
+        const reason=HQ.dungeon.searchReason(next,hero);if(reason)return reject(state,reason);
+        const report=HQ.dungeon.search(next,hero,command.type==="SEARCH_TRAPS"?"traps":"doors");
+        next.lastReport=report;next.pending={type:"report",reportId:report.id};log(next,hero.name+": "+report.detail);break;
+      }
+      case "JUMP_TRAP":
+      case "DISARM_TRAP": {
+        const trap=HQ.dungeon.traps(next).find(trap=>trap.id===command.id);
+        if(command.type==="JUMP_TRAP") {
+          const over=command.over||(trap&&HQ.dungeon.cell(trap));
+          if(!HQ.dungeon.jumpLandings(next,hero,over).includes(command.to))return reject(state,"Choose a clear landing beside the square with at least two moves remaining.");
+          beginMove(next,hero,2);
+          const actual=HQ.dungeon.at(next,over),[x,row]=T.parse(over);
+          next.lastReport=HQ.dungeon.jump(next,hero,actual||{id:null,kind:"clear",x,row},command.to,die);
+          // A landing square may itself conceal a trap. Only resolve it after
+          // the jump reaches it, never during the preview/target picker.
+          const landing=HQ.dungeon.at(next,C.cell(hero));
+          if(landing&&next.lastReport.trapId!==landing.id&&next.lastReport.jumpTo===command.to){
+            const jumped=next.lastReport;next.lastReport=HQ.dungeon.spring(next,hero,landing,die,over);
+            next.lastReport.operation="jump";next.lastReport.jumpFrom=jumped.jumpFrom;next.lastReport.jumpTo=jumped.jumpTo;
+            next.lastReport.rolls.unshift(...jumped.rolls);
+          }
+        } else {
+          const reason=HQ.dungeon.disarmReason(next,hero,trap);if(reason)return reject(state,reason);
+          if(trap.kind!=="furniture")beginMove(next,hero,1);
+          next.lastReport=HQ.dungeon.disarm(next,hero,trap,die);
+        }
+        next.pending={type:"report",reportId:next.lastReport.id};log(next,hero.name+": "+next.lastReport.detail);
+        if(!HQ.inventory.recoveryHero(next))finishQuest(next);discover(next);break;
+      }
+      case "ESCAPE_FALLING_BLOCK": {
+        if(!HQ.dungeon.mustEscape(next)||!HQ.dungeon.escapeCells(next,next.lastReport).includes(command.to))return reject(state,"Choose an empty square ahead or behind the falling blocks.");
+        motion={actorId:hero.id,from:C.cell(hero),path:[command.to]};[hero.x,hero.row]=T.parse(command.to);next.lastReport.escaped=true;next.lastReport.detail="Moved clear of the falling blocks. Turn ends.";discover(next);break;
+      }
       case "SEARCH_TREASURE": {
         const reason=HQ.treasure.reason(next,hero);if(reason)return reject(state,reason);
+        const furnitureTrap=HQ.dungeon.traps(next).find(trap=>trap.kind==="furniture"&&HQ.dungeon.record(next,trap.id).status!=="disarmed"&&HQ.dungeon.record(next,trap.id).status!=="sprung"&&HQ.dungeon.within(next,hero,HQ.dungeon.cell(trap)));
+        if(furnitureTrap) {
+          const report=HQ.dungeon.spring(next,hero,furnitureTrap,die,C.cell(hero));next.actionUsed=true;next.extraAttack=false;
+          next.lastReport=report;next.pending={type:"report",reportId:report.id};log(next,hero.name+": "+report.detail);
+          if(!HQ.inventory.recoveryHero(next))finishQuest(next);discover(next);break;
+        }
         const report=HQ.treasure.resolve(next,hero,randomInt);next.lastReport=report;next.pending={type:"report",reportId:report.id};
         log(next,hero.name+" searches for treasure: "+report.detail);
         if(!HQ.inventory.recoveryHero(next))finishQuest(next);discover(next);break;
@@ -216,11 +264,10 @@
             redDice,rollRole:"monster",rollDescription:"Any 6 breaks Sleep",awake,detail:awake?"Wakes and continues this turn.":"Remains asleep · turn missed."};
           next.lastReport=report;next.pending={type:"report",reportId:report.id};log(next,monster.name+": "+report.detail);break;
         }
-        const plan=HQ.zargon.choose(next,monster);motion={actorId:monster.id,from:C.cell(monster),path:[],visibility:[!next.settings.realisticLOS||sight(next).figures.includes(monster.id)]};
+        const plan=HQ.zargon.choose(next,monster);motion={actorId:monster.id,from:C.cell(monster),path:[]};
         for(const id of plan.path) {
           if(!T.connected(C.cell(monster),id,next)||T.furniture.has(id)||T.occupiedHero(next,id,null)||!next.discoveredCells.includes(id)||motion.path.length>=monster.movement)return reject(state,"The monster route is not legal.");
           [monster.x,monster.row]=T.parse(id);motion.path.push(id);
-          motion.visibility.push(!next.settings.realisticLOS||sight(next).figures.includes(monster.id));
         }
         const other=T.monsterAt(next,C.cell(monster),false,monster.id);
         if(other)return reject(state,"A monster cannot finish on another monster’s square.");
@@ -238,7 +285,12 @@
         const recovery=HQ.inventory.recoveryHero(next);
         if(recovery&&!command.acceptDefeat)return reject(state,"Choose a healing potion or let the hero fall.");
         if(recovery)log(next,recovery.name+" falls without drinking a healing potion.");
-        const report=next.lastReport;next.pending=null;
+        const report=next.lastReport;
+        if(HQ.dungeon.mustEscape(next)) {
+          if(HQ.dungeon.escapeCells(next,report).length)return reject(state,"Move clear of the falling blocks first.");
+          hero.body=0;hero.trapped=true;report.escaped=true;report.defeated=true;report.bodyAfter=0;report.damage=report.bodyBefore;report.detail="No escape from the falling blocks. Trapped forever.";
+        }
+        next.pending=null;
         if(report.type==="treasure"&&report.search.immediateAttack) {
           const monster=next.monsters.find(monster=>monster.id===report.search.wanderingId);
           if(monster&&C.adjacent(next,monster,hero)) {
@@ -246,7 +298,7 @@
           }
         }
         if(!HQ.quest.isEnded(next.phase)&&finishQuest(next))break;
-        if(next.phase==="hero-turn"&&(!C.inPlay(hero)||report.type==="treasure"&&report.endTurn))advanceTurn(next);
+        if(next.phase==="hero-turn"&&(!C.inPlay(hero)||["treasure","trap"].includes(report.type)&&report.endTurn))advanceTurn(next);
         else if(next.phase==="monster-turn"&&!next.monsterTurn.resumeId&&next.monsterTurn.index>=next.monsterTurn.queue.length)nextRound(next);
         break;
       }
@@ -254,7 +306,6 @@
         if(next.pending?.type!=="handoff"||next.phase!=="hero-turn")return reject(state,"There is no handoff waiting.");
         next.pending=null;log(next,hero.owner+" takes the "+hero.name+"’s turn.");break;
       }
-      case "SET_REALISTIC_LOS":next.settings.realisticLOS=Boolean(command.enabled);discover(next);break;
     }
     // A zero-health sandbox fixture is not a death. Mark only real accepted
     // living-to-dead transitions so decorative blood has an actual cause.
@@ -262,19 +313,21 @@
     return {ok:true,state:next,message:"",motion};
   }
   function project(state) {
-    const view=sight(state),known=new Set(state.discoveredEntities),seenFigures=new Set(view.figures),hero=active(state);
+    const view=sight(state),known=new Set(state.discoveredEntities),hero=active(state);
     const controllable=state.phase==="hero-turn"&&!state.pending&&C.inPlay(hero);
     const reachable=!controllable||state.movement.closed||state.extraAttack?new Map():T.routes(state,hero);
-    const doors=Q.doors.filter(d=>state.discoveredDoors.includes(d.id)).map(d=>({...d,open:state.openDoors.includes(d.id)}));
-    const monsters=state.monsters.filter(m=>C.alive(m)&&known.has(m.id)&&(!state.settings.realisticLOS||seenFigures.has(m.id))).map(m=>({...m,currentlyVisible:seenFigures.has(m.id)}));
+    const doors=HQ.dungeon.doors(state).filter(d=>state.discoveredDoors.includes(d.id)).map(d=>({...d,open:state.openDoors.includes(d.id)}));
+    const monsters=state.monsters.filter(m=>C.alive(m)&&known.has(m.id)).map(m=>({...m}));
     const spellTargets=controllable?[...state.heroes.filter(C.inPlay),...monsters,...doors].filter(target=>HQ.spells.book(hero).some(card=>!HQ.spells.reason(state,hero,card,target,card.id==="genie"&&doors.some(door=>door.id===target.id)?"door":"attack"))).map(target=>target.id):[];
     const focusFigure=state.phase==="monster-turn"||state.phase==="defeat"?monsters.find(m=>m.id===(state.lastReport?.attackerId))||hero:hero;
     const fallen=state.monsters.filter(figure=>figure.body===0&&figure.diedInPlay&&known.has(figure.id)&&state.discoveredCells.includes(C.cell(figure))).map(({id,x,row})=>({id,x,row}));
     return {heroes:state.heroes.filter(C.inPlay),activeHero:hero,focusFigure,phase:state.phase,visibleCells:view.cells,discoveredCells:state.discoveredCells,
-      doors,monsters,fallen,furniture:Q.furniture.filter(f=>known.has(f.id)),reachable:[...reachable.keys()],attackTargets:C.targets(state,hero),spellTargets,
+      doors,monsters,fallen,traps:HQ.dungeon.projection(state),blocked:[...Q.blocked,...HQ.dungeon.blocked(state)].filter(id=>state.discoveredCells.includes(id)),dungeonLayout:state.dungeon.layout,furniture:Q.furniture.filter(f=>known.has(f.id)),reachable:[...reachable.keys()],attackTargets:C.targets(state,hero),spellTargets,
       blindMovement:controllable&&!state.extraAttack&&state.movement.rolled&&!state.movement.closed&&state.movement.remaining>0&&T.magic(state,hero,"passThroughRock"),
       adjacentDoors:controllable&&!(T.magic(state,hero,"passThroughRock")&&T.unsafe(state,hero))?doors.filter(d=>!d.open&&T.endpoints(d).includes(C.cell(hero))):[],
       discoveredRooms:state.discoveredRooms.length,totalRooms:Q.rooms.length};
   }
-  HQ.exploration=Object.freeze({createSession,applyCommand,project,active,heroNames,monsterNames});
+  // Practice fixtures can refresh discoveries without inventing a game command.
+  function refreshDiscoveries(state){const next=JSON.parse(JSON.stringify(state));discover(next);return next;}
+  HQ.exploration=Object.freeze({createSession,applyCommand,project,refreshDiscoveries,active,heroNames,monsterNames});
 })();

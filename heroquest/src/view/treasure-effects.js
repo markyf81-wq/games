@@ -1,10 +1,10 @@
 (function () {
   "use strict";
   const HQ=window.HeroQuest,T=window.HQThree,Topo=HQ.topology;
-  // Cached scenery only: the saved Treasure report already owns the damage.
+  // Cached scenery only: saved Treasure/trap reports already own the damage.
   HQ.createTreasureEffects=function({scene,entities,terrain,ring,reducedMotion,contextReady,requestRender,invalidateShadows}) {
-    const root=new T.Group();root.name="Treasure hazards";root.visible=false;scene.add(root);
-    const arrow=new T.Group(),pit=new T.Group();root.add(arrow,pit);
+    const root=new T.Group();root.name="Treasure and trap hazards";root.visible=false;scene.add(root);
+    const arrow=new T.Group(),pit=new T.Group(),spear=new T.Group();root.add(arrow,pit,spear);
     const wood=new T.MeshStandardMaterial({color:0x795034,roughness:.85});
     const iron=new T.MeshStandardMaterial({color:0x9ca3a2,roughness:.42,metalness:.65});
     const feather=new T.MeshStandardMaterial({color:0xae5945,roughness:.9,side:T.DoubleSide});
@@ -12,6 +12,13 @@
     const tip=new T.Mesh(new T.ConeGeometry(.047,.14,4),iron);tip.rotation.x=Math.PI/2;tip.position.z=.09;arrow.add(tip);
     const finGeometry=new T.BufferGeometry();finGeometry.setAttribute("position",new T.Float32BufferAttribute([0,0,-.44,.07,0,-.46,0,0,-.28],3));finGeometry.computeVertexNormals();
     for(let i=0;i<3;i++){const fin=new T.Mesh(finGeometry,feather);fin.rotation.z=i*Math.PI*2/3;arrow.add(fin);}
+
+    const spearPlane=new T.Plane(new T.Vector3(0,1,0),-.15),spearWood=wood.clone(),spearIron=iron.clone();
+    for(const material of [spearWood,spearIron]){material.clippingPlanes=[spearPlane];material.clipShadows=true;}
+    const spearShaft=new T.Mesh(new T.CylinderGeometry(.019,.024,.76,8),spearWood);spearShaft.position.y=.38;spear.add(spearShaft);
+    const spearHead=new T.Mesh(new T.OctahedronGeometry(.075,0),spearIron);spearHead.scale.set(1,2.4,.35);spearHead.position.y=.88;spear.add(spearHead);
+    const spearCollar=new T.Mesh(new T.CylinderGeometry(.035,.035,.08,8),spearIron);spearCollar.position.y=.72;spear.add(spearCollar);
+    spear.traverse(mesh=>{if(mesh.isMesh){mesh.castShadow=true;mesh.receiveShadow=true;}});
 
     const black=new T.MeshBasicMaterial({color:0x080a09});
     const stone=new T.MeshStandardMaterial({color:0x756e5b,roughness:1});
@@ -34,7 +41,8 @@
       if(ended.kind==="hazard-pit") {
         ended.model.position.copy(ended.origin);ended.model.rotation.copy(ended.rotation);ring.visible=ended.ringVisible;terrain.setHole(null);invalidateShadows();
       }
-      root.visible=false;arrow.visible=false;pit.visible=false;
+      root.visible=false;arrow.visible=false;pit.visible=false;spear.visible=false;
+      if(ended.kind==="trap-spear")invalidateShadows();
       Promise.resolve(ended.impact).catch(()=>{}).then(ended.resolve);requestRender();
     }
     function impact(e) {
@@ -54,7 +62,7 @@
       return new Promise(resolve=>{
         effect={kind,model,origin,rotation,cell,onImpact,resolve,duration,started:null,hit:false,impact:null,hole:false,ringVisible:ring.visible,
           backward:new T.Vector3(-Math.sin(rotation.y),0,-Math.cos(rotation.y)),maskOnly:Topo.stairs.has(cell),timer:setTimeout(finish,duration+700)};
-        root.visible=true;arrow.visible=kind==="hazard-arrow";pit.visible=kind==="hazard-pit";
+        root.visible=true;arrow.visible=kind==="hazard-arrow";pit.visible=kind==="hazard-pit";spear.visible=false;
         if(arrow.visible) {
           const bounds=new T.Box3().setFromObject(model),height=T.MathUtils.clamp((bounds.max.y-origin.y)*.5,.5,1.05);
           effect.to=origin.clone().add(new T.Vector3(0,height,0));
@@ -70,12 +78,29 @@
         update(performance.now());requestRender();
       });
     }
+    function playTrap(report,onImpact){
+      finish();
+      const entry=entities.get(report.defenderId),sprung=report.trapKind==="spear"&&report.rolls.some(group=>group.label==="Spear trap");
+      if(!sprung||!entry?.model.visible||!available()||reducedMotion.matches)return Promise.resolve().then(()=>onImpact({recoil:true}));
+      const origin=entry.model.position,heading=entry.model.rotation.y,duration=1100;
+      return new Promise(resolve=>{
+        effect={kind:"trap-spear",model:entry.model,onImpact,resolve,duration,started:null,hit:false,impact:null,floorY:origin.y,timer:setTimeout(finish,duration+700)};
+        spearPlane.constant=-origin.y;
+        spear.position.set(origin.x+Math.sin(heading)*.24,origin.y-1.06,origin.z+Math.cos(heading)*.24);
+        root.visible=true;spear.visible=true;arrow.visible=pit.visible=false;
+        update(performance.now());requestRender();
+      });
+    }
     function update(time) {
       if(!effect)return;if(!available()){finish();return;}
       const e=effect;if(e.started===null)e.started=time;
       const ms=time-e.started;if(ms>=e.duration){finish();return;}
       if(!e.model.visible){finish();return;}
-      if(e.kind==="hazard-arrow") {
+      if(e.kind==="trap-spear"){
+        const thrust=smooth(ms/220)*(1-smooth((ms-500)/400));
+        spear.position.y=e.floorY-1.06+thrust*1.06;invalidateShadows();
+        if(ms>=180)impact(e);
+      } else if(e.kind==="hazard-arrow") {
         // Constant-speed flight: the arrowhead reaches the chest at 450ms.
         arrow.position.lerpVectors(e.from,e.to,Math.min(1,ms/450));
         if(ms>=450){arrow.visible=false;impact(e);}
@@ -94,6 +119,6 @@
         if(ms>=350)impact(e);
       }
     }
-    return Object.freeze({play,update,finish,get active(){return Boolean(effect);}});
+    return Object.freeze({play,playTrap,update,finish,get active(){return Boolean(effect);}});
   };
 })();

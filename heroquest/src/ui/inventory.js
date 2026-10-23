@@ -26,7 +26,7 @@
       give.setAttribute("aria-label",giveReason?"Give potion · "+giveReason:"Give "+definition.name+" to another hero");
       const attack=hero&&HQ.combatData.weapons[hero.weapon].attack;
       $("inventory-item-status").textContent=definition?.category==="equipment"
-        ?"Equipped · "+attack+" attack "+(attack===1?"die":"dice"):reason||definition?.summary||"";
+        ?definition.id==="tool-kit"?definition.summary:"Equipped · "+attack+" attack "+(attack===1?"die":"dice"):reason||definition?.summary||"";
     }
     function choose(kind) {
       chosen=kind;

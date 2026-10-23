@@ -8,7 +8,7 @@
     const material=HQ.floorMaterial(texture),colours=[];
     for(let i=0;i<tile.attributes.normal.count;i++){const shade=tile.attributes.normal.getY(i)>.5?1:.3;colours.push(shade,shade,shade);}
     tile.setAttribute("color",new T.Float32BufferAttribute(colours,3));tile.clearGroups();
-    const regions=new Map(),dummy=new T.Object3D(),floors=[],slots=new Map();let known=new Set(),hole=null;
+    const regions=new Map(),dummy=new T.Object3D(),floors=[],slots=new Map();let known=new Set(),hole=null,permanentHoles=new Set();
     for(const id of HQ.trial.floor){const region=Topo.regions.get(id);if(!regions.has(region))regions.set(region,[]);regions.get(region).push(id);}
     for(const cells of regions.values()) {
       const geometry=tile.clone();geometry.setAttribute("floorUvOffset",new T.InstancedBufferAttribute(new Float32Array(cells.flatMap(id=>{const [x,row]=Topo.parse(id);return [x,18-row];})),2));
@@ -24,7 +24,7 @@
     function reveal(cells) {
       const key=cells.join("|");if(key===discoveryKey)return false;discoveryKey=key;
       known=new Set(cells);
-      for(const mesh of floors){mesh.userData.cells.forEach((id,i)=>{dummy.position.copy(world(id));dummy.scale.setScalar(known.has(id)&&id!==hole?1:0);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);});mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();}
+      for(const mesh of floors){mesh.userData.cells.forEach((id,i)=>{dummy.position.copy(world(id));dummy.scale.setScalar(known.has(id)&&id!==hole&&!permanentHoles.has(id)?1:0);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);});mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();}
       const positions=[],edges=new Set();
       for(const id of known) {
         const [x,row]=Topo.parse(id),left=x-13,top=row-9.5;
@@ -45,13 +45,17 @@
       const previous=hole;hole=id;
       for(const key of [previous,hole]) {
         const slot=slots.get(key);if(!slot)continue;
-        dummy.position.copy(world(key));dummy.scale.setScalar(known.has(key)&&key!==hole?1:0);dummy.updateMatrix();
+        dummy.position.copy(world(key));dummy.scale.setScalar(known.has(key)&&key!==hole&&!permanentHoles.has(key)?1:0);dummy.updateMatrix();
         slot.mesh.setMatrixAt(slot.index,dummy.matrix);slot.mesh.instanceMatrix.needsUpdate=true;
         // Include a restored instance even if discovery was rebuilt mid-effect.
         slot.mesh.boundingSphere=null;
       }
       renderer.shadowMap.needsUpdate=true;
     }
-    return Object.freeze({floors,reveal,setHole,setGrid(enabled){grid.visible=enabled;}});
+    function setPermanentHoles(cells){
+      const next=new Set(cells);if(next.size===permanentHoles.size&&[...next].every(id=>permanentHoles.has(id)))return;
+      permanentHoles=next;discoveryKey=null;
+    }
+    return Object.freeze({floors,reveal,setHole,setPermanentHoles,setGrid(enabled){grid.visible=enabled;}});
   };
 })();

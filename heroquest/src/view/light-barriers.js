@@ -15,13 +15,14 @@
     let layout=null;
     const index=(x,y)=>y*columns+x,inside=(x,y)=>x>=0&&x<columns&&y>=0&&y<rows;
     function setProjection(projection) {
-      const key=projection.discoveredCells.join('|')+';'+projection.doors.map(d=>d.id+':'+d.open).join('|');
+      const blocked=new Set(projection.blocked||HQ.trial.blocked);
+      const key=[...blocked].join("|")+";"+projection.discoveredCells.join('|')+';'+projection.doors.map(d=>d.id+':'+d.open).join('|');
       if(key===layout)return;layout=key;known.clear();projection.discoveredCells.forEach(id=>known.add(id));edges.fill(15);keys.fill(null);
       const doors=new Map(projection.doors.map(door=>[Topo.edgeKey(...Topo.endpoints(door)),door]));
       for(const id of known){const [x,y]=Topo.parse(id);let bits=0;
         for(const [dx,dy,bit] of [[0,-1,1],[1,0,2],[0,1,4],[-1,0,8]]){
           const other=Topo.key(x+dx,y+dy),door=doors.get(Topo.edgeKey(id,other));
-          if(!known.has(other)||Topo.blocked.has(id)||Topo.blocked.has(other)||(door?!door.open:Topo.regions.get(id)!==Topo.regions.get(other)))bits|=bit;
+          if(!known.has(other)||blocked.has(id)||blocked.has(other)||(door?!door.open:Topo.regions.get(id)!==Topo.regions.get(other)))bits|=bit;
         }edges[index(x,y)]=bits;
       }
     }

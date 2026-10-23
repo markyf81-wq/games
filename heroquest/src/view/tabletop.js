@@ -39,7 +39,7 @@
     const facings=new Map();let spellFocus=null,cinematicCameraEnabled=true,attackShots=0;
     const torchLighting=HQ.createTorchLighting();let torchTimer=0,ambientLightLevel=26;
     scene.add(torchLighting.root);
-    const wallLayer=HQ.createDungeonWalls();
+    const wallLayer=HQ.createDungeonWalls(),dungeonFeatures=HQ.createDungeonFeatures();
     const lightBarriers=HQ.createLightBarriers();
     const bloodPools=HQ.createBloodPools(scene);
     const ambient=new T.HemisphereLight(0xe9edda,0x3f4a38,1.35);scene.add(ambient);
@@ -116,8 +116,8 @@
     function resize(){renderer.setSize(host.clientWidth,host.clientHeight,false);requestRender();}
     function world(id,y=.075){const [x,row]=Topo.parse(id);return new T.Vector3(x+.5-13,y,row+.5-9.5);}
     const refKey=ref=>ref?ref.type+":"+ref.id:"";
-    const selectable=entry=>Boolean(entry&&entry.type!=="wall"&&entry.type!=="blocked"&&entry.model.visible);
-    function known(ref){return ref&&(ref.type==="cell"?knownCells.has(ref.id)||current?.blindMovement&&Topo.floor.has(ref.id):selectable(entities.get(ref.id)));}
+    const selectable=entry=>Boolean(entry&&entry.type!=="wall"&&entry.type!=="blocked"&&!(entry.type==="door"&&entry.item.secret&&entry.item.open)&&entry.model.visible);
+    function known(ref){return ref&&(ref.type==="cell"?knownCells.has(ref.id)||(current?.blindMovement||boardChoices?.has(refKey(ref)))&&Topo.floor.has(ref.id):selectable(entities.get(ref.id)));}
     function inReach(ref){
       const reachable=reachableCells;
       if(ref.type==="cell")return reachable.has(ref.id);
@@ -129,7 +129,7 @@
       if(item.kind==="stairs"&&Topo.stairs.has(Topo.key(current.activeHero.x,current.activeHero.row)))return false;
       // Movement reach for a model means reaching its square or a free square
       // beside its footprint, through an open edge. Camera actions do not count.
-      return Topo.approachCells(item,entry.type,{openDoors:current.doors.filter(d=>d.open).map(d=>d.id)}).some(id=>reachable.has(id));
+      return Topo.approachCells(item,entry.type,{dungeon:{layout:current.dungeonLayout||"trial",traps:Object.fromEntries((current.traps||[]).map(trap=>[trap.id,trap]))},openDoors:current.doors.filter(d=>d.open).map(d=>d.id)}).some(id=>reachable.has(id));
     }
     function refreshGlow(){
       const targets=[];
@@ -139,7 +139,9 @@
       glow.setTargets(targets);requestRender();
     }
     function setBoardChoices(refs) {
-      boardChoices=refs?new Map(refs.filter(known).map(ref=>[refKey(ref),ref])):null;
+      // Callers supply legal choices. A falling-block escape can lead onto
+      // unrevealed floor; permit that square without revealing its contents.
+      boardChoices=refs?new Map(refs.filter(ref=>ref.type==="cell"?Topo.floor.has(ref.id):known(ref)).map(ref=>[refKey(ref),ref])):null;
       selected=null;hovered=null;keyboardPiece=refs?.find(ref=>ref.type==="piece"&&known(ref))||null;
       keyboardCell=refs?.find(ref=>ref.type==="cell"&&known(ref))?.id||null;
       setRoutePreview(null);refreshGlow();
@@ -153,7 +155,7 @@
     }
     function setSelection(ref){setRoutePreview(null);if(!ref)hovered=null;selected=known(ref)?ref:null;if(selected){keyboardPiece=selected.type==="piece"?selected:null;if(selected.type==="cell")keyboardCell=selected.id;}refreshGlow();return selected?anchor(selected):null;}
     function setInteractive(enabled){interactive=enabled;if(!enabled){selected=null;hovered=null;setRoutePreview(null);}refreshGlow();}
-    function heroPosition(id){return world(id,.15+(Topo.stairs.has(id)?.05:0));}
+    function heroPosition(id){return world(id,.15+(Topo.stairs.has(id)?.05:0)-(current?.traps?.some(trap=>trap.kind==="pit"&&trap.status==="sprung"&&trap.cell===id)?.25:0));}
     function sourceReflections(materials) {
       if(!environment)environment=HQ.modelSurfaces.createEnvironment(renderer);
       HQ.modelSurfaces.applyReflections(materials,environment,torchLighting.enabled?ambientLightLevel*.08/26:.75);
@@ -163,7 +165,8 @@
       if(type==="wall")model=wallLayer.make(item);
       else if(type==="blocked")model=wallLayer.makeBlocked(item);
       else if(type==="torch")model=torchLighting.make(item);
-      else if(type==="door")model=M.make(item.open?"open-door":"door");
+      else if(type==="door")model=item.secret?wallLayer.makeSecret(item):M.make(item.open?"open-door":"door");
+      else if(type==="trap")model=dungeonFeatures.make(item);
       else if(item.kind==="stairs")model=M.makeProp(item.kind);
       else {
         const sideways=Math.abs(Math.sin(item.rotation||0))>.5;
@@ -183,18 +186,22 @@
       renderer.shadowMap.needsUpdate=true;
       hovered=null;
       current=projection;currentDefeated=defeatedFigure;currentCutawayHero=cutawayHero;const discovered=knownCells=new Set(projection.discoveredCells);reachableCells=new Set(projection.reachable);
+      terrain.setPermanentHoles((projection.traps||[]).filter(trap=>trap.kind==="pit"&&trap.status==="sprung").map(trap=>trap.cell));
       terrain.reveal(projection.discoveredCells);terrain.setGrid(gridEnabled);
-      const wanted=new Set(),items=[...projection.heroes.map(i=>[i,"hero"]),...projection.monsters.map(i=>[i,"monster"]),...projection.furniture.map(i=>[i,"furniture"]),...projection.doors.map(i=>[i,"door"]),...torchLighting.itemsFor(projection).map(i=>[i,"torch"]),...wallLayer.itemsFor(projection,cutawayHero).map(i=>[i,"wall"]),...Q.blocked.filter(id=>discovered.has(id)).map(id=>{const [x,row]=Topo.parse(id);return [{id:"blocked-"+id,x,row,kind:"blocked"},"blocked"];})];
+      const wanted=new Set(),items=[...projection.heroes.map(i=>[i,"hero"]),...projection.monsters.map(i=>[i,"monster"]),...projection.furniture.map(i=>[i,"furniture"]),...projection.doors.map(i=>[i,"door"]),...torchLighting.itemsFor(projection).map(i=>[i,"torch"]),...wallLayer.itemsFor(projection,cutawayHero).map(i=>[i,"wall"]),...(projection.blocked||Q.blocked).filter(id=>discovered.has(id)).map(id=>{const [x,row]=Topo.parse(id);return [{id:"blocked-"+id,x,row,kind:"blocked",trapId:projection.traps?.find(trap=>trap.kind==="falling-block"&&trap.status==="sprung"&&trap.cell===id)?.id},"blocked"];})];
+      for(const trap of projection.traps||[])if(trap.kind!=="furniture"&&trap.kind!=="falling-block"||trap.kind==="falling-block"&&trap.status!=="sprung")items.push([trap,"trap"]);
       // Keep only the current report's defeated combatant visible until the
       // player acknowledges its outcome. It remains absent from all rule queries.
       if(defeatedFigure&&!items.some(([item])=>item.id===defeatedFigure.id))items.push([defeatedFigure,HQ.heroes.some(h=>h.id===defeatedFigure.id)?"hero":"monster"]);
       for(const [item,type] of items) {
         wanted.add(item.id);let entry=entities.get(item.id);
-        const variant=type==="door"?String(item.open):item.kind;
+        const variant=type==="door"?item.secret?"secret":String(item.open):type==="trap"?item.kind+":"+item.status:type==="blocked"?item.kind+":"+(item.trapId||""):item.kind;
         if(!entry||entry.variant!==variant){if(entry)scene.remove(entry.model);entry={model:makeEntity(item,type),variant,type,item};entities.set(item.id,entry);}
-        entry.item=item;entry.model.visible=true;position(entry.model,item,type);
+        entry.item=item;entry.model.visible=true;if(type==="door"&&item.secret){wallLayer.makeSecret(item);}position(entry.model,item,type);
+        if(type==="hero"||type==="monster")entry.model.position.y=heroPosition(Topo.key(item.x,item.row)).y;
       }
-      for(const [id,entry] of entities)if(!wanted.has(id))entry.model.visible=false;
+      for(const [id,entry] of entities)if(!wanted.has(id)){entry.model.visible=false;if(entry.model.userData.panel)entry.model.userData.panel.visible=false;}
+      dungeonFeatures.syncFurnitureWarnings(projection.traps,entities);
       statusEffects.sync(projection);
       bloodPools.sync(projection.fallen||[],defeatedFigure?.id);
       lightBarriers.setProjection(projection);lightBarriers.bind(scene);
@@ -219,10 +226,10 @@
       for(const hit of hits){if(!hit.object.visible)continue;let object=hit.object;while(object&&!object.userData.entityId)object=object.parent;if(!object)continue;const entry=entities.get(object.userData.entityId);
         if(entry.item.kind==="stairs"&&!boardChoices){const id=Topo.key(Math.floor(hit.point.x+13),Math.floor(hit.point.z+9.5));if(Topo.stairs.has(id))return {type:"cell",id};}
         return {type:"piece",id:entry.item.id};}
-      const tiles=raycaster.intersectObjects(terrain.floors,false);for(const hit of tiles){const id=hit.object.userData.cells[hit.instanceId];if(knownCells.has(id)&&choiceAllowed({type:"cell",id}))return {type:"cell",id};}
-      if(current.blindMovement&&!boardChoices) {
+      const tiles=raycaster.intersectObjects(terrain.floors,false);for(const hit of tiles){const id=hit.object.userData.cells[hit.instanceId];if(known({type:"cell",id})&&choiceAllowed({type:"cell",id}))return {type:"cell",id};}
+      if(current.blindMovement&&!boardChoices||boardChoices) {
         const point=raycaster.ray.intersectPlane(new T.Plane(new T.Vector3(0,1,0),-.15),new T.Vector3());
-        if(point){const id=Topo.key(Math.floor(point.x+13),Math.floor(point.z+9.5));if(Topo.floor.has(id))return {type:"cell",id};}
+        if(point){const id=Topo.key(Math.floor(point.x+13),Math.floor(point.z+9.5));if(current.blindMovement&&!boardChoices&&Topo.floor.has(id)||boardChoices&&known({type:"cell",id})&&choiceAllowed({type:"cell",id}))return {type:"cell",id};}
       }
       return null;
     }
@@ -239,7 +246,7 @@
       if(combatCamera.active)return;
       if(e.key==="Escape"){if(boardChoices){e.preventDefault();e.stopPropagation();}setSelection(null);onDismiss();return;}
       if(interactive&&["[","]"].includes(e.key)){
-        e.preventDefault();const pieces=pickable.map(([id])=>({type:"piece",id})).filter(choiceAllowed);
+        e.preventDefault();const pieces=boardChoices?[...boardChoices.values()]:pickable.map(([id])=>({type:"piece",id})).filter(choiceAllowed);
         if(pieces.length){const index=pieces.findIndex(ref=>ref.id===keyboardPiece?.id),next=index<0?(e.key==="]"?0:pieces.length-1):(index+(e.key==="]"?1:-1)+pieces.length)%pieces.length;keyboardPiece=pieces[next];setHover(keyboardPiece);}return;
       }
       if(interactive&&(e.key==="Enter"||e.shiftKey&&e.key.startsWith("Arrow"))){
@@ -266,10 +273,10 @@
     setTorchLighting(true);
     setCinematicCameraEnabled(true);
     new ResizeObserver(resize).observe(host);loading.hidden=true;resize();
-    return Object.freeze({setProjection,async animateMovement(movement,{holdView=false}={}){
+    return Object.freeze({get interactive(){return interactive;},setProjection,async animateMovement(movement,{holdView=false}={}){
         const entry=entities.get(movement.actorId);
         if(!entry?.model.visible){if(combatCamera.active)await combatCamera.leave();return motion.animateMovement(movement);}
-        const cinematic=cinematicCameraEnabled&&(!movement.visibility||movement.visibility.every(Boolean));
+        const cinematic=cinematicCameraEnabled;
         if(!cinematic&&combatCamera.active)await combatCamera.leave();
         follow=true;target.copy(world(movement.from,.4));if(!combatCamera.active)await cameraMotion.arrive();
         if(cinematic&&movement.path.length){
@@ -308,6 +315,10 @@
         } finally {spellFocus=null;requestRender();}
       },
       animateHit:combatImpact.play,animateHealthChanges:combatImpact.playChanges,
+      animateTrapHazard(report){
+        const changes=report.damage?[{id:report.defenderId,delta:-report.damage}]:[];
+        return treasureEffects.playTrap(report,options=>combatImpact.playChanges(changes,report,options));
+      },
       async animateTreasureHazard(report,changes){
         const entry=entities.get(report.defenderId);
         if(entry?.model.visible){

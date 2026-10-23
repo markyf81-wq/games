@@ -288,6 +288,11 @@
 .active-figure .active-name{margin-bottom:0;font-size:21px;overflow-wrap:anywhere}
 .active-figure .active-owner{overflow-wrap:anywhere}
 .active-figure .miniature-portrait{width:50px;height:56px}
+.active-portrait-button{flex:0 0 auto;display:inline-flex;padding:0;border:0;border-radius:8px;background:transparent;cursor:pointer}
+.active-portrait-button[hidden]{display:none}
+.active-portrait-button:focus-visible{outline:2px solid var(--hq-gold);outline-offset:3px}
+.active-portrait-button:hover:not(:disabled) .miniature-portrait{border-color:var(--hq-gold)}
+.active-portrait-button:disabled{cursor:default}
 .party-button{gap:8px}
 .party-button .miniature-portrait{width:38px;height:44px;border-radius:5px}
 .party-button .turn-number{min-width:10px;font-size:12px}
@@ -448,6 +453,7 @@
 .action-feedback .miniature-reference small{display:none}
 .feedback-result{display:block;font:17px/1.45 Georgia,serif;max-width:430px;margin-bottom:8px}
 .action-feedback p{font-size:11px;margin:6px 0 0}
+.action-feedback #escape-blocks{pointer-events:auto;min-height:38px;margin-top:12px;padding:8px 14px;font-size:13px}
 .zargon-dialog{width:min(380px,calc(100% - 32px));text-align:center}
 .zargon-portrait{display:block;width:min(240px,100%);height:auto;max-height:35svh;object-fit:contain;margin:20px auto 0;border-radius:6px}
 .zargon-dialog .dialog-actions{justify-content:center}
@@ -471,3 +477,7 @@
 
 .recovery-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;pointer-events:auto;margin-top:12px}
 .recovery-actions .hq-button{min-height:38px;padding:8px 12px;font-size:12px}
+
+.search-dialog{width:min(440px,calc(100% - 32px))}
+.search-options{display:grid;gap:16px;margin-top:20px}
+.search-options .hq-button{font-size:13px;min-height:44px}

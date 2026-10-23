@@ -4,21 +4,21 @@
   const alive=figure=>figure.body>0;
   const inPlay=figure=>alive(figure)&&!figure.exit;
   const cell=figure=>T.key(figure.x,figure.row);
-  const attack=figure=>figure.attack+(figure.effects?.courage?2:0)+(figure.effects?.strengthPotion?2:0);
-  const defence=figure=>figure.effects?.sleep?0:figure.defend+(figure.effects?.rockSkin?1:0)+(figure.effects?.defensePotion?2:0);
+  const attack=(figure,state)=>Math.max(1,figure.attack+(figure.effects?.courage?2:0)+(figure.effects?.strengthPotion?2:0)-(state&&HQ.dungeon.inPit(state,figure)?1:0));
+  const defence=(figure,state)=>figure.effects?.sleep?0:Math.max(1,figure.defend+(figure.effects?.rockSkin?1:0)+(figure.effects?.defensePotion?2:0)-(state&&HQ.dungeon.inPit(state,figure)?1:0));
   function adjacent(state,attacker,defender){return inPlay(attacker)&&inPlay(defender)&&T.spaceCells(cell(attacker)).some(a=>T.spaceCells(cell(defender)).some(b=>T.connected(a,b,state)));}
   function targets(state,hero) {
     if(state.phase!=="hero-turn"||state.pending||state.actionUsed&&!state.extraAttack||!inPlay(hero)||T.magic(state,hero,"passThroughRock")&&T.unsafe(state,hero))return [];
     return state.monsters.filter(m=>state.discoveredEntities.includes(m.id)&&adjacent(state,hero,m));
   }
-  function resolve(state,attacker,defender,attackerSide,rollDie,{attackDice:count=attack(attacker),consumeCourage=true}={}) {
+  function resolve(state,attacker,defender,attackerSide,rollDie,{attackDice:count=attack(attacker,state),consumeCourage=true}={}) {
     const faces=HQ.combatData.faces;
     const attackDice=Array.from({length:count},()=>faces[rollDie(state)-1]);
     if(consumeCourage&&attacker.effects?.courage)attacker.effects.courage=false;
     if(consumeCourage&&attacker.effects?.strengthPotion)attacker.effects.strengthPotion=false;
     const skulls=attackDice.filter(face=>face==="skull").length,shield=attackerSide==="hero"?"black-shield":"white-shield";
     // Defence is rolled only when the attack has at least one skull.
-    const defendDice=skulls?Array.from({length:defence(defender)},()=>faces[rollDie(state)-1]):[];
+    const defendDice=skulls?Array.from({length:defence(defender,state)},()=>faces[rollDie(state)-1]):[];
     if(skulls&&defender.effects?.defensePotion)defender.effects.defensePotion=false;
     const shields=defendDice.filter(face=>face===shield).length,damage=Math.max(0,skulls-shields),before=defender.body;
     defender.body=Math.max(0,before-damage);

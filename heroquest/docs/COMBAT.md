@@ -83,7 +83,7 @@ POV defaults to over-the-shoulder framing: 1000ms approach/120ms hold and 900ms
 return. Movement/doors/spells and most attacks retain the miniature. One attack
 in four uses a 1400ms/350ms eye view, selected by a cosmetic counter, not RNG.
 Linked actions share one shot; visible CPU units transition between actors and
-return at phase end. Hidden movement never creates a cinematic shot. Existing
+return at phase end. Only revealed monsters activate; their movement remains visible. Existing
 wall modes/cutaway apply throughout the lens blend. Camera snapshots always
 represent ordinary board goals. Reduced motion/interruptions settle the shot.
 

@@ -4,7 +4,7 @@
   const active=new URLSearchParams(window.location.search).get("sandbox")==="1";
   const freshMove=()=>({dice:[],remaining:0,rolled:false,started:false,closed:false,veilOfMist:false,passThroughRock:false});
   function freeCells(state,except=null) {
-    return HQ.trial.floor.filter(id=>!T.blocked.has(id)&&!T.furniture.has(id)&&!T.monsterAt(state,id,false,except)&&(!T.occupiedHero(state,id,except)||T.stairs.has(id)));
+    return HQ.trial.floor.filter(id=>!T.blockedAt(state,id)&&!T.furniture.has(id)&&!T.monsterAt(state,id,false,except)&&(!T.occupiedHero(state,id,except)||T.stairs.has(id)));
   }
   function nearest(state,figure) {
     const from=C.cell(E.active(state)),[x,row]=T.parse(from);
@@ -42,9 +42,22 @@
       const initial=E.createSession({heroIds:HQ.heroes.map(hero=>hero.id)},state.rng);
       state.discoveredCells=initial.discoveredCells;state.discoveredRooms=initial.discoveredRooms;state.discoveredDoors=initial.discoveredDoors;state.discoveredEntities=initial.discoveredEntities;
       // Recompute public discoveries for the actual practice positions only.
-      const discovered=E.applyCommand(state,{type:"SET_REALISTIC_LOS",enabled:false});if(discovered.ok)Object.assign(state,discovered.state);
+      Object.assign(state,E.refreshDiscoveries(state));
     }
     state.log.push({id:state.nextEventId++,text:card.name+" practice · Cast normally from the spellbook."});return state;
+  }
+  function dungeonScenario(kind,heroId) {
+    const state=create();state.dungeon=HQ.dungeon.fresh("practice");turn(state,heroId);
+    for(const monster of state.monsters){monster.body=0;monster.diedInPlay=false;}state.monsterMemory={};
+    for(const trap of HQ.dungeon.traps(state))if(trap.kind!==kind)state.dungeon.traps[trap.id].status="disarmed";
+    const hero=E.active(state),positions={pit:[3,17],spear:[1,17],"falling-block":[0,17],furniture:[16,16],"secret-door":[4,14]};
+    [hero.x,hero.row]=positions[kind];hero.body=hero.maxBody;
+    if(hero.id!=="dwarf")hero.inventory.items.push({id:"practice-tool-kit-"+hero.id,kind:"tool-kit"});
+    state.movement={...freshMove(),rolled:true,dice:[6,6],remaining:12};
+    if(kind==="secret-door") {
+      state.discoveredCells=[];state.discoveredRooms=[HQ.trial.startingRoom];state.discoveredDoors=[];state.discoveredEntities=[];
+    }
+    return E.refreshDiscoveries(state);
   }
   function attach({getState,replace,choose,onCpu}) {
     const dialog=document.createElement("dialog");dialog.id="sandbox-dialog";dialog.className="hq-dialog sandbox-dialog";
@@ -66,6 +79,12 @@
     button("Prepare selected spell",()=>{
       const prepared=spellScenario(spell.value);hero.value=E.active(prepared).id;enemy.value="orc";group.value="Earth";replace(prepared);HQ.dialogs.show(dialog.id);
       note.textContent=HQ.spellData.byId[spell.value].name+" ready · Heroes are wounded, spells restored, and an Orc is nearby. Return to play and cast normally.";
+    });
+    const dungeon=select("Exploration practice",[["pit","Pit trap"],["spear","Spear trap"],["falling-block","Falling blocks"],["furniture","Trapped chest"],["secret-door","Secret stone door"]]);
+    button("Prepare exploration scenario",()=>{
+      const prepared=dungeonScenario(dungeon.value,hero.value);replace(prepared);HQ.dialogs.show(dialog.id);
+      note.textContent=dungeon.value==="secret-door"?"Search for secret doors, then open the discovered stone panel beside your hero. The area beyond is unrevealed.":
+        "Search for traps first, or step onto the hidden trap. Jump after finding it, or reset this hero’s turn to try disarming. Non-Dwarf heroes carry a practice tool kit. Twelve moves are ready.";
     });
     button("Reset turn / switch hero",()=>apply(s=>turn(s,hero.value)));
     button("Give 12 movement",()=>apply(s=>{turn(s,hero.value);s.movement={...freshMove(),rolled:true,dice:[6,6],remaining:12};}));

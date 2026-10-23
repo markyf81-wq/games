@@ -19,11 +19,16 @@ loader, runtime fetch or new dependency is required. Keep file:// compatibility.
 session/app.js applies and saves a command before any presentation. It then awaits
 movement/camera/spell/removal promises and renders recorded dice or outcomes.
 Interrupted presentation cannot reroll, recast or advance a turn twice. Current
-state schema is 7; content ID and save keys remain unchanged. SAVES.md records
+state schema is 8; content ID and save keys remain unchanged. SAVES.md records
 search/potion state and earlier migrations. Sandbox fixtures remain in their separate save slot.
 
 ## Reusable components
 
+- data/dungeon.js, rules/dungeon.js: original trap/search/jump/disarm rules,
+  stable layout records and pure pending falling-block escape choices.
+- ui/search.js: native sidebar Search modal; reuses per-choice rule reasons.
+- ui/dungeon.js, view/dungeon-features.js: context actions and persistent pit/marker
+  presentation. Terrain masks pits; wall records own sliding secret stone panels.
 - data/pieces.js: public metadata shared by contexts, Models and the Test room.
 - ui/dialogs.js: native modal confirmations and nonmodal spell-drawer opening.
 - data/treasure.js, rules/treasure.js: 24 physical cards, source text/art, room

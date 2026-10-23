@@ -102,9 +102,9 @@ with the same party; New adventure returns to setup.
 ## Visibility and appearance
 
 Only discovered terrain is displayed. Rooms reveal their contents together;
-corridors appear as explored. Static terrain/furniture remain. Optional realistic
-LOS hides movable pieces outside combined party sight; spell targeting always
-uses the individual caster's sight. Floor/grid brightness follows scene lighting.
+corridors appear as explored. Discovered terrain, furniture and living miniatures
+remain visible. Spell targeting still uses the individual caster's sight.
+Floor/grid brightness follows scene lighting.
 
 The main-view wall icon cycles Full walls, Automatic cutaway and Low walls.
 The bulb toggles lighting; the POV button toggles the cinematic camera; table and board
@@ -142,14 +142,14 @@ including the newly painted cupboard, in an invented neutral-floor showroom.
 These viewers share game factories but reveal no quest placements or save state.
 
 **Gameplay sandbox** opens [a separate practice game](index.html?sandbox=1).
-Its tools prepare each spell, movement, heroes and original opponents through
+Its tools prepare each spell, traps/secret doors, movement, heroes and original opponents through
 fixtures while real rolls/effects use the normal engine. Its browser save is
 separate from the adventure. See [sandbox guide/checklist](docs/SANDBOX.md).
 
 ## Saves, rules and implementation
 
 Adventure autosave uses heroquest.session.v1; practice uses heroquest.sandbox.v1.
-Envelope 1/state schema 7 retain RNG, spent cards, the treasure deck/search ledger, pending dice/reports, CPU queue
+Envelope 1/state schema 8 retain RNG, spent cards, the treasure deck/search ledger, pending dice/reports, CPU queue
 and view preferences. Accepted outcomes save before presentation. Refresh resumes
 recorded results without recasting/rerolling. Invalid saves remain until explicit
 replacement. Menu → Export save downloads a JSON file; Menu → Import save loads
@@ -163,7 +163,9 @@ Through Rock object traversal
 are Mark's digital rulings, distinct from original printed rules. Rock movement
 stays within the quest's playable floor; ending inside any object with no movement
 left, or ending the turn there, is fatal. Original base cards/items/quests only;
-no expansion/remake/fan content. Trap/secret-door searches, gold/equipment trading, throwing,
+no expansion/remake/fan content. Trap/secret-door searches, jumping and disarming
+are implemented with isolated practice scenarios; see [traps](docs/TRAPS.md).
+Gold/equipment trading, throwing,
 Chaos spells and campaign progression are still unfinished. Original treasure
 searches and all four base treasure potions are implemented; see the current
 limits in [treasure](docs/TREASURE.md).

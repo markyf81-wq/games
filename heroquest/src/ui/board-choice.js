@@ -15,15 +15,17 @@
       if(!pending)return;
       const ended=pending;pending=null;bar.hidden=true;view.setBoardChoices(null);
       ended.unlock();
-      if(reopen)HQ.dialogs.show(ended.dialogId);
+      view.setInteractive(ended.wasInteractive);
+      if(reopen&&ended.dialogId)HQ.dialogs.show(ended.dialogId);
       ended.resolve(ref);
     }
     function choose({dialogId,title,targets,reopenOnPick=true}) {
-      if(pending||!targets.length||!document.getElementById(dialogId)?.open)return Promise.resolve(null);
+      if(pending||!targets.length||dialogId&&!document.getElementById(dialogId)?.open)return Promise.resolve(null);
       const unlock=HQ.turnControls.lock();
       return new Promise(resolve=>{
-        pending={dialogId,title,resolve,unlock,reopenOnPick,targets:new Map(targets.map(ref=>[key(ref),ref]))};
-        text.textContent=title;bar.hidden=false;HQ.dialogs.close(dialogId);
+        pending={dialogId,title,resolve,unlock,wasInteractive:view.interactive,reopenOnPick,targets:new Map(targets.map(ref=>[key(ref),ref]))};
+        text.textContent=title;bar.hidden=false;if(dialogId)HQ.dialogs.close(dialogId);
+        view.setInteractive(true);
         view.setBoardChoices(targets);canvas.focus({preventScroll:true});
       });
     }

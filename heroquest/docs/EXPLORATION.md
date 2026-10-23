@@ -1,6 +1,6 @@
 # The Trial exploration milestone
 
-This document records the original exploration milestone. The current entry also implements basic melee combat and CPU monster turns; [COMBAT.md](COMBAT.md) supersedes its old scope/state/phase descriptions below. Setup now selects 1–4 actual hero miniatures, rather than always placing four heroes. Browser autosave now exists as documented in SAVES.md, superseding the historical no-save scope below. The earlier verification remains historical exploration evidence and does not cover those setup/save revisions.
+This document records the original exploration milestone. The current entry also implements basic melee combat and CPU monster turns; [COMBAT.md](COMBAT.md) supersedes its old scope/state/phase descriptions below. Setup now selects 1–4 actual hero miniatures, rather than always placing four heroes. Browser autosave now exists as documented in SAVES.md, superseding the historical no-save scope below. The realistic-LOS display option described in the historical state/command section below has since been removed: revealed living miniatures now remain visible, and individual spell sight still applies. The earlier verification remains historical exploration evidence and does not cover those setup/save/visibility revisions.
 
 ## Implemented scope
 
@@ -41,7 +41,7 @@ Movement previews use known terrain and remembered monster positions. They do no
 - Explored terrain and static scenery remain. Scene lighting alone controls explored terrain brightness. The outer rectangle and unused board are never rendered; **Explored map** fits discovered cells only.
 - Terrain sight ignores figures so a companion does not erase the room floor. Movable-piece sight uses walls, closed doors and intervening figures, from every hero’s centre. Furniture blocks movement but is not added as a SEE blocker here.
 - Exact corner crossings permit either open orthogonal route but block a corner sealed by two walls. This is an explicit digital grid interpretation to avoid diagonal room leaks. Future attack/spell targeting must revisit corner/edge rulings against the full relevant rules.
-- **Use realistic line of sight** defaults off. Off retains discovered movable pieces as on the physical board; on shows only pieces currently seen by at least one hero. Discovery/state are retained in both modes. This combined-party rendering option is Mark’s requested adaptation, not a printed rule.
+- Discovered living miniatures remain visible as on the physical board. The former realistic-LOS display option and its command have been removed; discovery and spell sight still use their normal sight rules.
 - A reveal pause, exact starting hero squares and hidden terrain presentation are digital interface choices. They do not add traps, encounters or quest-note hints.
 
 Client-side quest data is inherently inspectable in developer tools. Ordinary UI, picking, camera framing, route previews and the journal should not disclose hidden content.

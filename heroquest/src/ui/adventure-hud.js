@@ -7,6 +7,7 @@
     const heroTurn=state.phase==="hero-turn";
     const ended=HQ.quest.isEnded(state.phase);
     HQ.portraits.set($("active-portrait"),heroTurn?[hero]:[]);
+    $("active-portrait").setAttribute("aria-label","Centre camera on "+name);$("active-portrait").title="Centre camera on "+name;
     HQ.questUI.render(state);
     $("active-name").textContent=heroTurn?name:state.phase==="defeat"?"Party defeated":state.phase==="victory"?"Quest completed":state.phase==="retreat"?"Party withdrew":"Zargon";$("active-owner").textContent=heroTurn?hero.owner:ended?"THE PARTY":"COMPUTER";$("round-label").textContent="ROUND "+state.round;
     $("movement-remaining").textContent=ended?"Adventure ended":!heroTurn?"Heroes are waiting":state.movement.closed?"Movement finished":state.movement.rolled?state.movement.remaining+" remaining":"Ready to roll";
@@ -15,13 +16,13 @@
     $("roll-movement").hidden=pending||!heroTurn||state.movement.rolled||state.movement.closed;
     $("open-spellbook").hidden=!heroTurn||!HQ.spells.isCaster(hero);$("open-spellbook").disabled=pending||!heroTurn;
     $("open-inventory").disabled=ended;
-    const searchReason=HQ.treasure.reason(state,hero);
-    $("search-treasure").hidden=!heroTurn;$("search-treasure").disabled=Boolean(searchReason);$("search-treasure").title=searchReason||"Search this room. Uses your action.";
+    $("open-search").hidden=!heroTurn;$("open-search").disabled=pending||!heroTurn||state.actionUsed;
+    $("open-search").title=state.actionUsed?"Your action has already been used this turn.":"Choose a search. Uses your action.";
     $("finish-attacks").hidden=!heroTurn||!state.extraAttack;$("finish-attacks").disabled=pending;
     $("hero-combat-stats").replaceChildren();$("hero-combat-stats").hidden=!heroTurn;
     if(heroTurn){
       const stats=$("hero-combat-stats");stats.append(HQ.health.body(hero.body,hero.maxBody));
-      for(const [label,value] of [["Mind",hero.mind],["Attack",HQ.combat.attack(hero)+" dice"],["Defend",HQ.combat.defence(hero)+" dice"]]){
+      for(const [label,value] of [["Mind",hero.mind],["Attack",HQ.combat.attack(hero,state)+" dice"],["Defend",HQ.combat.defence(hero,state)+" dice"]]){
         const stat=document.createElement("span"),caption=document.createElement("span"),amount=document.createElement("strong");
         stat.className="hero-stat";caption.textContent=label;amount.textContent=value;stat.append(caption,amount);stats.append(stat);
       }
@@ -30,7 +31,6 @@
     }
     $("action-status").textContent=!heroTurn?"":state.extraAttack?"Heroic Brew · one attack remaining":state.actionUsed?"Action used":"Action available";
     $("action-status").hidden=!heroTurn;
-    $("setting-realistic-los").checked=state.settings.realisticLOS;
     $("discovery-label").textContent=projection.discoveredRooms+" room"+(projection.discoveredRooms===1?"":"s")+" explored";
     // Do not display the hidden map's room/monster counts as a progress target.
     $("event-log").replaceChildren();for(const event of state.log.slice(-9).reverse()){const li=document.createElement("li");li.textContent=event.text;$("event-log").append(li);}

@@ -78,9 +78,10 @@ ordering. Restore/group changes are tools, not campaign replenishment. Pass
 Through Rock's broad object/last-step semantics and shared stairs are Mark's
 explicit digital rulings, separate from original card wording.
 
-Quest-event/treasure/trap scenarios remain future work. Inventory and Healing
-Potions have practice fixtures; other potions, searches, gear changes and quest-note
-effects are not presented as testable here.
+Treasure and potion scenarios are described below. Exploration practice now
+supports pit, spear, falling-block, trapped-chest and secret-stone-door scenarios;
+see TRAPS.md for preparation, expected behaviour and manual review steps.
+These are invented placements, not additions to The Trial.
 
 ## Camera and performance
 
@@ -119,3 +120,14 @@ ownership, fixed quest A/B/D/E claims, hazards ending the turn, wandering Orc
 placement/immediate attack/manual defence, subsequent CPU activation, potion
 expiry, Brew second attack/Finish attacks and refresh between each stage.
 Source/diff review only; these new flows have not been run in the engine/browser.
+
+## Exploration practice
+
+Select a hero and an Exploration practice scenario, then Prepare exploration
+scenario. Twelve moves are ready; the active trap starts concealed. Search from
+a tile or hero context, walk into a hidden trap, or select Jump over. Reset the
+hero’s turn after discovery to enable Disarm; non-Dwarfs carry a practice Tool Kit.
+A trapped chest uses a one-Body practice consequence before treasure, not an
+invented quest note. Secret-door practice hides the area behind the concealed
+panel until opened. Pending rolls, sprung pits/blocks and move-clear choices
+remain in the separate sandbox save (schema 8). No engine/browser checks run.

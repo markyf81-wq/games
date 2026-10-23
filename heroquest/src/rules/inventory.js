@@ -6,7 +6,7 @@
   const potions=hero=>hero.inventory.items.filter(item=>HQ.itemData.byId[item.kind]?.category==="potion");
   function recoveryHero(state) {
     const report=state.pending?.type==="report"?state.lastReport:null;
-    if(!report?.defeated||report.recovery||!["combat","treasure"].includes(report.type))return null;
+    if(!report?.defeated||report.recovery||!["combat","treasure","trap"].includes(report.type))return null;
     return state.heroes.find(hero=>hero.id===report.defenderId&&hero.body===0&&!hero.trapped&&!hero.exit&&potions(hero).some(item=>item.kind==="potion-of-healing"))||null;
   }
   function reason(state,hero,itemId) {

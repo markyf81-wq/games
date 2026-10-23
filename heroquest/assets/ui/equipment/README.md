@@ -1,6 +1,6 @@
-# Inventory weapon artwork
+# Inventory equipment artwork
 
-Broadsword and Dagger (page 1) and Shortsword (page 2) are cropped from the local
+Broadsword and Dagger (page 1) and Shortsword and Tool Kit (page 2) are cropped from the local
 `references/fan-reference/drathe-system-equipment.pdf`. This card presentation
 was created by drathe; it is not an original deck supplied in the North American
 box. Equipment rules still use the original Armoury. Displaying these images

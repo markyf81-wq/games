@@ -42,8 +42,8 @@ or encounter scaling are granted for a small party. Defaults follow the printed
 suggestion of Fire for the Wizard's first choice and Earth for the Elf.
 
 Casting checks the individual caster's centre-to-centre grid sight with figure
-occlusion, independent of the combined party display sight, remembered monsters
-and the realistic-LOS presentation checkbox. It retains the existing grid corner
+occlusion, independent of combined party discovery and remembered monsters.
+Revealed miniatures remain displayed even outside current sight. Casting retains the existing grid corner
 and user-requested four-square stair footprint. Targets exposed by the board picker
 come from live heroes or the filtered revealed-monster projection; an unseen
 monster's coordinates never appear as a target hint. The engine validates again. Legal spell targets join the existing light-blue

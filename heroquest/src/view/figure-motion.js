@@ -21,17 +21,15 @@
     function advanceMovement(time) {
       if(!movement)return;
       if(movement.started===null)movement.started=time;
-      const elapsed=(time-movement.started)/stepDuration,step=Math.floor(elapsed);
+      const elapsed=(time-movement.started)/movement.duration,step=Math.floor(elapsed);
       if(step>=movement.points.length-1){finishMovement();return;}
       const progress=elapsed-step,eased=progress*progress*(3-2*progress);
       if(movement.segment!==step){movement.segment=step;movement.fromYaw=movement.model.rotation.y;}
       const yawDelta=Math.atan2(Math.sin(movement.headings[step]-movement.fromYaw),Math.cos(movement.headings[step]-movement.fromYaw));
       const turn=Math.min(1,progress/.4),turnEase=turn*turn*(3-2*turn);
       movement.model.rotation.y=movement.fromYaw+yawDelta*turnEase;
-      // Conservatively hide a monster during a step crossing the edge of sight.
-      if(movement.visibility)movement.model.visible=movement.visibility[step]&&movement.visibility[step+1];
       movement.point.lerpVectors(movement.points[step],movement.points[step+1],eased);
-      movement.point.y+=Math.sin(progress*Math.PI)*hopHeight;
+      movement.point.y+=Math.sin(progress*Math.PI)*movement.hopHeight;
       placeMovingHero(movement.point);
     }
     function animateMovement(motion) {
@@ -43,7 +41,7 @@
       if(!entry||!entry.model.visible||!motion.path.length||reducedMotion.matches||!contextReady()||document.visibilityState==="hidden")return Promise.resolve();
       return new Promise(resolve=>{
         const movesRing=entry.type==="hero";
-        movement={model:entry.model,movesRing,headings,segment:-1,fromYaw:entry.model.rotation.y,visibility:motion.visibility,points:[motion.from,...motion.path].map(id=>movesRing?heroPosition(id):world(id,.15)),point:new T.Vector3(),started:null,resolve};
+        movement={duration:motion.jump?600:stepDuration,hopHeight:motion.jump?.38:hopHeight,model:entry.model,movesRing,headings,segment:-1,fromYaw:entry.model.rotation.y,points:[motion.from,...motion.path].map(id=>movesRing?heroPosition(id):world(id,.15)),point:new T.Vector3(),started:null,resolve};
         entry.model.position.copy(movement.points[0]);requestRender();
       });
     }

@@ -22,7 +22,7 @@ Use stone floors and a visible square grid. Low walls, faded foreground walls, o
 
 The exploration entry uses the original Trial layout and actual discovery. The reusable board trace is 26 × 19 with 22 rooms; only the quest’s walkable areas and discovered cells appear. The older full-board visual study has been retired; use the in-game Models viewer to inspect current pieces.
 
-Unexplored floors, rooms and corridors are absent. Once discovered, terrain and furniture remain; explored terrain brightness follows scene lighting alone. **Use realistic line of sight** controls movable pieces only: when enabled, monsters disappear outside combined hero sight. It defaults off. See EXPLORATION.md for the distinction between terrain sight, full room reveals and movable visibility; do not reuse display calculations uncritically as spell/attack rules.
+Unexplored floors, rooms and corridors are absent. Once discovered, terrain, furniture and living miniatures remain visible; explored terrain brightness follows scene lighting alone. The realistic line-of-sight display option has been removed. Full room reveals and individual spell/attack sight still follow their own rules; do not reuse display visibility as targeting legality.
 
 ## Model inspection modal
 

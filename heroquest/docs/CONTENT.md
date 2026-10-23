@@ -94,7 +94,7 @@ Target selection, tactical movement, monster activation order, and spell timing 
 
 Legal-action highlighting, automatic arithmetic, recorded dice, and turn prompts can assist players while preserving the rules. Reachability and previews must use the hero's discovered information so they do not disclose hidden traps, monsters, treasures, or quest events.
 
-Mark's digital presentation choice hides undiscovered terrain completely. Discovered terrain and static furniture remain, with optional dimming out of sight. The implemented **Use realistic line of sight** checkbox, default off, additionally hides movable pieces outside the combined current view of the heroes. This is an explicit display option, not an original printed rule or a change to targeting, searching, or quest triggers. Actual discovery and this option exist in the exploration entry; the separate visual studio retains a fixed explored-room example.
+Mark's digital presentation choice hides undiscovered terrain completely. Discovered terrain, furniture and living miniatures remain visible, as pieces do on the physical board. Scene lighting controls floor brightness. There is no realistic line-of-sight display option; discovery, targeting, searching and quest triggers retain their sight rules. The separate visual studio retains a fixed explored-room example.
 
 ## Review ledger
 

@@ -79,7 +79,6 @@
     const players=playerFields.slice(0,playerCount());
     return {heroIds:players.map(field=>field.select.value),
       owners:Object.fromEntries(players.map((field,index)=>[field.select.value,playerName(index)])),
-      realisticLOS:$("setup-realistic-los").checked,
       spellGroups:{elf:[elfPick.value],wizard:HQ.spellData.groups.filter(group=>group!==elfPick.value)}};
   }
   function restore(heroes) {
