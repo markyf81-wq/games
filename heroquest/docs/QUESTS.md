@@ -1,4 +1,8 @@
-# The Trial: objective, exits and outcomes
+# Quest objectives, exits and outcomes
+
+The Trial and The Rescue of Sir Ragnar are implemented. See [CAMPAIGN.md](CAMPAIGN.md)
+for current carry-forward, original Quest 2 map/events, sources and review limits.
+The historical Trial milestone below records its original scope and verification.
 
 ## Reviewed original sources
 
@@ -65,3 +69,8 @@ CPU progression while reading. The link shares temporary animation/target locks.
 Source/diff review only; no browser checks were run.
 
 See ARMOURY.md for between-quest shopping, practice and save/review limits.
+
+
+Current schema 16 supports party carry-forward, original Quest 2 and retries;
+the earlier statements that campaign/Quest 2 are future work are superseded by
+CAMPAIGN.md. No new engine/browser verification has been run for this milestone.

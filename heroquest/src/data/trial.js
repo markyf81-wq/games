@@ -82,6 +82,6 @@
       "room-11":Object.freeze({note:"E",gold:120,description:"The first Hero who searches for treasure will find 120 gold coins in this treasure chest."})
     }),
     wanderingMonster:Object.freeze({kind:"orc",name:"Orc",source:Object.freeze({sourceId:"system-quest-book",pdfPage:5,region:"Quest 1 footer",reviewStatus:"visually-reviewed"})}),
-    limitations:"Gameplay prototype: exploration, melee, twelve elemental spells, treasure searches, potions, CPU turns and quest outcomes. Trap/secret-door mechanics have separate practice scenarios. Thrown weapons and campaign progression remain unfinished."
+    limitations:"Gameplay prototype: exploration, melee, twelve elemental spells, treasure searches, potions, CPU turns and quest outcomes. Trap/secret-door mechanics have separate practice scenarios. Dagger throws, party carry-forward and Quest 2 are implemented; the remaining original campaign and Chaos spells are unfinished."
   });
 })();

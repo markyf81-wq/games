@@ -31,6 +31,6 @@
   const variants={orc:["orc","orc-mace","orc-sword"],goblin:["goblin","goblin-dagger","goblin-axe"]};
   // Appearance only: stable quest order, no extra rule kinds or RNG/save fields.
   HQ.monsterModel=(kind,id)=>{const models=variants[kind];if(!models)return kind;
-    const index=id?.startsWith("wanderer-")?Number(id.slice(9))-1:HQ.trial.monsters.filter(monster=>monster.kind===kind).findIndex(monster=>monster.id===id);
+    const index=id?.startsWith("wanderer-")?Number(id.slice(9))-1:(HQ.quests?.current||HQ.trial).monsters.filter(monster=>monster.kind===kind).findIndex(monster=>monster.id===id);
     return models[Math.max(0,index)%models.length];};
 })();

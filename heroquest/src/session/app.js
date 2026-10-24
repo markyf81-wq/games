@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  const HQ=window.HeroQuest,E=HQ.exploration,T=HQ.topology,Q=HQ.trial,D=HQ.dialogs,S=HQ.sessionStorage,P=HQ.sessionPresentation;
+  const HQ=window.HeroQuest,E=HQ.exploration,T=HQ.topology,Q=HQ.quests.current,D=HQ.dialogs,S=HQ.sessionStorage,P=HQ.sessionPresentation;
   const $=id=>document.getElementById(id);let state=null,projection=null,view=null,moving=false,screen=null,saveError="",diceProgress=null,dicePrompt=null,animateDice=false;
   let selectedRoute=null,restartMode="new",boardChoice=null,sandboxUI=null,feedbackKey=null,animateTreasure=false,treasureLock=null,importing=false,treasureHealth=null,trapTravel=null;
   function clearFeedback(){feedbackKey=null;$("action-feedback").hidden=true;}
@@ -12,8 +12,8 @@
     if(hero||chooseHeir) {
       const actions=document.createElement("div");actions.className="recovery-actions";
       const add=(label,run,primary=false)=>{const button=document.createElement("button");button.type="button";button.className="hq-button"+(primary?" hq-button--primary":"");button.textContent=label;button.addEventListener("click",run);actions.append(button);};
-      const potion=hero&&HQ.inventory.potions(hero).find(item=>item.kind==="potion-of-healing");
-      if(potion)add("Drink healing potion & roll",()=>requestItem(hero.id,potion.id),true);
+      const potion=hero&&HQ.inventory.potions(hero).find(HQ.inventory.healing);
+      if(potion)add(HQ.itemData.byId[potion.kind].healingDice?"Drink healing potion & roll":"Drink healing potion",()=>requestItem(hero.id,potion.id),true);
       for(const card of hero?HQ.recovery.healingSpells(state,hero):[])add("Save yourself · "+card.name,()=>dispatch({type:"RECOVER_SPELL",heroId:hero.id,spellId:card.id}),true);
       add(hero?"Let hero fall":"Recover possessions",requestDefeat);$("feedback-content").append(actions);
     }
@@ -37,7 +37,7 @@
   const movementActions=HQ.createMovementActions({getState:()=>state,getProjection:()=>projection,dispatch});
   const {moveOption,approachDestination,modelMoveOption,plannedRoute}=movementActions;
   const diceTray=HQ.createDiceTray({onRoll:rollDice,onSettled:id=>{
-    if(screen==="movement"||diceProgress)pacing.schedule("dice-"+id,()=>{if(diceTray.activeId===id)continueDice();},screen==="movement"?250:1000);
+    if(screen==="movement"||diceProgress||state?.pending?.type==="escort"&&!state.pending.ready)pacing.schedule("dice-"+id,()=>{if(diceTray.activeId===id)continueDice();},screen==="movement"?250:1000);
   },onCancel(){
     const attack=dicePrompt?.type==="attack";dicePrompt=null;
     if(attack)playPresentation(()=>view?.finishAttack(),()=>{render();persist();});
@@ -82,7 +82,7 @@
   function updateBoard({preserveCamera=false}={}) {
     projection=E.project(diceProgress?.stage==="trap"?P.unrevealed(state,diceProgress):state);Object.assign(projection,P.statuses(state,projection.activeHero,diceProgress));
     const report=P.pendingReport(state),cutawayHero=report?.type==="combat"&&report.attackerSide==="monster"
-      ?state.heroes.find(hero=>hero.id===report.defenderId):projection.activeHero;
+      ?HQ.escort.allies(state).find(hero=>hero.id===report.defenderId):state.pending?.type==="escort"?HQ.escort.get(state):projection.activeHero;
     view?.setProjection(projection,{defeatedFigure:P.defeatedFigure(state),cutawayHero,preserveCamera});
   }
   function playPresentation(play,complete) {
@@ -103,6 +103,7 @@
     const openingSecret=command.type==="OPEN_DOOR"&&projection.doors.some(door=>door.id===command.id&&door.secret);
     const previousReport=state.lastReport,removal=command.type==="ACK_REPORT"?P.defeatedReport(state):null,result=E.applyCommand(state,command);
     if(!result.ok){message(result.message,true);return false;}
+    if(result.reload)return installQuest(result.state);
     const healthChanges=P.healthChanges(state,result.state),nextHeroTurn=P.nextHeroTurn(state,result.state);
     if(nextHeroTurn||!["ACK_REPORT","ACK_HANDOFF"].includes(command.type)){clearFeedback();treasureDrawer.close();}
     pacing.clear();spellbook.close();if(command.type!=="SET_EQUIPMENT")inventory.close();context.close();
@@ -192,7 +193,7 @@
       dicePrompt={type:"attack",targetId:item.id,...options};render();persist();
     };
     message(hero.name+(options.throwItemId?" throws a Dagger at ":HQ.combatData.weapons[hero.weapon].ranged?" shoots at ":" attacks ")+item.name+".");
-    playPresentation(()=>view?.animateAttack(hero.id,item.id),show);
+    playPresentation(()=>view?.animateAttack(hero.id,item.id,{melee:!options.throwItemId&&!HQ.combatData.weapons[hero.weapon].ranged}),show);
   }
   function requestMovementRoll() {
     if(moving||state?.pending||state?.phase!=="hero-turn"||screen||dicePrompt)return;
@@ -204,6 +205,7 @@
     const accepted=dispatch({type:"USE_ITEM",heroId,itemId});if(!accepted)animateDice=false;return accepted;
   }
   function rollDice() {
+    if(state?.pending?.type==="escort"&&state.pending.die===null){animateDice=true;return dispatch({type:"ROLL_ESCORT"});}
     inventory.close();
     if(dicePrompt){animateDice=true;return dispatch(dicePrompt.type==="trap"?dicePrompt.command:{type:"ATTACK",targetId:dicePrompt.targetId,...(dicePrompt.throwItemId?{throwItemId:dicePrompt.throwItemId}:{})});}
     if(!diceProgress||diceProgress.rolled)return false;
@@ -217,6 +219,7 @@
   }
   function continueDice() {
     pacing.clear();
+    if(state?.pending?.type==="escort"&&!state.pending.ready&&state.pending.die!==null){dispatch({type:"ACK_ESCORT_ROLL"});return;}
     if(screen==="movement"){screen=null;persist();render();$("board-canvas").focus({preventScroll:true});return;}
     if(!diceProgress)return;
     if(diceProgress.stage==="item") {
@@ -260,6 +263,10 @@
   }
   function openCell(id) {
     if(boardChoice?.pick({type:"cell",id}))return;
+    if(state?.pending?.type==="escort"&&state.pending.ready&&!moving){
+      const routes=HQ.escort.routes(state),point=view.setSelection({type:"cell",id});
+      context.show({name:"Tile",kind:"ESCORT SIR RAGNAR",description:state.pending.remaining+" movement remaining",actions:[{label:"Move Sir Ragnar here",primary:true,disabled:!routes.has(id),reason:routes.has(id)?"":"Choose a clear square within his movement.",run:()=>dispatch({type:"MOVE_ESCORT",to:id})}]},point);previewRoute(id,true);return;
+    }
     if(!state||state.pending||moving||screen||dicePrompt||diceProgress||!projection.discoveredCells.includes(id)&&!(projection.blindMovement&&T.floor.has(id)))return;
     spellbook.close();inventory.close();treasureDrawer.close();
     const point=view.setSelection({type:"cell",id});
@@ -267,11 +274,15 @@
     const stair=T.stairs.has(id),actions=[moveOption(id)];
     const trap=projection.traps.find(trap=>trap.cell===id);if(trap)actions.push(...dungeonActions.forTrap(trap));
     if(stair)actions.push({label:"Leave dungeon",disabled:Boolean(HQ.quest.exitReason(state,projection.activeHero)),reason:HQ.quest.exitReason(state,projection.activeHero)||"",run:async()=>{if(await HQ.questUI.confirmExit(state))dispatch({type:"EXIT_QUEST"});}});
-    context.show({name:known?"Tile":"Unexplored space",kind:rock?"PASS THROUGH ROCK":stair?"STAIRWAY":"DUNGEON SQUARE",description:rock?"Pass through any object. Reach a free playable square before your last move or ending your turn.":stair?"Movement within the stairs is free while you have movement remaining.":T.blockedAt(state,id)?HQ.pieces.blocked.description:"A square of explored dungeon floor.",actions},point);
+    context.show({name:known?"Tile":"Unexplored space",kind:rock?"PASS THROUGH ROCK":stair?"STAIRWAY":"DUNGEON SQUARE",description:rock?"Pass through objects. Ending inside furniture or a figure returns you to the last clear square and ends movement. Ending in solid rock is fatal.":stair?"Movement within the stairs is free while you have movement remaining.":T.blockedAt(state,id)?HQ.pieces.blocked.description:"A square of explored dungeon floor.",actions},point);
     previewRoute(id,true);
   }
   function previewRoute(id,select=false) {
     if(boardChoice?.active)return;
+    if(state?.pending?.type==="escort"&&state.pending.ready&&!moving){
+      const escort=HQ.escort.get(state),path=HQ.escort.routes(state).get(id);
+      view?.setRoutePreview(path?{cells:[T.key(escort.x,escort.row),...path],reachableSteps:path.length}:null);return;
+    }
     if(select)selectedRoute=id;
     if(!id||!state||moving||state.phase!=="hero-turn"||state.pending||!projection.discoveredCells.includes(id)&&!(projection.blindMovement&&T.floor.has(id))){view?.setRoutePreview(null);return;}
     const hero=projection.activeHero,plan=plannedRoute(id);
@@ -307,6 +318,8 @@
       const reason=HQ.recovery.takeReason(state,projection.activeHero,item);
       details=item.items.length+" items · "+item.gold+" gold";
       actions.push({label:"Pick up sealed bag",primary:true,disabled:Boolean(reason),reason:reason||"Carry this bag to quest completion. Contents cannot be used. Uses no action or movement.",run:()=>dispatch({type:"TAKE_BELONGINGS",id:item.id})});
+    } else if(item.id==="sir-ragnar") {
+      details="Wounded knight · "+item.body+" / "+item.maxBody+" Body · Defend "+item.defend+" dice · Cannot attack";
     } else if(item.type==="hero") {
       details=item.owner+" · Attack "+HQ.combat.attack(item,state)+" · Defend "+HQ.combat.defence(item,state)+(item.effects.rockSkin?" · Rock Skin":"")+(item.effects.courage?" · Courage":"");
       actions.push({label:"Inventory",run:()=>{context.close();spellbook.close();inventory.show(item.id);}});
@@ -353,7 +366,7 @@
   if(HQ.sandbox.active&&view)sandboxUI=HQ.sandbox.attach({getState:()=>state,replace:replaceSandbox,choose:chooseActionTarget,onArmoury:openArmoury,onCpu(){
     if(!state||moving)return;const next=JSON.parse(JSON.stringify(state));HQ.sandbox.turn(next,next.heroes.at(-1).id);replaceSandbox(next);dispatch({type:"END_TURN"});
   }});
-  $("quest-briefing").textContent=Q.briefing;
+  $("quest-briefing").textContent=Q.briefing;$("briefing-heading").textContent=Q.title;document.title="HeroQuest · "+Q.title;
   function unrevealedRollState(){return P.unrevealed(state,diceProgress);}
   function render({preserveCamera=false}={}) {
     if(!treasureDrawer.busy&&treasureLock){treasureLock();treasureLock=null;}
@@ -363,7 +376,7 @@
     $("setting-fair-loot").disabled=moving||Boolean(screen||dicePrompt||diceProgress||state.pending||boardChoice?.active)||HQ.quest.isEnded(state.phase);
     $("open-quest-info").disabled=moving||Boolean(screen);
     selectedRoute=null;movementActions.reset();
-    context.close();searchDialog.close();updateBoard({preserveCamera});view?.setInteractive(state.phase==="hero-turn"&&!state.pending&&!moving&&!screen&&!dicePrompt&&!diceProgress);
+    context.close();searchDialog.close();updateBoard({preserveCamera});view?.setInteractive(state.phase==="hero-turn"&&(!state.pending||state.pending.type==="escort"&&state.pending.ready)&&!moving&&!screen&&!dicePrompt&&!diceProgress);
     $("show-sight").disabled=!view?.interactive||Boolean(boardChoice?.active);
     const hero=projection.activeHero,name=E.heroNames.get(hero.id);
     const display=unrevealedRollState();
@@ -379,7 +392,12 @@
     if(dicePrompt||screen==="movement"||diceProgress)for(const id of ["roll-movement","open-spellbook","open-search","finish-attacks","end-turn"])$(id).disabled=true;
     const latest=diceProgress?diceProgress.rolled?"Rolling…":"Waiting for the next roll.":display.log.at(-1)?.text||"Choose your next move.";message(latest);
     saveStatus();partyUI.render(display);
-    if(dicePrompt)diceTray.show(HQ.diceFlow.prompt(state,projection,dicePrompt));
+    HQ.adventureHUD.renderEscort(state);
+    if(state.pending?.type==="escort"){
+      if(state.pending.ready)diceTray.close();
+      else {const animate=animateDice;animateDice=false;diceTray.show(HQ.diceFlow.escort(state,animate));}
+    }
+    else if(dicePrompt)diceTray.show(HQ.diceFlow.prompt(state,projection,dicePrompt));
     else if(screen==="movement"||diceProgress){presentDice();}
     else if(state.pending?.type==="monster-intro") {
       diceTray.close();pacing.clear();clearFeedback();treasureDrawer.close();
@@ -432,12 +450,29 @@
     else if(state.movement.rolled)presentDice();
     else diceTray.close();
   }
+  function installSnapshot(snapshot){
+    const error=S.save(snapshot);
+    if(error)return error;
+    // Reload only after storage succeeds. Outgoing page callbacks must not
+    // overwrite the imported save or the newly selected quest with old state.
+    importing=true;pacing.clear();diceTray.close();window.location.reload();return "";
+  }
+  function installQuest(next){
+    const previous=view?.snapshot(),first=next.heroes[0],framing={target:[first.x+.5-13,.4,first.row+.5-9.5],halfHeight:4.4,follow:true};
+    const camera=previous?{...previous,...framing,facings:{},sightOverlayEnabled:false,
+      overheadReturn:previous.overheadReturn?{...previous.overheadReturn,...framing}:null}:null;
+    const error=installSnapshot({state:next,screen:"briefing",dice:null,view:camera});
+    if(error){message("The next quest could not be saved. This adventure has been kept. "+error,true);return false;}
+    return true;
+  }
   function startAdventure(config) {
     if(!view||moving)return;
     beginAction();
     clearFeedback();pacing.clear();resetTreasure();pacing.setPaused(false);spellbook.close();inventory.close();diceTray.close();
     const values=new Uint32Array(1);window.crypto.getRandomValues(values);
-    state=E.createSession(config,values[0]);
+    const next=E.createSession(config,values[0]);
+    if(next.contentVersion!==Q.id){installQuest(next);return;}
+    state=next;
     screen="briefing";diceProgress=null;dicePrompt=null;animateDice=false;view.resetFacing();persist();
     try {render();view.centre();persist();D.close("setup-dialog");D.show("briefing-dialog");}
     catch(error){message("The adventure could not start. "+error.message,true);const p=document.createElement("p");p.className="hq-callout";p.textContent=error.message;$("setup-form").append(p);}
@@ -454,13 +489,15 @@
     if(!moving&&!diceProgress&&state?.pending?.type==="report")dispatch({type:"ACK_REPORT"});
   });
   $("open-armoury").addEventListener("click",openArmoury);
+  $("continue-campaign").addEventListener("click",()=>{if(!moving)dispatch({type:"EMBARK_QUEST",mode:state.phase==="victory"?"next":"retry"});});
+  $("focus-escort").addEventListener("click",()=>view?.focusHero("sir-ragnar"));
   $("retry-adventure").addEventListener("click",()=>{D.close("quest-outcome-dialog");if(sandboxUI)sandboxUI.show();else D.show("setup-dialog");});
   $("roll-movement").addEventListener("click",requestMovementRoll);
   $("open-search").addEventListener("click",()=>{if(state&&!moving&&!screen&&!dicePrompt&&!diceProgress&&!state.pending&&!boardChoice?.active){beginAction();context.close();spellbook.close();inventory.close();treasureDrawer.close();searchDialog.show();}});
   $("finish-attacks").addEventListener("click",()=>{if(!moving&&!screen&&!dicePrompt&&!diceProgress)dispatch({type:"FINISH_ATTACKS"});});
   $("open-spellbook").addEventListener("click",()=>{if(!moving&&!screen&&!dicePrompt&&state?.phase==="hero-turn"&&!state.pending){context.close();inventory.close();treasureDrawer.close();if($("spell-dialog").open)spellbook.close();else spellbook.show();}});
   $("open-inventory").addEventListener("click",()=>{if(state&&!moving&&!screen&&!dicePrompt&&!diceProgress){context.close();spellbook.close();treasureDrawer.close();if(inventory.open)inventory.close();else inventory.show(HQ.inventory.recoveryHero(state)?.id);}});
-  $("end-turn").addEventListener("click",()=>{if(!screen&&!dicePrompt)dispatch({type:"END_TURN"});});
+  $("end-turn").addEventListener("click",()=>{if(!screen&&!dicePrompt)dispatch({type:state.pending?.type==="escort"?"END_ESCORT":"END_TURN"});});
   $("ready-hero").addEventListener("click",()=>{D.close("handoff-dialog");dispatch({type:"ACK_HANDOFF"});view?.centre();});
   $("begin-zargon").addEventListener("click",()=>{
     if(moving||state?.pending?.type!=="monster-intro")return;
@@ -476,15 +513,15 @@
     if(!state||moving)return;
     if(sandboxUI){D.close("menu-dialog");sandboxUI.show();return;}
     restartMode=mode;context.close();D.close("menu-dialog");
-    $("confirm-heading").textContent=mode==="restart"?"Restart The Trial?":"Gather a new party?";
+    $("confirm-description").textContent=mode==="restart"?"Restart this quest with the party and equipment it began with. Progress and finds from this attempt will be discarded.":"Start from Quest 1 with a fresh party, replacing this campaign and its browser save.";
+    $("confirm-heading").textContent=mode==="restart"?"Restart "+Q.title+"?":"Gather a new party?";
     $("confirm-restart").textContent=mode==="restart"?"Restart":"New adventure";D.show("confirm-dialog");
   }
   $("restart-game").addEventListener("click",()=>requestRestart("restart"));
   $("restart-adventure").addEventListener("click",()=>requestRestart("new"));
   $("confirm-restart").addEventListener("click",()=>{
     D.close("confirm-dialog");
-    if(restartMode==="restart")startAdventure({fairLootRecovery:state.settings.fairLootRecovery,heroIds:state.heroes.map(hero=>hero.id),owners:Object.fromEntries(state.heroes.map(hero=>[hero.id,hero.owner])),
-      ...(state.heroes.filter(HQ.spells.isCaster).every(hero=>hero.spellGroups.length)?{spellGroups:Object.fromEntries(state.heroes.filter(HQ.spells.isCaster).map(hero=>[hero.id,hero.spellGroups]))}:{})});
+    if(restartMode==="restart")installQuest(HQ.campaign.restart(state));
     else D.show("setup-dialog");
   });
   $("setting-fair-loot").addEventListener("change",event=>{dispatch({type:"SET_RULES",fairLootRecovery:event.target.checked});event.target.checked=$("setup-fair-loot").checked=state.settings.fairLootRecovery;});
@@ -504,11 +541,7 @@
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")persist();});
   HQ.createSaveFiles({getSnapshot:()=>state&&!moving&&!importing?{state,screen,dice:diceProgress,view:view?.snapshot()||null}:null,onImport:snapshot=>{
     if(moving||importing||boardChoice?.active)return "Finish the current action before importing.";
-    const error=S.save(snapshot);
-    if(error)return "Browser storage is unavailable. Your current adventure has been kept; the file was not imported.";
-    // Use the ordinary startup path for pending rolls/queues and migrations.
-    // pagehide/visibility callbacks must not overwrite the newly installed save.
-    importing=true;pacing.clear();diceTray.close();window.location.reload();return "";
+    return installSnapshot(snapshot)?"Browser storage is unavailable. Your current adventure has been kept; the file was not imported.":"";
   }});
   const saved=S.load();
   if(saved.snapshot&&view) {

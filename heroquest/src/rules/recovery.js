@@ -15,7 +15,7 @@
   function hero(state){
     if(HQ.quest.isEnded(state.phase))return null;
     const fallen=casualty(state);
-    return fallen&&!fallen.trapped&&(HQ.inventory.potions(fallen).some(item=>item.kind==="potion-of-healing")||healingSpells(state,fallen).length)?fallen:null;
+    return fallen&&!fallen.trapped&&(HQ.inventory.potions(fallen).some(HQ.inventory.healing)||healingSpells(state,fallen).length)?fallen:null;
   }
   function spellReason(state,owner,spellId){
     if(!owner||casualty(state)?.id!==owner.id||owner.trapped)return "Only the hero currently facing death can save themselves.";
@@ -47,7 +47,7 @@
     // Entrapment/rubble must still leave an accessible bag. Prefer the closest
     // known clear square, also guarding legacy off-board phasing saves.
     const distance=id=>{const [x,row]=T.parse(id);return Math.abs(x-fallen.x)+Math.abs(row-fallen.row);};
-    const candidates=HQ.trial.floor.filter(clear),known=candidates.filter(id=>state.discoveredCells.includes(id));
+    const candidates=HQ.quests.current.floor.filter(clear),known=candidates.filter(id=>state.discoveredCells.includes(id));
     const id=(known.length?known:candidates).reduce((best,id)=>distance(id)<distance(best)?id:best);
     const [x,row]=T.parse(id);return {x,row};
   }
@@ -95,7 +95,7 @@
       }
       owner.body=owner.maxBody;owner.trapped=false;owner.spellsUsed=[];owner.actionUsed=true;
       owner.effects={...HQ.spells.heroEffects(),...HQ.inventory.effects()};
-      const starting=HQ.heroes.find(hero=>hero.id===owner.id);owner.x=starting.x;owner.row=starting.row;
+      const Q=HQ.quests.forState(state),starting=Q.starts?.[owner.id]||[HQ.heroes.find(hero=>hero.id===owner.id).x,HQ.heroes.find(hero=>hero.id===owner.id).row];[owner.x,owner.row]=starting;
       // deathResolved keeps the revived hero out of this finished board's
       // occupancy/turn order; questRecovery records the between-quest result.
       state.questRecovery.push({heroId:owner.id,carrierId:carrier?.id||null,

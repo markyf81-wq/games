@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  const HQ=window.HeroQuest,T=window.HQThree,Topo=HQ.topology,Q=HQ.trial;
+  const HQ=window.HeroQuest,T=window.HQThree,Topo=HQ.topology,Q=HQ.quests.current;
   HQ.createTabletop=function ({onCell,onPiece,onDismiss=()=>{},onAnchor=()=>{},onHover=()=>{}}) {
     const canvas=document.getElementById("board-canvas"),host=document.getElementById("canvas-host"),loading=document.getElementById("loading-message");
     if(!T||!HQ.models)throw new Error("The local 3D renderer or model files could not load.");
@@ -190,7 +190,7 @@
       for(const trap of projection.traps||[])if(trap.kind!=="furniture"&&trap.kind!=="falling-block"||trap.kind==="falling-block"&&trap.status!=="sprung")items.push([trap,"trap"]);
       // Keep only the current report's defeated combatant visible until the
       // player acknowledges its outcome. It remains absent from all rule queries.
-      if(defeatedFigure&&!items.some(([item])=>item.id===defeatedFigure.id))items.push([defeatedFigure,HQ.heroes.some(h=>h.id===defeatedFigure.id)?"hero":"monster"]);
+      if(defeatedFigure&&!items.some(([item])=>item.id===defeatedFigure.id))items.push([defeatedFigure,HQ.heroes.some(h=>h.id===defeatedFigure.id)||defeatedFigure.id==="sir-ragnar"?"hero":"monster"]);
       for(const [item,type] of items) {
         wanted.add(item.id);let entry=entities.get(item.id);
         const variant=type==="door"?item.secret?"secret":String(item.open):type==="trap"?item.kind+":"+item.status:type==="blocked"?item.kind+":"+(item.trapId||""):item.kind;
@@ -297,10 +297,15 @@
         }
         await motion.animateMovement(movement);
         if(cinematic&&combatCamera.active){await combatCamera.hold(180);if(!holdView)await combatCamera.leave();}
-      },animateAttack(attackerId,defenderId){
+      },animateAttack(attackerId,defenderId,{melee=true}={}){
         motion.finish();contacts.clear();down=null;pinch=null;canvas.classList.remove("dragging");
         const attacker=entities.get(attackerId),defender=entities.get(defenderId);
-        if(attacker?.model.visible&&defender?.model.visible){const delta=defender.model.position.clone().sub(attacker.model.position),angle=Math.atan2(delta.x,delta.z);facings.set(attackerId,angle);attacker.model.rotation.y=angle;renderer.shadowMap.needsUpdate=true;requestRender();}
+        if(attacker?.model.visible&&defender?.model.visible){
+          const delta=defender.model.position.clone().sub(attacker.model.position),angle=Math.atan2(delta.x,delta.z);
+          facings.set(attackerId,angle);attacker.model.rotation.y=angle;
+          if(melee){const reverse=Math.atan2(-delta.x,-delta.z);facings.set(defenderId,reverse);defender.model.rotation.y=reverse;}
+          renderer.shadowMap.needsUpdate=true;requestRender();
+        }
         // Cosmetic cadence only: most attacks remain over the shoulder. Do not
         // consume game RNG or inspect the already-resolved damage/dice result.
         const firstPerson=cinematicCameraEnabled&&++attackShots%4===0;

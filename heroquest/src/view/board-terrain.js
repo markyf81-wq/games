@@ -14,7 +14,7 @@
     for(let i=0;i<tile.attributes.normal.count;i++){const shade=tile.attributes.normal.getY(i)>.5?1:.3;colours.push(shade,shade,shade);}
     tile.setAttribute("color",new T.Float32BufferAttribute(colours,3));tile.clearGroups();
     const regions=new Map(),dummy=new T.Object3D(),floors=[],slots=new Map();let known=new Set(),hole=null,permanentHoles=new Set();
-    for(const id of HQ.trial.floor){const region=Topo.regions.get(id);if(!regions.has(region))regions.set(region,[]);regions.get(region).push(id);}
+    for(const id of HQ.quests.current.floor){const region=Topo.regions.get(id);if(!regions.has(region))regions.set(region,[]);regions.get(region).push(id);}
     for(const cells of regions.values()) {
       const geometry=tile.clone();geometry.setAttribute("floorUvOffset",new T.InstancedBufferAttribute(new Float32Array(cells.flatMap(id=>{const [x,row]=Topo.parse(id);return [x,18-row];})),2));
       const mesh=new T.InstancedMesh(geometry,material,cells.length);mesh.receiveShadow=true;mesh.frustumCulled=false;mesh.userData.cells=cells;

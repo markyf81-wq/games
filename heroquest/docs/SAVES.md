@@ -216,3 +216,42 @@ Armoury trades update existing personal inventories/gold via engine commands, wi
 armoury-<event-id> purchased instances. No shop stock ledger or presentation replay.
 Optional view.fullBoardEnabled restores the printed-board backdrop, default off.
 Neither feature resets pending stages or RNG. Source/diff review only.
+
+
+## Schema 16: campaign and quest context
+
+Content may be `the-trial-combat-v1` or `rescue-sir-ragnar-v1`. Resolve the saved
+quest and its cached topology before checking placements, doors, searches,
+reports or objective completion; importing another map must not mutate the live
+renderer/rule context. Sandbox files remain Quest 1 only.
+
+`campaign` stores completed quest IDs, attempt, per-hero replacement generations,
+settlement guard and the entry roster/loadout. `questState` is empty for The Trial
+and contains alarm/escort for Quest 2. Validate the escort independently of the
+1–4 actual heroes; it participates in combat reports and occupancy but not hero
+inventories/death recovery. Pending escort stores manual die, readiness and
+remaining moves. New command results save before presentation; refresh keeps
+these exact values. The fixed quest healing potion also has validated use/find
+records independent of physical Treasure cards.
+
+Schemas 2–15 migrate without changing in-quest RNG, pending results, spent spells,
+loot or discovery. Entry loadouts can only use the roster available at migration.
+Finished legacy saves settle recovery once. Each new attempt creates a fresh
+Treasure deck and rekeys carried holdings/equipment refs, preventing duplicate
+physical-card/starting-gear identities. Accepted transition saves replace the slot
+before reload and suppress outgoing autosaves; storage failure leaves the old
+session live. See CAMPAIGN.md. Source/diff review only; no new automated checks.
+
+Completed-party spell report validation permits cards restored by settled rest,
+while retaining the spent-card requirement for every in-quest/pending report.
+
+
+Pass Through Rock adds movement.rockTrail without changing schema 16. Older
+saves normalize the absent field to []; no prior casualty is revived. Nonempty
+trails contain at most 64 canonical adjacent cell keys, end at the active hero,
+and require rolled positive remaining phasing movement. Furniture/unit endings
+return along that recorded route and close movement; the motion is saved before
+animation. Trail-less legacy phasing positions fall back to the nearest revealed
+legal square. Closed/finished movement and fresh turns clear the trail. A dodged,
+non-ending floor-trap report can preserve a positive-movement phasing position.
+Source/diff review only; no new automated/browser checks.

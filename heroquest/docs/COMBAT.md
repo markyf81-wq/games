@@ -237,3 +237,11 @@ The 23 October presentation, status, recovery/treasure, controller extraction an
 cleanup have source/diff review only. No new tests, builds, lint, screenshots,
 browser automation or performance checks ran. Mark retains manual verification.
 The historical diagnostic above does not certify these later revisions.
+
+
+Melee presentation: the defender faces the attacker when the attack approach
+begins, before dice, including misses and fully blocked hits. Hero and CPU
+melee share tabletop.animateAttack; Crossbow shots and thrown Daggers opt out,
+and spell effects retain their existing presentation. This updates cosmetic
+saved facings only, with no reach, defence, Sleep or RNG changes. Source/diff
+review only; no new browser or automated checks.

@@ -23,7 +23,7 @@ notices and other games. CODE-STRUCTURE.md maps current component boundaries.
   derived from saved flags/current movement and bounded independently of casts.
 - Zargon portrait modal with explicit Continue before the CPU queue begins.
 - Separate gameplay sandbox with twelve spell presets and turn/opponent fixtures.
-- Autosave/restore, local JSON save export/import, recorded dice stages, schema 15
+- Autosave/restore, local JSON save export/import, recorded dice stages, schema 16
   with guarded older migrations. Menu transfer and setup import confirm replacement
   and keep adventure/sandbox files separate; see SAVES.md.
 - Per-hero inventories, personal gold, starting equipment, one-use healing
@@ -58,6 +58,10 @@ authoring review only. Mark is manually testing. Subsequent focused spell-effect
 Chrome checks and blocked-square authoring renders are recorded in SPELLS.md and
 WALLS.md; these do not constitute a broad gameplay/performance pass.
 
+- Persistent parties, survivor recovery, standard death replacements, entry-loadout
+  restart and original Quest 2, including Sir Ragnar's alarm/escort, needle chest,
+  fixed healing potion and idempotent reward. Source/diff review only.
+
 ## Next priorities
 
 Requested TODO: **Minify the whole codebase** for distribution, keeping readable
@@ -91,10 +95,11 @@ scaled before implementation; no automatic encounter/stat scaling exists yet.
    No hidden information in target hints.
 4. **Complete The Trial and then original campaign.** Genuine quest exceptions,
    remaining base mechanics, rewards and persistent campaign progression.
-   Standard deaths need replacement characters; optional Fair loot recovery carries
-   revived bag owners forward. Retain survivor recovery and possessions. Next-quest advancement should
-   follow the party objective plus a safe exit; early retreat/failure replays.
-   The Armoury is implemented; carrying this party into the next quest is next.
+   Standard death replacements, survivor recovery, optional Fair loot recovery,
+   party carry-forward and original Quest 2 rescue events are implemented; see
+   CAMPAIGN.md. Advancement follows the party objective plus a safe exit; early
+   retreat/failure offers a retry.
+   Next campaign content is Quest 3, Lair of the Orc Warlord; source/map/event work remains.
 5. **Further models/performance/presentation.** Dwarf, Elf and monsters await detailed
    paint; gargoyle wings need assembly. Profile camera/GPU setup/draw calls/shadows
    only with agreed scope. Add a real library thumbnail/catalog entry when playable.

@@ -51,5 +51,11 @@
     return {id:"combat-"+report.id+"-"+diceProgress.stage,kind:"combat",count:results.length,title:actor+" · "+(attack?"Attack":"Defence"),kicker:automatic?"ZARGON’S ROLL":"HERO’S ROLL",automatic,rolled:diceProgress.rolled,results,animate,
       figures,description:results.length+" dice · "+(attack?"Skulls hit":(report.shield==="white-shield"?"White":"Black")+" shields block "+report.skulls+" hit"+(report.skulls===1?"":"s"))};
   }
-  HQ.diceFlow=Object.freeze({afterCommand,next,prompt,tray});
+  function escort(state,animate){
+    const pending=state.pending,hero=state.heroes[state.turnIndex];
+    return {id:"escort-"+state.round+"-"+state.turnIndex,kind:"movement",count:1,title:"Sir Ragnar · Movement",kicker:hero.owner,
+      figures:[HQ.escort.get(state)],description:"One red die · Cannot attack",automatic:false,rolled:pending.die!==null,
+      results:pending.die===null?[]:[pending.die],animate};
+  }
+  HQ.diceFlow=Object.freeze({afterCommand,next,prompt,tray,escort});
 })();

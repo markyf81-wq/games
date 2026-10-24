@@ -15,7 +15,7 @@
     let layout=null;
     const index=(x,y)=>y*columns+x,inside=(x,y)=>x>=0&&x<columns&&y>=0&&y<rows;
     function setProjection(projection) {
-      const blocked=new Set(projection.blocked||HQ.trial.blocked);
+      const blocked=new Set(projection.blocked||HQ.quests.current.blocked);
       const key=[...blocked].join("|")+";"+projection.discoveredCells.join('|')+';'+projection.doors.map(d=>d.id+':'+d.open).join('|');
       if(key===layout)return;layout=key;known.clear();projection.discoveredCells.forEach(id=>known.add(id));edges.fill(15);keys.fill(null);
       const doors=new Map(projection.doors.map(door=>[Topo.edgeKey(...Topo.endpoints(door)),door]));

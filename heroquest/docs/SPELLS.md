@@ -154,18 +154,25 @@ Mark explicitly chose a digital ruling on 2026-10-22: this spell phases through
 all objects, including furniture and units, within the quest’s playable footprint.
 Mark subsequently excluded unused/off-board space from hover, selection and new
 routes; playable black squares still do not reveal furniture or units.
-A hero may pause in an unsafe square while moves remain; consuming the last move
-there, or ending the turn there, is fatal. Stair squares retain their printed per-square sharing exception. Reach a free playable square before attacking/casting/interacting. This
-broader object/last-step treatment is an approved ruling, not additional wording
-on the original card. Veil of Mist's ordinary monster-transit restriction stays
+A hero may pause inside an object while moves remain. Under the revised
+25 October ruling, consuming the last move or ending the turn inside furniture
+or a unit returns the hero to their last legal square and ends movement, with
+no damage. Ending in solid rock/outside playable floor remains fatal. Stair
+squares retain their sharing exception. Reach free playable ground before other
+actions. The broader object traversal and forgiving return are approved house
+rules, not additional wording on the original card. Veil of Mist's ordinary monster-transit restriction stays
 separate. No extra spell/item/card or expansion content was introduced.
 
-Unsafe endings use the existing stone-move death report and normal removal/
-acknowledgement flow. Saves permit a living active phasing hero in an object or
-outside the board only with rolled positive remaining movement, no pending
-result and an open movement phase. They retain dead trapped heroes even if the
-unit that occupied the fatal cell later moves. No additional save fields are
-needed. Preview search is bounded to the playable footprint, with uniform treatment of
+Solid-rock endings use the existing stone-move death report and removal flow.
+Furniture/unit returns append the reverse route to the ordinary movement
+animation; no new damage report or dice is generated. movement.rockTrail stores
+the route since the last clear square across MOVE requests/discovery pauses and
+refresh, erasing loops and clearing when movement ends. Older saves default to
+an empty trail; an already-phasing legacy hero with no safe history uses the
+nearest revealed legal square as a fallback. No historical deaths are undone.
+Living active phasing saves still require rolled positive remaining movement
+and an open movement phase. A non-ending trap result may remain pending while
+phasing; falling-block escape retains its dedicated decision. Preview search is bounded to the playable footprint, with uniform treatment of
 unrevealed objects. The validator retains a 24-cell coordinate guard for older
 phasing/death saves; an old outside origin can route back into playable floor but
 new routes cannot leave it. No off-board/unused square is selectable.
@@ -306,3 +313,6 @@ Geometry/particles finish before recorded resistance dice or compact outcome
 feedback. Later colour/shape/status revisions have source/diff review only;
 earlier approved effect checks do not certify these additions. See
 CODE-STRUCTURE.md for component/lifecycle ownership.
+
+The revised soft landing has source/diff review only. No automated or browser
+checks were run; Mark retains manual verification.

@@ -19,7 +19,7 @@ loader, runtime fetch or new dependency is required. Keep file:// compatibility.
 session/app.js applies and saves a command before any presentation. It then awaits
 movement/camera/spell/removal promises and renders recorded dice or outcomes.
 Interrupted presentation cannot reroll, recast or advance a turn twice. Current
-state schema is 15; content ID and save keys remain unchanged. SAVES.md records
+state schema is 16; each supported quest has a stable content ID and save keys remain unchanged. SAVES.md records
 search/potion state and earlier migrations. Sandbox fixtures remain in their separate save slot.
 
 ## Reusable components
@@ -40,7 +40,9 @@ search/potion state and earlier migrations. Sandbox fixtures remain in their sep
 - session/storage.js: localStorage, slot/envelope ownership and import/export
   wrapper errors; no gameplay validation rules.
 - session/save-validation.js: actor/inventory/dungeon/turn validation and ordered
-  legacy migrations; shares bounded primitive checks with save-reports.js.
+  legacy migrations; shares bounded primitive/item checks with the validators below.
+- session/save-campaign.js: quest-specific escort invariants, campaign history,
+  replacement generations and entry-loadout validation/migration.
 - session/save-reports.js: recorded potion/combat/spell/trap/search results,
   recovery and consumed-item references; never resolves another outcome.
 - ui/save-files.js: local file picker/download and import confirmation; app.js installs only
@@ -56,7 +58,7 @@ search/potion state and earlier migrations. Sandbox fixtures remain in their sep
 - session/movement-actions.js: movement reasons, partial-route actions, cached
   previews and free auto-approach destinations. The controller still sequences
   move-then-act and rechecks the accepted endpoint after reveals.
-- session/dice-flow.js: read-only tray/prompt descriptors and recorded-stage
+- session/dice-flow.js: read-only hero/escort tray/prompt descriptors and recorded-stage
   transitions. app.js retains manual roll triggers, saves, pacing and effects.
 - session/pacing.js: one cancellable keyed presentation timer, CPU pause and
   hidden-tab/modal suspension; commands and RNG remain in the engine.
@@ -199,3 +201,23 @@ cleanup. The backdrop is excluded from picking and authoritative discovery.
 The final cleanup shares equipment-card construction across Inventory and Armoury,
 keeps viewer-only lighting/plinth variables local, simplifies sealed-bag settlement
 and updates stale recovery/shop docs. No tests/build/browser checks were run.
+
+
+Campaign modules: data/quests.js owns immutable catalog/current selection;
+data/ragnar.js owns original Quest 2 content. topology.forQuest caches per-map
+queries for save validation and fresh sessions. rules/campaign.js owns roster
+carry-forward/settlement/replacements; rules/escort.js owns the separate knight
+and his saved post-controller-turn movement. app.js writes transitions before
+reloading into a new immutable scene. See CAMPAIGN.md for source/review limits.
+
+
+## Campaign cleanup (25 October 2026)
+
+Campaign restart/embark share party configuration and item rekeying. The session
+controller uses one save-before-reload installation path for quest changes and
+imports, suppressing old autosaves only after successful storage. Escort HUD and
+dice descriptions live in their existing read-only UI modules; command timing
+and persistence remain in the controller. Campaign/escort save checks are isolated
+from actor and recorded-report checks while retaining their migration order.
+Treasure results omit an outcome paragraph when it repeats the description exactly.
+Source/diff review only; gameplay verification remains with Mark.

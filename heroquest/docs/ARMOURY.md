@@ -25,9 +25,9 @@ Selling worn gear clears its slot; an equipped last weapon leaves the hero unarm
 Owned equipment can be equipped/unequipped between quests with the same slot rules.
 
 Done/Escape returns to results. Trades save immediately. Purchases remain in this
-saved party, including after refresh/export/import. New adventures still create
-fresh parties; next-quest progression and carrying this party forward are the next
-milestone, not implemented here. No invented Trial completion gold is awarded.
+saved party, including after refresh/export/import and continuing to the next
+quest. New adventures create fresh parties; Restart restores this attempt’s entry
+loadout. See CAMPAIGN.md. No invented Trial completion gold is awarded.
 
 ## Engine and persistence
 

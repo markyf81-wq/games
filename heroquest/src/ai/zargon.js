@@ -12,7 +12,7 @@
   }
   function choose(state,monster) {
     const routes=paths(state,monster),options=[];
-    for(const [order,hero] of state.heroes.entries())if(C.inPlay(hero))for(const cell of T.spaceCells(C.cell(hero)))for(const id of T.neighbors(cell)) {
+    for(const [order,hero] of HQ.escort.allies(state).entries())if(C.inPlay(hero)&&hero.found!==false)for(const cell of T.spaceCells(C.cell(hero)))for(const id of T.neighbors(cell)) {
       if(!T.connected(id,cell,state)||!routes.has(id))continue;
       const occupant=T.monsterAt(state,id);if(occupant&&occupant.id!==monster.id)continue;
       options.push({hero,order,path:routes.get(id)});
@@ -23,7 +23,7 @@
     // Never finish a partial approach on a friendly monster's square.
     while(path.length&&T.monsterAt(state,path[path.length-1]))path.pop();
     const end=path[path.length-1]||C.cell(monster),position={...monster,x:T.parse(end)[0],row:T.parse(end)[1]};
-    const target=state.heroes.filter(C.inPlay).find(hero=>C.adjacent(state,position,hero));
+    const target=HQ.escort.allies(state).filter(hero=>C.inPlay(hero)&&hero.found!==false).find(hero=>C.adjacent(state,position,hero));
     return {path,targetId:target?.id||null};
   }
   HQ.zargon=Object.freeze({choose});

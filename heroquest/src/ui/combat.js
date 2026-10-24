@@ -8,7 +8,7 @@
     $("feedback-kicker").textContent="ROUND "+state.round+" · "+(state.phase==="monster-turn"?"ZARGON":"YOUR ACTION");
     const spell=HQ.spellData.byId[report.spellId];
     $("feedback-heading").textContent=report.type==="dungeon-search"?(report.searchKind==="traps"?"Search for traps":"Search for secret doors"):report.type==="trap"?(report.operation==="jump"?"Jump":report.operation==="disarm"?"Disarm trap":HQ.dungeon.names[report.trapKind]):report.type==="treasure"?report.attackerName+" searches":report.type==="combat"?report.attackerName+" → "+report.defenderName:spell?spell.name:report.attackerName;
-    const figures=[...state.heroes,...state.monsters],participants=document.createElement("div");participants.className="roll-participants";
+    const figures=HQ.sessionPresentation.actors(state),participants=document.createElement("div");participants.className="roll-participants";
     HQ.portraits.set(participants,figures.filter(figure=>[report.attackerId,report.defenderId].includes(figure.id)));
     content.append(participants);
     const result=document.createElement("strong");result.className="feedback-result";

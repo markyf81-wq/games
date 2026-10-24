@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const HQ=window.HeroQuest;
-  const actors=state=>[...state.heroes,...state.monsters];
+  const actors=state=>[...HQ.escort.allies(state),...state.monsters];
   const pendingReport=state=>state?.pending?.type==="report"?state.lastReport:null;
   const casualtyTypes=new Set(["combat","spell","stone-move","treasure","trap"]);
   function defeatedReport(state) {
@@ -49,7 +49,8 @@
     // while the spent trap/blocked square still waits for the result.
     const trapStatus=report.statusBefore==="hidden"?"found":report.statusBefore;
     const dungeon=report.type==="trap"&&report.trapId?{...state.dungeon,traps:{...state.dungeon.traps,[report.trapId]:{...state.dungeon.traps[report.trapId],status:trapStatus}}}:state.dungeon;
-    return {...state,phase,dungeon,heroes:restore(state.heroes),monsters:restore(state.monsters),log:index<0?state.log:state.log.slice(0,index)};
+    const questState=state.questState?.escort?{...state.questState,escort:restore([state.questState.escort])[0]}:state.questState;
+    return {...state,phase,dungeon,questState,heroes:restore(state.heroes),monsters:restore(state.monsters),log:index<0?state.log:state.log.slice(0,index)};
   }
   HQ.sessionPresentation=Object.freeze({actors,pendingReport,defeatedReport,defeatedFigure,healthChanges,nextHeroTurn,statuses,unrevealed});
 })();

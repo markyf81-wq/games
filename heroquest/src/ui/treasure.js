@@ -29,13 +29,14 @@
       if(current?.id===report.id)return true;
       reset();
       const instance=HQ.treasureData.instancesById[report.search.cardId],card=HQ.treasureData.byId[instance?.kind];
-      const special=HQ.trial.treasureRooms[report.search.roomId];
+      const special=HQ.quests.current.treasureRooms[report.search.roomId];
       current={id:report.id,ready:false,animations:[],watchdog:0};const record=current;
       next.disabled=true;
       $("treasure-draw-hero").textContent=report.attackerName+" · Treasure search";
       $("treasure-card-name").textContent=card?.name||"Quest discovery";
-      $("treasure-card-description").textContent=card?.description||special?.description||report.detail;
-      $("treasure-card-outcome").textContent=report.detail;
+      const description=card?.description||special?.description||report.detail,outcome=$("treasure-card-outcome");
+      $("treasure-card-description").textContent=description;
+      outcome.textContent=report.detail;outcome.hidden=report.detail===description;
       $("treasure-card-face").src=card?.artwork||HQ.treasureData.back;
       $("treasure-card-face").alt=card?.name||"Treasure";
       stage.classList.remove("is-revealed");stage.classList.toggle("is-quest-find",!card);

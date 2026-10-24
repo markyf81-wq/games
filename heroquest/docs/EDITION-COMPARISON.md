@@ -26,5 +26,6 @@ below and chose the optional solid-furniture rule.
 
 Printed pp10–11, 14–15 and 16–17 were visually reviewed. Other locators were
 checked in extracted text. This is a focused comparison, not a complete audit of
-modern cards, quests or expansions. Item trading and shop/selling are now implemented. Gold transfer, replacement heroes and
-next-quest advancement remain future work. Changes have source/diff review only.
+modern cards, quests or expansions. Item trading and shop/selling are now implemented. Replacement heroes and
+party carry-forward into Quest 2 are implemented; see CAMPAIGN.md. Gold transfer
+and later quests remain future work. Changes have source/diff review only.

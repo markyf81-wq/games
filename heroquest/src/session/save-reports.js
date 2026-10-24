@@ -1,9 +1,12 @@
 (function () {
   "use strict";
-  const HQ=window.HeroQuest,Q=HQ.trial,T=HQ.topology,Data=HQ.combatData;
+  const HQ=window.HeroQuest,Data=HQ.combatData;
   const {object,integer,boolean,expect}=HQ.saveValidation;
   // Recorded results are checked without resolving a roll or changing a queue.
-  HQ.validateSavedReports=function(s,{heroIds,monsterIds,doorIds,trapIds,trapDefinitions,roomIds,treasure,itemIds,oldEffects}){
+  HQ.validateSavedReports=function(s,{Q,T,heroIds,monsterIds,doorIds,trapIds,trapDefinitions,roomIds,treasure,itemIds,oldEffects}){
+    // Completed parties regain their cards; the recorded final spell still
+    // belongs to the previous quest, before that between-quest reset.
+    const spellSpent=(hero,id)=>Boolean(hero&&(hero.spellsUsed.includes(id)||s.campaign?.settled&&HQ.quest.isEnded(s.phase)&&s.pending===null&&HQ.spells.book(hero).some(card=>card.id===id)));
     if(s.lastItemUse!==null) {
       const use=s.lastItemUse,owner=s.heroes.find(hero=>hero.id===use?.heroId);
       const definition=HQ.itemData.byId[use?.itemKind];
@@ -12,10 +15,11 @@
       if(definition.healingDice) {
         expect(use.redDice.length===1&&integer(use.redDice[0],1,6)&&use.bodyBefore<use.maxBody);
         expect(use.bodyAfter===Math.min(use.maxBody,use.bodyBefore+use.redDice[0])&&use.healed===use.bodyAfter-use.bodyBefore);
-      } else expect(use.redDice.length===0&&use.bodyBefore>0&&use.bodyAfter===use.bodyBefore&&use.healed===0&&use.detail===definition.summary);
+      } else if(definition.healingPoints)expect(use.redDice.length===0&&use.bodyBefore<use.maxBody&&use.bodyAfter===Math.min(use.maxBody,use.bodyBefore+definition.healingPoints)&&use.healed===use.bodyAfter-use.bodyBefore);
+      else expect(use.redDice.length===0&&use.bodyBefore>0&&use.bodyAfter===use.bodyBefore&&use.healed===0&&use.detail===definition.summary);
     }
     if(s.lastReport!==null) {
-      const r=s.lastReport,actors=new Set([...s.heroes.map(h=>h.id),...monsterIds]);
+      const r=s.lastReport,actors=new Set([...HQ.escort.allies(s).map(h=>h.id),...monsterIds]);
       expect(object(r)&&integer(r.id,1)&&actors.has(r.attackerId)&&typeof r.attackerName==="string");
       if(r.type==="combat") {
         expect(actors.has(r.defenderId)&&typeof r.defenderName==="string"&&["hero","monster"].includes(r.attackerSide));
@@ -23,12 +27,12 @@
         for(const [rolls,max] of [[r.attackDice,8],[r.defendDice,9]])expect(Array.isArray(rolls)&&rolls.length<=max&&rolls.every(face=>Data.faces.includes(face)));
         for(const field of ["skulls","shields","damage","unblockedHits","bodyBefore","bodyAfter","maxBody"])expect(integer(r[field],0,12));
         expect(boolean(r.defeated));
-        if(r.spellId!==undefined)expect(r.spellId==="genie"&&s.heroes.find(hero=>hero.id===r.attackerId)?.spellsUsed.includes("genie")&&r.attackDice.length===5);
+        if(r.spellId!==undefined)expect(r.spellId==="genie"&&spellSpent(s.heroes.find(hero=>hero.id===r.attackerId),"genie")&&r.attackDice.length===5);
         if(r.weaponId!==undefined)expect(r.attackerSide==="hero"&&r.spellId===undefined&&Object.hasOwn(Data.weapons,r.weaponId));
         if(r.thrownItemId!==undefined)expect(r.weaponId==="dagger"&&s.heroes.some(hero=>hero.id===r.attackerId)&&typeof r.thrownItemId==="string"&&/^[a-z0-9-]{1,80}$/.test(r.thrownItemId)&&!itemIds.includes(r.thrownItemId));
       } else if(r.type==="spell") {
         const card=HQ.spellData.byId[r.spellId],caster=s.heroes.find(hero=>hero.id===r.attackerId),target=[...s.heroes,...s.monsters].find(actor=>actor.id===r.defenderId);
-        expect(card?.implemented&&caster&&target&&caster.spellsUsed.includes(card.id)&&typeof r.defenderName==="string"&&typeof r.detail==="string");
+        expect(card?.implemented&&caster&&target&&spellSpent(caster,card.id)&&typeof r.defenderName==="string"&&typeof r.detail==="string");
         const count=r.spellId==="swift-wind"&&r.redDice?.length?r.redDice.length:r.spellId==="ball-of-flame"?2:r.spellId==="fire-of-wrath"?1:r.spellId==="sleep"?target.mind:0;
         expect(Array.isArray(r.redDice)&&r.redDice.length===count&&r.redDice.every(d=>integer(d,1,6)));
         if(r.spellId==="swift-wind")expect([0,1,2].includes(r.redDice.length));
@@ -36,7 +40,7 @@
         expect(boolean(r.defeated)&&r.maxBody===target.maxBody&&r.bodyAfter<=r.maxBody&&r.damage===Math.max(0,r.bodyBefore-r.bodyAfter)&&r.healed===Math.max(0,r.bodyAfter-r.bodyBefore));
         if(oldEffects){r.rollRole="monster";r.rollDescription=r.redDice.length?"Each 5 or 6 prevents one Body damage":"";}
         expect(["hero","monster"].includes(r.rollRole)&&typeof r.rollDescription==="string");
-      } else if(r.type==="spell-door")expect(r.spellId==="genie"&&doorIds.has(r.doorId)&&s.openDoors.includes(r.doorId)&&s.heroes.find(hero=>hero.id===r.attackerId)?.spellsUsed.includes("genie")&&typeof r.detail==="string");
+      } else if(r.type==="spell-door")expect(r.spellId==="genie"&&doorIds.has(r.doorId)&&s.openDoors.includes(r.doorId)&&spellSpent(s.heroes.find(hero=>hero.id===r.attackerId),"genie")&&typeof r.detail==="string");
       else if(r.type==="sleep-check")expect(monsterIds.has(r.attackerId)&&r.defenderId===r.attackerId&&r.spellId==="sleep"&&Array.isArray(r.redDice)&&r.redDice.length===s.monsters.find(monster=>monster.id===r.attackerId).mind&&r.redDice.every(d=>integer(d,1,6))&&boolean(r.awake)&&r.awake===r.redDice.includes(6)&&r.rollRole==="monster"&&typeof r.rollDescription==="string"&&typeof r.detail==="string");
       else if(r.type==="stone-move")expect(heroIds.has(r.attackerId)&&r.defenderId===r.attackerId&&s.heroes.some(hero=>hero.id===r.attackerId)&&boolean(r.defeated)&&typeof r.detail==="string"&&integer(r.bodyBefore,1,12)&&integer(r.bodyAfter,0,12)&&integer(r.maxBody,1,12));
       else if(r.type==="treasure") {
@@ -59,7 +63,7 @@
       if(r.search!==undefined) {
         const find=r.search,owner=s.heroes.find(hero=>hero.id===find?.heroId),instance=HQ.treasureData.instancesById[find?.cardId],card=HQ.treasureData.byId[instance?.kind],special=Q.treasureRooms[find?.roomId];
         expect(["treasure","combat"].includes(r.type)&&object(find)&&owner&&roomIds.has(find.roomId)&&treasure.searched[owner.id].includes(find.roomId)&&integer(find.gold)&&boolean(find.immediateAttack));
-        if(find.cardId===null)expect(special&&find.specialId===special.note&&treasure.claimed.includes(find.roomId)&&find.gold===(special.gold||0)&&find.itemId===null&&find.wanderingId===null&&!find.immediateAttack);
+        if(find.cardId===null)expect(special&&find.specialId===special.note&&treasure.claimed.includes(find.roomId)&&find.gold===(special.gold||0)&&(special.itemKind?typeof find.itemId==="string"&&/^quest-find-[1-9][0-9]*$/.test(find.itemId):find.itemId===null)&&find.wanderingId===null&&!find.immediateAttack);
         else {
           expect(card&&find.specialId===null&&find.gold===(card.gold||0));
           expect((["gold","potion"].includes(card.category)?treasure.removed:treasure.deck).includes(find.cardId));
@@ -74,7 +78,7 @@
         const owner=s.heroes.find(hero=>hero.id===r.defenderId),use=s.lastItemUse;
         expect(["combat","treasure","trap"].includes(r.type)&&object(r.recovery)&&r.defeated&&r.bodyAfter===0&&owner&&integer(r.recovery.bodyAfter,1,owner.maxBody)&&r.recovery.healed===r.recovery.bodyAfter);
         if(r.recovery.spellId!==undefined){
-          expect(r.recovery.itemUseId===undefined&&["heal-body","water-of-healing"].includes(r.recovery.spellId)&&HQ.spells.book(owner).some(card=>card.id===r.recovery.spellId)&&owner.spellsUsed.includes(r.recovery.spellId)&&integer(r.recovery.spellReportId,r.id+1,s.nextCombatId-1)&&r.recovery.bodyAfter===Math.min(4,owner.maxBody));
+          expect(r.recovery.itemUseId===undefined&&["heal-body","water-of-healing"].includes(r.recovery.spellId)&&HQ.spells.book(owner).some(card=>card.id===r.recovery.spellId)&&spellSpent(owner,r.recovery.spellId)&&integer(r.recovery.spellReportId,r.id+1,s.nextCombatId-1)&&r.recovery.bodyAfter===Math.min(4,owner.maxBody));
         }else{
           expect(integer(r.recovery.itemUseId,1,s.nextCombatId-1));
           if(use?.id===r.recovery.itemUseId)expect(use.heroId===owner.id&&use.bodyBefore===0&&use.bodyAfter===r.recovery.bodyAfter);

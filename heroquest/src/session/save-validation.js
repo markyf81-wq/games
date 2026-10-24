@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  const HQ=window.HeroQuest,Q=HQ.trial,T=HQ.topology,Data=HQ.combatData;
+  const HQ=window.HeroQuest,Data=HQ.combatData;
   // Validate and migrate a detached save in the original dependency order.
   const object=value=>value!==null&&typeof value==="object"&&!Array.isArray(value);
   const integer=(value,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value)&&value>=min&&value<=max;
@@ -10,7 +10,10 @@
   function ids(values,allowed){return Array.isArray(values)&&new Set(values).size===values.length&&values.every(id=>allowed.has(id));}
   function validate(snapshot,{slot,version}) {
     expect(object(snapshot)&&snapshot.version===version&&object(snapshot.state));
-    const s=snapshot.state;
+    const s=snapshot.state,Q=HQ.quests.forState(s);expect(Q);
+    const T=HQ.topology.forQuest(Q),preCampaign=integer(s.schemaVersion,2,15);
+    if(preCampaign){expect(Q.id===HQ.quests.first.id);s.questState={};}
+    expect(object(s.questState));
     const preRuleSettings=integer(s.schemaVersion,2,13);
     if(preRuleSettings&&object(s.settings))s.settings.fairLootRecovery=false;
     const preSealedBags=integer(s.schemaVersion,2,12);if(preSealedBags)s.questRecovery=null;
@@ -19,7 +22,7 @@
     const preEquipment=[2,3,4,5,6,7,8].includes(s.schemaVersion);
     const preDungeon=[2,3,4,5,6,7].includes(s.schemaVersion);
     if(preDungeon)s.dungeon=HQ.dungeon.fresh();
-    expect(object(s.dungeon)&&Object.hasOwn(HQ.dungeonData.layouts,s.dungeon.layout)&&(slot==="sandbox"||s.dungeon.layout==="trial")&&object(s.dungeon.traps));
+    expect(object(s.dungeon)&&Object.hasOwn(HQ.dungeonData.layouts,s.dungeon.layout)&&(slot==="sandbox"?Q.id===HQ.quests.first.id:s.dungeon.layout===(Q.dungeonLayout||"trial"))&&object(s.dungeon.traps));
     const trapDefinitions=HQ.dungeon.traps(s),trapIds=new Set(trapDefinitions.map(trap=>trap.id)),searchAreaCount=Q.rooms.length+trapDefinitions.filter(trap=>trap.kind==="pit").length;
     expect(Object.keys(s.dungeon.traps).length===trapIds.size&&Object.keys(s.dungeon.traps).every(id=>trapIds.has(id)));
     for(const trap of trapDefinitions){const entry=s.dungeon.traps[trap.id];expect(object(entry)&&["hidden","found","sprung","disarmed"].includes(entry.status)&&integer(entry.foundRound,0,s.round)&&integer(entry.foundTurn,0,3));}
@@ -34,7 +37,7 @@
     expect(s.monsters.every(monster=>originalMonsterIds.has(monster.id)||!preTreasure&&/^wanderer-[1-9][0-9]*$/.test(monster.id)&&monster.kind===Q.wanderingMonster.kind));
     const entityIds=new Set([...monsterIds,...Q.furniture.map(f=>f.id)]),doorIds=new Set(HQ.dungeon.doors(s).map(d=>d.id));
     const legacy=s.schemaVersion===2,preSpells=legacy||s.schemaVersion===3,oldEffects=preSpells||s.schemaVersion===4,preInventory=oldEffects||s.schemaVersion===5;
-    expect((preSearches||[10,11,12,13,14,15].includes(s.schemaVersion))&&s.contentVersion===Q.id&&["hero-turn","monster-turn","defeat", "victory", "retreat"].includes(s.phase));
+    expect((preSearches||[10,11,12,13,14,15,16].includes(s.schemaVersion))&&s.contentVersion===Q.id&&["hero-turn","monster-turn","defeat", "victory", "retreat"].includes(s.phase));
     if(legacy)expect(["hero-turn","monster-turn","defeat"].includes(s.phase));
     expect(Array.isArray(s.heroes)&&s.heroes.length>=1&&s.heroes.length<=4&&ids(s.heroes.map(h=>h?.id),heroIds));
     if(preTreasure)expect(s.monsters.length===Q.monsters.length);
@@ -45,7 +48,7 @@
       const hero=heroIds.has(actor.id),definition=hero?HQ.heroes.find(h=>h.id===actor.id):Q.monsters.find(m=>m.id===actor.id)||{kind:Q.wanderingMonster.kind};
       const stats=hero?Data.heroes[actor.id]:Data.monsters[definition.kind];
       if(hero&&oldEffects)actor.trapped=false;
-      const phasing=!oldEffects&&hero&&s.phase==="hero-turn"&&s.heroes[s.turnIndex]?.id===actor.id&&object(s.movement)&&s.movement.rolled&&s.movement.remaining>0&&!s.movement.closed&&T.magic(s,actor,"passThroughRock")&&actor.body>0&&!actor.exit&&s.pending===null;
+      const phasing=!oldEffects&&hero&&s.phase==="hero-turn"&&s.heroes[s.turnIndex]?.id===actor.id&&object(s.movement)&&s.movement.rolled&&s.movement.remaining>0&&!s.movement.closed&&T.magic(s,actor,"passThroughRock")&&actor.body>0&&!actor.exit&&(s.pending===null||s.pending?.type==="report"&&s.lastReport?.type==="trap"&&s.lastReport.defenderId===actor.id&&!s.lastReport.endTurn);
       expect(hero&&actor.trapped?actor.body===0:phasing||T.floor.has(T.key(actor.x,actor.row))&&!T.blocked.has(T.key(actor.x,actor.row))&&!T.furniture.has(T.key(actor.x,actor.row)));
       if(actor.body>0&&HQ.dungeon.blocked(s).includes(T.key(actor.x,actor.row)))expect(phasing||hero&&s.pending?.type==="report"&&s.lastReport?.type==="trap"&&s.lastReport.defenderId===actor.id&&s.lastReport.fallingFrom&&!s.lastReport.escaped);
       expect(actor.kind===definition.kind&&typeof actor.name==="string"&&actor.name.length>0&&integer(actor.body,0,stats.body)&&actor.maxBody===stats.body);
@@ -89,6 +92,7 @@
         expect(object(actor.effects)&&Object.keys(HQ.spells.monsterEffects()).every(flag=>boolean(actor.effects[flag])));
       }
     }
+    const campaign=HQ.validateSavedCampaign(s,{Q,T,doorIds,preCampaign});
     const elf=s.heroes.find(hero=>hero.id==="elf"),wizard=s.heroes.find(hero=>hero.id==="wizard");
     expect(Array.isArray(s.belongings)&&s.belongings.length<=s.heroes.length&&new Set(s.belongings.map(loot=>loot?.id)).size===s.belongings.length);
     for(const loot of s.belongings){
@@ -128,6 +132,14 @@
     const m=s.movement;if(oldEffects){m.veilOfMist=false;m.passThroughRock=false;}
     if(preEquipment)m.swiftWind=Array.isArray(m.dice)&&m.dice.length===4;
     expect(object(m)&&boolean(m.rolled)&&boolean(m.started)&&boolean(m.closed)&&boolean(m.veilOfMist)&&boolean(m.passThroughRock)&&integer(m.remaining,0,24));
+    if(m.rockTrail===undefined)m.rockTrail=[];
+    expect(Array.isArray(m.rockTrail)&&m.rockTrail.length<=64&&m.rockTrail.every(id=>typeof id==="string"&&T.rockBounds(id)));
+    if(m.rockTrail.length){
+      expect(m.rolled&&m.remaining>0&&!m.closed&&s.phase==="hero-turn"&&T.magic(s,s.heroes[s.turnIndex],"passThroughRock")&&m.rockTrail.at(-1)===T.key(s.heroes[s.turnIndex].x,s.heroes[s.turnIndex].row));
+      for(let i=1;i<m.rockTrail.length;i++){
+        const [x,row]=T.parse(m.rockTrail[i-1]),[nx,nr]=T.parse(m.rockTrail[i]);expect(Math.abs(x-nx)+Math.abs(row-nr)===1);
+      }
+    }
     const moveCount=HQ.inventory.movementDice(s.heroes[s.turnIndex])*(m.swiftWind?2:1);
     expect(boolean(m.swiftWind)&&Array.isArray(m.dice)&&(m.rolled?m.dice.length===moveCount:m.dice.length===0&&!m.swiftWind)&&m.dice.every(d=>integer(d,1,6)));
     expect(m.rolled?m.remaining<=m.dice.reduce((a,b)=>a+b,0):m.remaining===0&&!m.started&&!m.closed&&!m.veilOfMist&&!m.passThroughRock);
@@ -137,7 +149,7 @@
     for(const [id,memory] of Object.entries(s.monsterMemory))expect(monsterIds.has(id)&&object(memory)&&memory.id===id&&integer(memory.x)&&integer(memory.row)&&T.floor.has(T.key(memory.x,memory.row))&&s.discoveredEntities.includes(id));
     expect(Array.isArray(s.log)&&s.log.length<=60&&s.log.every(event=>object(event)&&integer(event.id,1)&&typeof event.text==="string"));
     if(preInventory)s.lastItemUse=null;
-    HQ.validateSavedReports(s,{heroIds,monsterIds,doorIds,trapIds,trapDefinitions,roomIds,treasure,itemIds,oldEffects});
+    HQ.validateSavedReports(s,{Q,T,heroIds,monsterIds,doorIds,trapIds,trapDefinitions,roomIds,treasure,itemIds,oldEffects});
     if(s.phase==="monster-turn"){
       if(oldEffects&&object(s.monsterTurn))s.monsterTurn.resumeId=null;
       expect(object(s.monsterTurn)&&ids(s.monsterTurn.queue,monsterIds)&&s.monsterTurn.queue.length>0&&integer(s.monsterTurn.index,0,s.monsterTurn.queue.length));
@@ -152,6 +164,11 @@
       expect(object(s.pending));
       if(s.pending.type==="handoff")expect(s.phase==="hero-turn"&&s.pending.heroId===s.heroes[s.turnIndex].id);
       else if(s.pending.type==="monster-intro")expect(s.phase==="monster-turn");
+      else if(s.pending.type==="escort"){
+        const escort=s.questState.escort,pending=s.pending;
+        expect(Q.escort&&s.phase==="hero-turn"&&escort?.found&&HQ.combat.inPlay(escort)&&escort.controllerId===s.heroes[s.turnIndex].id&&pending.heroId===escort.controllerId);
+        expect(boolean(pending.ready)&&integer(pending.remaining,0,6)&&(pending.die===null?!pending.ready&&pending.remaining===0:integer(pending.die,1,6)&&pending.remaining<=pending.die));
+      }
       else expect(s.pending.type==="report"&&s.lastReport&&s.pending.reportId===s.lastReport.id);
     }
     expect([null,"briefing","movement"].includes(snapshot.screen));
@@ -185,7 +202,9 @@
     // never create new loot or a retroactive revival.
     if(preSealedBags)HQ.recovery.complete(s);
     else expect(s.phase!=="victory"||s.pending!==null||s.questRecovery!==null);
+    if(preCampaign)HQ.campaign.settle(s);
+    else expect(!HQ.quest.isEnded(s.phase)||s.pending!==null||campaign.settled);
     return snapshot;
   }
-  HQ.saveValidation=Object.freeze({validate,object,integer,boolean,expect});
+  HQ.saveValidation=Object.freeze({validate,object,integer,boolean,expect,ids,itemsValid});
 })();

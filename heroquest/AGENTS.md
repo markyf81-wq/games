@@ -3,11 +3,11 @@
 ## Scope and working rules
 
 Original North American base Game System, shared-browser pass-and-play, 1–4
-selected hero miniatures and CPU Zargon. Current prototype supports The Trial,
+selected hero miniatures and CPU Zargon. Current prototype supports The Trial and The Rescue of Sir Ragnar,
 movement, doors, discovery, melee/Crossbow combat, twelve elemental spells, individual exits,
 quest outcomes, personal inventories, original treasure searches/potions and
 browser saves, trap/secret-door searches, jumping and disarming. Chaos spells and
-campaign progression remain unfinished. Do not call it
+the remaining original quests remain unfinished. Do not call it
 a complete adaptation or add a playable library catalog record yet.
 
 Follow Mark's root rules. Never create/use/suggest worktrees. No commit/push or
@@ -35,7 +35,7 @@ compatibility, local assets and the Games library return link.
 | Area | Responsibility |
 | --- | --- |
 | index.html, heroquest.css, ui.css, drawers.css | Entry, base styling, common UI tokens, native dialogs and anchored board panels |
-| src/data/board.js, trial.js | 26×19 board/rooms, source-linked original Trial placements/narrative/stats |
+| src/data/board.js, trial.js, ragnar.js, quests.js | 26×19 board, source-linked original quest definitions and immutable quest selection |
 | src/data/pieces.js | Public names/descriptions and 36-type model catalog; no hidden quest placements |
 | src/data/combat.js, spells.js | Source-linked canonical stats/weapons and twelve original spell cards/descriptions |
 | src/data/dungeon.js, src/rules/dungeon.js | Original trap/search/disarm/jump rules, empty Trial layout and isolated practice placements |
@@ -44,13 +44,14 @@ compatibility, local assets and the Games library return link.
 | src/rules/topology.js | Pure routes, occupancy, weighted stairs, sight and rock phasing |
 | src/rules/combat.js, spells.js, quest.js | Legal actions, recorded resolution and quest/exit queries |
 | src/rules/recovery.js | Own healing at zero Body, per-hero action eligibility, standard inheritance/loss and optional fair death bags/revival |
+| src/rules/campaign.js, escort.js | Between-quest settlement, entry loadouts, replacements and Sir Ragnar’s alarm/escort movement |
 | src/data/treasure.js, src/rules/treasure.js | Physical 24-card deck, search limits, quest finds, hazards and wandering Orc placement |
 | src/data/items.js, src/rules/inventory.js | Source-linked item definitions, per-hero holdings, potion eligibility/consumption/recovery |
 | src/ai/zargon.js | Replaceable deterministic legal CPU policy; no hidden discoveries or invented powers |
 | src/engine/exploration.js | Serializable state, RNG, command boundary, discovery and filtered projection |
 | src/session/app.js | Command/save coordination, presentation sequencing, contexts and UI events |
 | src/session/storage.js | Browser storage, slot/envelope ownership and save-file wrappers |
-| src/session/save-validation.js, save-reports.js | Ordered state migrations/validation and recorded-result validation |
+| src/session/save-validation.js, save-campaign.js, save-reports.js | Ordered state migrations, shared validation primitives, campaign/escort and recorded-result validation |
 | src/session/movement-actions.js | Cached route previews, movement reasons and free approach destinations |
 | src/session/dice-flow.js | Read-only dice/prompt descriptors and recorded-stage transitions |
 | src/session/sandbox.js | Isolated opt-in practice fixtures/tools and twelve spell presets |
@@ -119,7 +120,7 @@ card use or CPU activation. Save pending reports, queue/cursor/resumeId and dice
 stages; refreshing goes straight to the recorded stage without replaying effects.
 
 Adventure key heroquest.session.v1; sandbox key heroquest.sandbox.v1. Envelope 1,
-state schema 15, content the-trial-combat-v1. See SAVES.md for v2–v14 migrations.
+state schema 16; content IDs the-trial-combat-v1 / rescue-sir-ragnar-v1. See SAVES.md for migrations.
 Preserve prior RNG, pending reports and spent cards. Pre-spell v2/v3 adventures
 migrate with empty books; never grant new cards midway. Keep rejected/corrupt saves
 until explicit replacement. New setup/restart replaces only its own slot. Camera,
@@ -161,8 +162,11 @@ shows the rest. Move partway here dispatches ordinary MOVE to that prefix only.
 Mark's Pass Through Rock ruling: ordinary MOVE can target invisible PLAYABLE
 quest-floor cells, traverse every object (walls, furniture, units, rubble) and
 pause inside an object with movement remaining. No off-board/unused-map target
-or new route is allowed. Zero moves or End turn in an unsafe space is fatal;
-shared stairs remain an exception. Reach free playable ground before other actions.
+or new route is allowed. Zero moves or End turn in solid rock/outside the playable
+floor remains fatal. Furniture/unit endings return along movement.rockTrail to
+the last legal square and end movement without damage; End turn still advances
+normally after the return. Shared stairs retain their occupancy exception.
+Reach free playable ground before other actions.
 Topo.unsafe is authoritative, never a hidden-preview oracle. Preserve guarded
 legacy outside/trapped saves and return routes; no new off-board interaction.
 
@@ -482,7 +486,7 @@ ATTACK resolutions, leaving the live action/report unspent. No force-roll flag
 or special command enters the engine/save. Shoot before any other RNG-consuming
 action; reprepare for repetition. Sandbox equipment practice supplies Crossbow only in fresh fixtures;
 Wizard presets preserve his Dagger. Ordinary gear may have multiple owned copies.
-Equipment acquisition/trading remain unfinished. See COMBAT.md,
+Equipment acquisition/trading and the between-quest Armoury are implemented; gold trading remains unfinished. See COMBAT.md,
 INVENTORY.md and SANDBOX.md. Current source/offline art review only.
 
 Dagger throws use ATTACK with an optional owned throwItemId, not the equipped
@@ -521,7 +525,7 @@ Default final ACK_REPORT transfers items/gold to an eligible living companion
 in the same room/straight corridor, or loses them when none is present (no actual
 monster required). Multiple heirs require a cancellable board choice; one heir
 is automatic. Gear is carried, not equipped. Entrapment possessions are lost.
-Standard deaths do not revive after victory; next-quest replacements are future work.
+Standard deaths receive replacement characters with starting gear on the next quest/retry; see CAMPAIGN.md.
 
 With Fair loot recovery, every finalized death instead drops a sealed bag exactly
 once, including empty/unsafe deaths. Clear owner inventory/slots to unarmed;
@@ -744,7 +748,7 @@ The outcome screen opens the shop; no dungeon shopping or free adventure gold.
 Sandbox Prepare Armoury gives practice-only funds in an ended session. Schema 15
 keeps questRecovery counts historical after trades, while current inventories keep
 ordinary uniqueness/equipment guards. See ARMOURY.md. New adventures still reset
-the party; next-quest progression remains unfinished.
+the party; Continue campaign carries it into Quest 2 (CAMPAIGN.md).
 
 Menu Show full board saves view.fullBoardEnabled, default false. One unlit dim
 printed-board plane covers unknown cells only; a cached nearest-filter discovery
@@ -756,3 +760,70 @@ Both features have source/diff review only; no tests/build/browser checks ran.
 Cleanup: inventory/Armoury card buttons share ui/item-card.js, loaded before both
 controllers. Model-viewer lighting/plinth objects stay local to renderer setup.
 Latest work has source/diff review only; commit/push does not authorize tests.
+
+
+## Campaign and Sir Ragnar (schema 16)
+
+Read docs/CAMPAIGN.md before changing quest transitions, escort rules or map data.
+The original map/notes were visually reviewed in quest-book PDF p6 lower half
+rotated 180° / p7 lower half, plus p4 symbol key. No automated/browser gameplay
+verification was run; Mark retains testing.
+
+src/data/ragnar.js owns original Quest 2 placements/notes. data/quests.js selects
+an immutable current map from the adventure save before topology/scene factories
+load; HQ.trial remains original Quest 1 for isolated sandbox fixtures.
+Topology.forQuest supports validating imports from either map without mutating
+live globals. Scene/rule factories bind quests.current. Embark/restart writes
+first and reloads, suppressing outgoing autosaves; preserve view options but
+reset framing/facing to the new stairs. New adventure always begins Quest 1.
+
+rules/campaign.js owns completed IDs, attempt/generation tracking, entry loadouts,
+idempotent settlement, survivor carry-forward and fresh standard replacements.
+Restore surviving Body/Mind/spells/statuses between attempts; preserve exact
+fair bag settlement. Re-key carried item identities independently of the new
+24-card Treasure deck, including equipped refs and inherited starting gear.
+Restart uses the entry roster, never regrants this attempt's finds. Legacy saves
+use their migration roster as the only recoverable baseline. Quest 2 is the last
+implemented map; never offer a playable Quest 3 yet.
+
+rules/escort.js owns Sir Ragnar's alarm, controller and movement paths. He is
+separate from the selectable hero roster; include him in occupancy, LOS, CPU
+victims and presentation actors, not inventory/casting/recovery. Use the supplied
+Chaos Warlock sculpt, 2 Body/2 defence/no attack. Finding his cell reveals every
+remaining room/monster/furniture and opens all doors once; no treasure search in
+that cell. On his controller's End turn, pending escort requires a manual one-die
+roll, then ordinary tile contexts/path and Finish escort. ROLL_ESCORT,
+ACK_ESCORT_ROLL, MOVE_ESCORT and END_ESCORT are saved commands; refresh cannot
+reroll. Stop at the first stair square. EMBARK_QUEST accepts next/retry only
+following settled terminal results. Failed controller ownership passes to the
+first remaining hero. Digital policies/limits are documented in CAMPAIGN.md.
+
+The ragnar dungeon layout contains the original secret door and one-Body needle
+chest A. Chest B grants 60 gold plus quest-healing-potion (fixed 4 Body, distinct
+from the Treasure one-die potion; no misleading card art). The rescue reward is
+240 gold split once among completed exits. Standard/Fair death rules still apply
+only to actual heroes. Schema 16 validates quest/campaign/escort records and
+preserves schemas 2–15, pending outcomes and RNG. Sandbox stays on Quest 1;
+fixture resets maintain an entry roster and clear settlement when re-entering play.
+
+
+Melee attack approach faces both participants towards one another before dice,
+regardless of eventual hit/block. tabletop.animateAttack accepts melee=true by
+default for CPU attacks; player Crossbow/Dagger throws pass false. Save cosmetic
+facings through the existing view snapshot; never alter combat rules/statuses.
+Source/diff review only, no new checks.
+
+
+Pass Through Rock soft landing (25 October): movement.rockTrail records the
+route since the last clear square, including reveal pauses and refresh. Record
+against actual occupancy only during accepted moves; never use it as a hidden
+preview oracle. topology.rockReturnPath reverses that route; trail-less legacy
+phasing saves use the nearest revealed legal square as a guarded fallback.
+On exhausted movement/End turn inside furniture or a figure, append the retreat
+to the saved motion, end movement, consume active phasing and retain health.
+Only solid/off-playfield endings use the existing fatal stone-move report.
+Falling-block trap escape remains its own pending decision. A dodged spear may
+retain an active phasing position while its recorded result is pending.
+The additive trail defaults empty on older saves, validates bounded adjacent
+coordinates/current endpoint, and clears on ended movement/turn changes. No
+schema bump, retroactive casualty changes or automatic tests/browser checks.

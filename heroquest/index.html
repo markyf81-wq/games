@@ -12,6 +12,8 @@
   <script defer src="src/data/board.js"></script>
   <script defer src="src/data/pieces.js"></script>
   <script defer src="src/data/trial.js"></script>
+  <script defer src="src/data/ragnar.js"></script>
+  <script defer src="src/data/quests.js"></script>
   <script defer src="src/data/dungeon.js"></script>
   <script defer src="src/rules/topology.js"></script>
   <script defer src="src/data/combat.js"></script>
@@ -25,11 +27,14 @@
   <script defer src="src/rules/dungeon.js"></script>
   <script defer src="src/rules/quest.js"></script>
   <script defer src="src/rules/recovery.js"></script>
+  <script defer src="src/rules/campaign.js"></script>
+  <script defer src="src/rules/escort.js"></script>
   <script defer src="src/rules/armoury.js"></script>
   <script defer src="src/ai/zargon.js"></script>
   <script defer src="src/engine/exploration.js"></script>
   <script defer src="src/session/sandbox.js"></script>
   <script defer src="src/session/save-validation.js"></script>
+  <script defer src="src/session/save-campaign.js"></script>
   <script defer src="src/session/save-reports.js"></script>
   <script defer src="src/session/storage.js"></script>
   <script defer src="assets/models/imported/barbarian.js"></script>
@@ -48,6 +53,7 @@
   <script defer src="assets/models/imported/mummy.js"></script>
   <script defer src="assets/models/imported/fimir.js"></script>
   <script defer src="assets/models/imported/chaos-warrior.js"></script>
+  <script defer src="assets/models/imported/chaos-warlock.js"></script>
   <script defer src="assets/models/imported/gargoyle.js"></script>
   <script defer src="assets/models/furniture/table.js"></script>
   <script defer src="assets/models/furniture/closed-door.js"></script>
@@ -140,7 +146,7 @@
   </header>
   <main class="workspace">
     <aside class="sidebar adventure-sidebar" aria-label="Hero details and dice">
-      <div class="adventure-brand"><p class="eyebrow">QUEST ONE</p><h1>Hero<span>Quest</span></h1><button class="quest-title quest-info-link" id="open-quest-info" type="button" aria-haspopup="dialog" aria-controls="quest-info-dialog" disabled>The Trial · Quest info</button></div>
+      <div class="adventure-brand"><p class="eyebrow" id="quest-number">QUEST 1</p><h1>Hero<span>Quest</span></h1><button class="quest-title quest-info-link" id="open-quest-info" type="button" aria-haspopup="dialog" aria-controls="quest-info-dialog" disabled>The Trial · Quest info</button></div>
       <section class="hq-panel turn-panel" aria-labelledby="turn-heading">
         <div class="section-heading"><h2 id="turn-heading">Your turn</h2><span id="round-label">ROUND 1</span></div>
         <div class="active-figure"><button id="active-portrait" class="active-portrait-button" type="button" aria-label="Centre camera on active hero" title="Centre camera on active hero" hidden></button><div><p class="active-owner" id="active-owner">Gather your party</p><h2 class="active-name" id="active-name">Your heroes await.</h2></div></div>
@@ -151,6 +157,7 @@
           <div id="dice-stage" class="dice-stage"><canvas id="dice-canvas" role="img" aria-label="Three-dimensional dice"></canvas><span id="dice-stage-note" class="dice-stage-note" hidden></span></div>
           <footer class="dice-footer"><p id="dice-result" class="dice-result" role="status" hidden></p><div class="dialog-actions"><button id="dice-cancel" class="hq-button" type="button">Cancel</button><button id="dice-roll" class="hq-button hq-button--primary" type="button">Roll</button></div></footer>
         </section>
+        <section class="hq-panel" id="escort-controls" hidden aria-live="polite"><h3>Escort Sir Ragnar</h3><p id="escort-instructions"></p><div id="escort-health"></div><button class="hq-button" id="focus-escort" type="button">Centre on Sir Ragnar</button></section>
         <p id="action-status" class="action-status">One action per turn</p>
       </section>
       <p class="quest-objective" id="quest-objective"></p>
@@ -193,7 +200,7 @@
       <div class="dialog-actions"><button class="hq-button" data-import-save type="button">Import save</button><button class="hq-button hq-button--quiet" data-open-model-viewer type="button">View models</button><button class="hq-button hq-button--primary" type="submit" id="start-adventure">Enter the catacombs <span aria-hidden="true">→</span></button></div>
     </form>
   </dialog>
-  <dialog id="briefing-dialog" class="hq-dialog" aria-labelledby="briefing-heading"><p class="eyebrow">MENTOR’S WORDS</p><h2 id="briefing-heading">The Trial</h2><blockquote class="quest-briefing" id="quest-briefing"></blockquote><p class="hq-callout">No traps or secret doors in this quest.</p><div class="dialog-actions"><button class="hq-button hq-button--primary" id="begin-turn" type="button">Begin exploring →</button></div></dialog>
+  <dialog id="briefing-dialog" class="hq-dialog" aria-labelledby="briefing-heading"><p class="eyebrow">MENTOR’S WORDS</p><h2 id="briefing-heading">The Trial</h2><blockquote class="quest-briefing" id="quest-briefing"></blockquote><div class="dialog-actions"><button class="hq-button hq-button--primary" id="begin-turn" type="button">Begin exploring →</button></div></dialog>
   <dialog id="search-dialog" class="hq-dialog search-dialog" aria-labelledby="search-heading"><div class="dialog-title-row"><h2 id="search-heading">Search</h2><button class="dialog-close" data-close-dialog="search-dialog" type="button" aria-label="Close search">×</button></div><div id="search-options" class="search-options"></div></dialog>
   <dialog id="quest-info-dialog" class="hq-dialog" aria-labelledby="quest-info-heading"><div class="dialog-title-row"><div><p class="eyebrow">MENTOR’S WORDS</p><h2 id="quest-info-heading">The Trial</h2></div><button class="dialog-close" data-close-dialog="quest-info-dialog" type="button" aria-label="Close quest info">×</button></div><blockquote class="quest-briefing" id="quest-info-briefing"></blockquote><section class="hq-panel" aria-labelledby="quest-info-objective-heading"><h3 id="quest-info-objective-heading">Objective</h3><p id="quest-info-objective"></p></section><div class="dialog-actions"><button class="hq-button hq-button--primary" data-close-dialog="quest-info-dialog" type="button">Return to the table →</button></div></dialog>
   <dialog id="handoff-dialog" class="hq-dialog handoff-dialog" aria-labelledby="handoff-heading"><div class="dialog-ornament" aria-hidden="true">◇</div><p class="eyebrow" id="handoff-round">NEXT HERO</p><h2 id="handoff-heading">Pass the device</h2><div id="handoff-portrait" class="handoff-portrait" hidden></div><p class="dialog-lead" id="handoff-description"></p><div class="dialog-actions"><button class="hq-button hq-button--primary" id="ready-hero" type="button">I’m ready →</button></div></dialog>
@@ -228,7 +235,7 @@
     <p>Drag to rotate, Shift-drag to pan, and scroll or pinch to zoom. Click your hero’s portrait to centre the view. The board button toggles top view; click it again to return to your previous view. POV follows the acting unit from directly behind. The eye button highlights whole tiles with clear sight from the active hero. Starting an action turns it off; click the eye again when you want to check sight. In the Adventure menu, <strong>Show full board</strong> keeps the printed board visible while unexplored walls and pieces remain hidden.</p>
     <div class="dialog-actions"><button class="hq-button hq-button--primary" data-close-dialog="help-dialog" type="button">Back to game →</button></div>
   </dialog>
-  <dialog id="confirm-dialog" class="hq-dialog" aria-labelledby="confirm-heading"><p class="eyebrow">START AGAIN</p><h2 id="confirm-heading">Gather a new party?</h2><p class="dialog-lead">Replaces your current adventure and browser save.</p><div class="dialog-actions"><button class="hq-button" data-close-dialog="confirm-dialog" type="button">Keep exploring</button><button class="hq-button hq-button--primary" id="confirm-restart" type="button">New adventure</button></div></dialog>
+  <dialog id="confirm-dialog" class="hq-dialog" aria-labelledby="confirm-heading"><p class="eyebrow">START AGAIN</p><h2 id="confirm-heading">Gather a new party?</h2><p class="dialog-lead" id="confirm-description">Replaces your current adventure and browser save.</p><div class="dialog-actions"><button class="hq-button" data-close-dialog="confirm-dialog" type="button">Keep exploring</button><button class="hq-button hq-button--primary" id="confirm-restart" type="button">New adventure</button></div></dialog>
   <dialog id="action-dialog" class="hq-dialog" aria-labelledby="action-heading"><p class="eyebrow" id="action-kicker">YOUR ACTION</p><h2 id="action-heading">Choose an action</h2><p class="dialog-lead" id="action-description"></p><div id="action-options"></div><div class="dialog-actions"><button id="cancel-action" class="hq-button" type="button">Cancel</button><button id="confirm-action" class="hq-button hq-button--primary" type="button">Continue →</button></div></dialog>
   <dialog id="treasure-dialog" class="hq-dialog game-drawer treasure-drawer" data-nonmodal aria-labelledby="treasure-heading">
     <div class="dialog-title-row"><h2 id="treasure-heading">Treasure</h2></div>
@@ -272,7 +279,7 @@
     </section>
     <div class="dialog-actions"><button class="hq-button hq-button--primary" id="cast-spell" type="button" disabled>Cast spell</button></div>
   </dialog>
-  <dialog id="quest-outcome-dialog" class="hq-dialog handoff-dialog" aria-labelledby="quest-outcome-heading"><p class="eyebrow" id="quest-outcome-kicker">THE TRIAL ENDS</p><h2 id="quest-outcome-heading">The party has fallen</h2><p class="dialog-lead" id="quest-outcome-description"></p><ul class="quest-outcome-heroes" id="quest-outcome-heroes"></ul><div class="dialog-actions"><button class="hq-button hq-button--primary" id="open-armoury" type="button">Visit Armoury</button><button class="hq-button" id="retry-adventure" type="button">Gather a new party →</button></div></dialog>
+  <dialog id="quest-outcome-dialog" class="hq-dialog handoff-dialog" aria-labelledby="quest-outcome-heading"><p class="eyebrow" id="quest-outcome-kicker">THE TRIAL ENDS</p><h2 id="quest-outcome-heading">The party has fallen</h2><p class="dialog-lead" id="quest-outcome-description"></p><ul class="quest-outcome-heroes" id="quest-outcome-heroes"></ul><div class="dialog-actions"><button class="hq-button" id="open-armoury" type="button">Visit Armoury</button><button class="hq-button hq-button--primary" id="continue-campaign" type="button">Continue campaign →</button><button class="hq-button" id="retry-adventure" type="button">Gather a new party →</button></div></dialog>
   <dialog id="model-viewer-dialog" class="hq-dialog model-viewer-dialog" aria-labelledby="model-viewer-heading">
     <div class="dialog-title-row"><h2 id="model-viewer-heading">Model viewer</h2><button class="dialog-close" data-close-dialog="model-viewer-dialog" type="button" aria-label="Close model viewer">×</button></div>
     <label class="hq-field model-viewer-field"><span>Model</span><select id="model-viewer-list"></select></label>

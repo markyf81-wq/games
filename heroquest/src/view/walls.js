@@ -4,7 +4,7 @@
   const modes=Object.freeze(["full","cutaway","low"]),labels={full:"Full walls",cutaway:"Automatic cutaway",low:"Low walls"};
   const floorHeight=.15,lowHeight=.27;
   function wallHash(key){
-    let value=2166136261;for(const character of HQ.trial.id+":"+key)value=Math.imul(value^character.charCodeAt(0),16777619);
+    let value=2166136261;for(const character of HQ.quests.current.id+":"+key)value=Math.imul(value^character.charCodeAt(0),16777619);
     value=Math.imul(value^(value>>>16),0x7feb352d);value=Math.imul(value^(value>>>15),0x846ca68b);return (value^(value>>>16))>>>0;
   }
   function stoneAttributes(geometry) {
@@ -55,7 +55,7 @@
       core.castShadow=true;core.raycast=()=>{};model.add(core);
     }
     function itemsFor(projection,hero=projection.activeHero) {
-      const known=new Set(projection.discoveredCells),blocked=new Set(HQ.trial.blocked),solid=new Set(projection.blocked||HQ.trial.blocked);
+      const known=new Set(projection.discoveredCells),blocked=new Set(HQ.quests.current.blocked),solid=new Set(projection.blocked||HQ.quests.current.blocked);
       // Fallen blocks add independent scenery. Keep the original masonry
       // partition so springing a trap cannot remove or regroup adjacent walls.
       // Keep concealed stone in the same masonry partition before/after a search.

@@ -21,6 +21,7 @@
     mummy:{asset:"mummy",baseWidth:.8,rotation:Math.PI/2,colour:0xc4baa0},
     fimir:{asset:"fimir",baseWidth:.82,rotation:0,colour:0x617d49},
     "chaos-warrior":{asset:"chaos-warrior",baseWidth:.82,rotation:0,colour:0x5e6564},
+    "chaos-warlock":{asset:"chaos-warlock",baseWidth:.82,rotation:0,colour:0x72729e},
     gargoyle:{asset:"gargoyle",baseWidth:.82,rotation:Math.PI/2,colour:0x6f7470},
     "open-door":{asset:"open-door",width:1.23,rotation:0,colour:0x8b8777},
     "alchemists-bench":{asset:"alchemists-bench",width:2.86,rotation:0,colour:0x695240},

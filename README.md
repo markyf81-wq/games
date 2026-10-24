@@ -20,7 +20,7 @@ For an HTTP preview with background CPU search, run `python3 -m http.server 8787
 
 ## Structure
 
-HeroQuest has a [gameplay prototype](heroquest/index.html) of the original North American quest The Trial: 1–4 shared-device heroes, CPU monsters, movement/discovery, melee, twelve elemental spells, Treasure searches, inventories/potion sharing, quest exits and local saves with file transfer. Traps, equipment/campaign progression and other base mechanics remain unfinished, so it is not listed in the game catalog. See its [implementation plan](heroquest/docs/PLAN.md).
+HeroQuest has a [gameplay prototype](heroquest/index.html) of the original North American quests The Trial and The Rescue of Sir Ragnar: 1–4 shared-device heroes, CPU monsters, movement/discovery, melee, twelve elemental spells, Treasure searches, inventories/potion sharing, quest exits and local saves with file transfer. Traps, equipment, Armoury and party carry-forward are implemented; later quests and other base mechanics remain unfinished, so it is not listed in the game catalog. See its [implementation plan](heroquest/docs/PLAN.md).
 
 ```text
 Games/
@@ -33,7 +33,7 @@ Games/
   type-tails/          Type & Tails code and its own agent guide
   bomb-major/          Chicken Major code and its own agent guide
   fateless-kingdoms/    Card game, original card exports, rules and CPU
-  heroquest/           The Trial combat prototype, models and references
+  heroquest/           HeroQuest campaign prototype, models and references
 ```
 
 ## Add another game

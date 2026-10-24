@@ -7,7 +7,7 @@
     const layout=projection.dungeonLayout||"trial";
     // Reserve every secret-door edge before discovery so finding/opening a
     // panel cannot leave a torch mounted on it or reshuffle nearby fixtures.
-    if(!placements.has(layout))placements.set(layout,HQ.placeQuestTorches(HQ.trial,HQ.board,HQ.dungeonData.layouts[layout].doors));
+    if(!placements.has(layout))placements.set(layout,HQ.placeQuestTorches(HQ.quests.current,HQ.board,HQ.dungeonData.layouts[layout].doors));
     return placements.get(layout).filter(item=>projection.discoveredCells.includes(HQ.topology.key(item.x,item.row)));
   }
   function flameSample(index,seed){

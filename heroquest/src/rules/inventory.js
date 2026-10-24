@@ -55,6 +55,7 @@
     Object.assign(hero,equipmentKinds(hero.inventory));return item;
   }
   const effects=()=>({strengthPotion:false,defensePotion:false,heroicBrew:false});
+  const healing=item=>Boolean(HQ.itemData.byId[item?.kind]?.healingDice||HQ.itemData.byId[item?.kind]?.healingPoints);
   const potions=hero=>hero.inventory.items.filter(item=>HQ.itemData.byId[item.kind]?.category==="potion");
   function recoveryHero(state) {
     return HQ.recovery.hero(state);
@@ -69,8 +70,8 @@
     const recovery=recoveryHero(state);
     if(recovery&&recovery.id!==hero.id)return "Resolve "+recovery.name+"’s recovery first.";
     if(hero.body<=0&&recovery?.id!==hero.id)return "This hero has fallen.";
-    if(hero.body<=0&&item.kind!=="potion-of-healing")return "Only a healing potion can save this hero.";
-    if(item.kind==="potion-of-healing"&&hero.body===hero.maxBody)return "Already at full Body.";
+    if(hero.body<=0&&!healing(item))return "Only a healing potion can save this hero.";
+    if(healing(item)&&hero.body===hero.maxBody)return "Already at full Body.";
     if(definition.effect&&hero.effects[definition.effect])return "This potion’s effect is already ready.";
     if(definition.effect==="heroicBrew"&&state.heroes[state.turnIndex]?.id===hero.id&&state.actionUsed)return "Drink before your attack action.";
     // Combat is resolved before its dice are revealed. Do not pretend a potion
@@ -82,6 +83,7 @@
     const index=hero.inventory.items.findIndex(item=>item.id===itemId),item=hero.inventory.items[index],before=hero.body;
     const definition=HQ.itemData.byId[item.kind],redDice=definition.healingDice?[die(state)]:[];
     if(redDice.length)hero.body=Math.min(hero.maxBody,before+redDice[0]);
+    else if(definition.healingPoints)hero.body=Math.min(hero.maxBody,before+definition.healingPoints);
     else hero.effects[definition.effect]=true;
     hero.inventory.items.splice(index,1);
     const use={id:state.nextCombatId++,heroId:hero.id,heroName:hero.name,itemId:item.id,itemKind:item.kind,redDice,
@@ -118,5 +120,5 @@
   function give(hero,target,itemId) {
     const item=removeItem(hero,itemId);target.inventory.items.push(item);return item;
   }
-  HQ.inventory=Object.freeze({limit,empty,emptyEquipment,equipmentKinds,setInventory,fresh,effects,potions,equipped,worn,defenceBonus,movementDice,validEquipment,equipReason,equip,removeItem,recoveryHero,reason,drink,giveReason,giveTargets,give});
+  HQ.inventory=Object.freeze({limit,empty,emptyEquipment,equipmentKinds,setInventory,fresh,effects,healing,potions,equipped,worn,defenceBonus,movementDice,validEquipment,equipReason,equip,removeItem,recoveryHero,reason,drink,giveReason,giveTargets,give});
 })();

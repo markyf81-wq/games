@@ -37,5 +37,17 @@
     // Do not display the hidden map's room/monster counts as a progress target.
     $("event-log").replaceChildren();for(const event of state.log.slice(-9).reverse()){const li=document.createElement("li");li.textContent=event.text;$("event-log").append(li);}
   }
-  HQ.adventureHUD=Object.freeze({render});
+  function renderEscort(state){
+    const escort=HQ.escort.get(state),pending=state.pending,active=pending?.type==="escort";
+    $("escort-controls").hidden=!active;
+    $("end-turn").textContent=active?"Finish escort →":"End turn →";
+    if(!active)return;
+    $("escort-instructions").textContent=pending.ready?pending.remaining+" moves remaining. Click a tile to move Sir Ragnar, or finish his move.":"Your hero’s turn is finished. Roll one red die to move the wounded knight.";
+    $("escort-health").replaceChildren(HQ.health.body(escort.body,escort.maxBody));
+    $("end-turn").disabled=!pending.ready;$("open-inventory").disabled=true;
+    document.querySelector(".dice-row").hidden=false;
+    $("movement-remaining").textContent=pending.die===null?"Sir Ragnar · Ready to roll":"Sir Ragnar · "+pending.remaining+" remaining";
+    $("action-status").textContent="Your hero’s turn is finished · Escort Sir Ragnar";
+  }
+  HQ.adventureHUD=Object.freeze({render,renderEscort});
 })();

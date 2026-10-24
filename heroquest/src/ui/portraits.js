@@ -4,7 +4,7 @@
   // Bust framing in the supplied sculpt's units, after its normal facing fix.
   // Weapons above the head must not shrink faces to a dot in these small images.
   const frames={barbarian:[27.7,14,-.3,-1],dwarf:[18,13,0,0],elf:[28,15,0,0],wizard:[26,15,0,0],
-    orc:[25,17,0,0],goblin:[16,13,0,0],fimir:[30,18,0,0],skeleton:[28,14,0,0],
+    "chaos-warlock":[28,17,0,0],orc:[25,17,0,0],goblin:[16,13,0,0],fimir:[30,18,0,0],skeleton:[28,14,0,0],
     zombie:[24,16,0,0],mummy:[30,16,0,0],"chaos-warrior":[31,18,0,0],gargoyle:[35.5,22,0,0]};
   for(const id of ["orc-mace","orc-sword"])frames[id]=frames.orc;
   for(const id of ["goblin-dagger","goblin-axe"])frames[id]=frames.goblin;

@@ -82,3 +82,10 @@ fixtures. All presets preserve the selected rule; no duplicate selector. Check
 both modes, multiple-heir selection/cancellation, bag carrier death, mode changes,
 completion versus retreat and save/refresh in a dedicated manual pass.
 Source/diff review only; no engine/save/browser checks, builds or lint were run.
+
+
+Schema 16 campaign carry-forward now creates standard replacement characters
+with starting equipment and zero gold for the next quest/retry. Fair-mode revived
+owners retain their settled bag outcome. Survivors recover health/spells between
+attempts. No in-quest death rule changed; see CAMPAIGN.md for policies and source/
+verification limits.

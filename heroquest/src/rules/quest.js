@@ -4,8 +4,9 @@
   const endedPhases = new Set(["victory", "retreat", "defeat"]);
 
   function objectiveComplete(state) {
-    return state.monsters.some(monster =>
-      monster.id === HQ.trial.objective.targetId && monster.body === 0);
+    const Q=HQ.quests.forState(state);
+    return Q.escort?state.questState?.escort?.exit==="completed"&&state.questState.escort.body>0:state.monsters.some(monster =>
+      monster.id === Q.objective.targetId && monster.body === 0);
   }
 
   function outcome(state) {
@@ -17,7 +18,7 @@
 
   function exitReason(state, hero) {
     if (state.phase !== "hero-turn" || state.pending || !HQ.combat.inPlay(hero)) return "Wait for your hero’s turn.";
-    if (!HQ.topology.stairs.has(HQ.combat.cell(hero))) return "Move onto the stairway first.";
+    if (!HQ.topology.forQuest(HQ.quests.forState(state)).stairs.has(HQ.combat.cell(hero))) return "Move onto the stairway first.";
     return "";
   }
 

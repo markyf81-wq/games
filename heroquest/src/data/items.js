@@ -26,6 +26,9 @@
   ])definitions[id]=Object.freeze({id,name,effect,summary,description,category:"potion",source:source("system-treasure",pdfPage,locator)});
   for(const [id,definition]of Object.entries(definitions))if(definition.category==="potion")
     definitions[id]=Object.freeze({...definition,artwork:"assets/ui/treasure/"+id+".jpg"});
+  definitions["quest-healing-potion"]=Object.freeze({id:"quest-healing-potion",name:"Potion of Healing",category:"potion",healingPoints:4,
+    description:"Restore up to 4 lost Body Points. You cannot exceed your starting Body Points. Single use.",summary:"Restore up to 4 Body. Single use.",
+    source:source("system-quest-book",7,"Quest 2 note B: fixed four-Body healing potion, not the Treasure deck’s one-die potion")});
   HQ.itemData=Object.freeze({byId:Object.freeze(definitions),sources:Object.freeze({
     potions:source("system-instruction-booklet",8,"rotate 180 degrees; printed p17, Potions"),
     giving:source("system-instruction-booklet",8,"rotate 180 degrees; printed p17, Potions, final sentence: give one potion to a fellow Hero only on your turn"),

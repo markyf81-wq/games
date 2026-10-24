@@ -13,7 +13,7 @@
       const hero=projection.activeHero;if(id===T.key(hero.x,hero.row))return "Your hero is already here.";
       if(!rock&&projection.heroes.some(h=>h.id!==hero.id&&T.key(h.x,h.row)===id)&&!T.stairs.has(id))return "Another hero occupies this square.";
       if(!rock&&Object.values(state.monsterMemory).some(m=>T.key(m.x,m.row)===id))return "A known monster position blocks this square.";
-      if(state.movement.closed)return "Movement ended when you acted after moving.";
+      if(state.movement.closed)return "Your movement has ended this turn.";
       if(projection.reachable.includes(id))return "";
       if(!state.movement.rolled)return "Roll movement first.";
       return "No known route within your remaining movement.";
@@ -40,7 +40,7 @@
       const hero=projection.activeHero;
       if(T.magic(state,hero,"passThroughRock")&&item.type!=="door"&&item.kind!=="stairs") {
         const id=T.key(item.x,item.row),option=moveOption(id);
-        if(!option.disabled)option.reason="Pass through this model. Reach a free playable square before your last move or ending your turn.";
+        if(!option.disabled)option.reason="Pass through this model. If movement ends inside furniture or a figure, return to the last clear square. Solid-rock endings are fatal.";
         return option;
       }
       if(item.kind==="blocked"||item.type==="hero"&&item.id===hero.id)return moveOption(T.key(item.x,item.row));
@@ -50,7 +50,7 @@
         option.reason=item.kind==="stairs"?"Move onto the stairway.":item.type==="door"?"Move to a free square beside this door.":"Move to a free square beside this model.";
         return option;
       }
-      const reason=state.phase!=="hero-turn"||state.pending?"Wait for your hero’s turn.":state.movement.closed?"Movement ended when you acted after moving.":!state.movement.rolled?"Roll movement first.":state.movement.remaining<=0?"No movement remaining.":"No known route to this model within your remaining movement.";
+      const reason=state.phase!=="hero-turn"||state.pending?"Wait for your hero’s turn.":state.movement.closed?"Your movement has ended this turn.":!state.movement.rolled?"Roll movement first.":state.movement.remaining<=0?"No movement remaining.":"No known route to this model within your remaining movement.";
       return {label:"Move here",primary:true,disabled:true,reason};
     }
     function plannedRoute(id) {

@@ -20,7 +20,7 @@
       const cell=nearest(state,hero);if(cell)[hero.x,hero.row]=T.parse(cell);
     }
     state.turnIndex=state.heroes.findIndex(hero=>hero.id===heroId);state.phase="hero-turn";state.pending=null;state.lastReport=null;state.monsterTurn=null;state.actionUsed=false;state.extraAttack=false;state.movement=freshMove();
-    state.questRecovery=null;
+    state.questRecovery=null;state.campaign.settled=false;
     for(const figure of state.heroes)if(figure.body>0)figure.deathResolved=false;
     const hero=E.active(state);hero.body=Math.max(1,hero.body);hero.exit=null;hero.trapped=false;hero.actionUsed=false;hero.deathResolved=false;
     state.belongings=state.belongings.filter(loot=>loot.heroId!==hero.id);
@@ -103,6 +103,7 @@
       // Fresh fixtures reset the board, not the player's selected rules.
       const current=getState();
       if(current)prepared.settings.fairLootRecovery=current.settings.fairLootRecovery;
+      prepared.campaign.entry=HQ.campaign.roster(prepared);
       install(prepared);
     }
     const dialog=document.createElement("dialog");dialog.id="sandbox-dialog";dialog.className="hq-dialog sandbox-dialog";
@@ -126,7 +127,7 @@
       for(const [i,hero] of prepared.heroes.entries()){
         [hero.x,hero.row]=T.parse(HQ.trial.stairs[i]);hero.exit="retreated";hero.body=hero.maxBody;hero.trapped=false;hero.deathResolved=false;hero.inventory.gold=2000;
       }
-      replace(prepared);onArmoury();
+      HQ.campaign.settle(prepared);replace(prepared);onArmoury();
     });
     button("Prepare selected spell",()=>{
       const prepared=spellScenario(spell.value);hero.value=E.active(prepared).id;enemy.value="orc";group.value="Earth";replace(prepared);HQ.dialogs.show(dialog.id);

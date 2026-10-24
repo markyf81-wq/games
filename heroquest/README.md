@@ -1,4 +1,4 @@
-# HeroQuest — The Trial prototype
+# HeroQuest — original quests prototype
 
 A client-side 3D adaptation of the original North American base Game System for
 one shared browser. Choose 1–4 players, each with an actual hero miniature; the
@@ -81,8 +81,7 @@ Equip weapons or armour in the drawer; only equipped items contribute bonuses.
 Body armour changes must happen before rolling movement. Equipment practice
 offers sandbox loadouts. After a quest, **Visit Armoury** buys original equipment
 with each hero’s gold, sells copies at half price rounded down and changes worn
-gear. Sandbox tools → **Prepare Armoury** supplies practice funds. Trades save
-with this party; next-quest carry-forward remains unfinished.
+gear. Sandbox tools → **Prepare Armoury** supplies practice funds. Trades carry forward with this party into the next quest.
 Staff and Longsword permit diagonal melee. The Wizard can use a Staff, and Staff
 cannot be combined with a Shield. Successful defence rolls show a brief shield
 flash before any remaining damage feedback.
@@ -113,9 +112,20 @@ the next attack/defence; Heroic Brew permits two weapon attacks. See
 Use **Quest info** beside the sidebar quest title to reread Mentor’s briefing
 and the current objective.
 
-Return to the stairway to Leave dungeon. Leaving before defeating Verag is
-an individual retreat; other heroes can continue. Restart confirms a fresh quest
-with the same party; New adventure returns to setup.
+Return to the stairway to Leave dungeon. Leaving before the objective is complete
+is an individual retreat; other heroes can continue. After The Trial, visit the
+Armoury and choose **Continue · Quest 2** to carry this party into **The Rescue of
+Sir Ragnar**. Gold, potions and equipped gear carry forward; health and spells
+recover. Standard fallen heroes get replacements with starting gear. Fair-mode
+revival retains the settled bag result. Failed quests offer a retry with the
+remaining possessions. Restart restores this attempt's entry party/loadout;
+New adventure starts a fresh Quest 1 party.
+
+In Quest 2, finding Sir Ragnar sounds an alarm, reveals the dungeon and opens
+all doors. After his rescuer's turn, roll one red die, click a tile and choose
+**Move Sir Ragnar here**, or choose **Finish escort**. He cannot attack, has two
+hearts and defends with two dice. Bring him alive to the stairs, then return the
+heroes safely for the 240-gold reward. [Campaign and escort details](docs/CAMPAIGN.md).
 
 ## Visibility and appearance
 
@@ -184,7 +194,7 @@ separate from the adventure. See [sandbox guide/checklist](docs/SANDBOX.md).
 ## Saves, rules and implementation
 
 Adventure autosave uses heroquest.session.v1; practice uses heroquest.sandbox.v1.
-Envelope 1/state schema 15 retain RNG, spent cards, the treasure deck/search ledger, pending dice/reports, CPU queue
+Envelope 1/state schema 16 retain RNG, spent cards, the treasure deck/search ledger, pending dice/reports, CPU queue
 and view preferences. Accepted outcomes save before presentation. Refresh resumes
 recorded results without recasting/rerolling. Invalid saves remain until explicit
 replacement. Menu → Export save downloads a JSON file; Menu → Import save loads
@@ -196,12 +206,13 @@ travel with the save. No cloud save or account system is implemented.
 Discounted movement inside the four individual stair squares and broader Pass
 Through Rock object traversal
 are Mark's digital rulings, distinct from original printed rules. Rock movement
-stays within the quest's playable floor; ending inside any object with no movement
-left, or ending the turn there, is fatal. Original base cards/items/quests only;
+stays within the quest's playable floor. Ending inside furniture or a unit
+returns the hero to their last legal square and ends movement without damage.
+Ending in solid rock remains fatal. Original base cards/items/quests only;
 no expansion/remake/fan content. Trap/secret-door searches, jumping and disarming
 are implemented with isolated practice scenarios; see [traps](docs/TRAPS.md).
-Gold/equipment trading,
-Chaos spells and campaign progression are still unfinished. Original treasure
+Gold trading,
+Chaos spells and the remaining original campaign are still unfinished. Original treasure
 searches and all four base treasure potions are implemented; see the current
 limits in [treasure](docs/TREASURE.md).
 

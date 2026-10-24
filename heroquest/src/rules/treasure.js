@@ -8,22 +8,23 @@
     if(state.actionUsed)return "Your action has already been used this turn.";
     if(T.unsafe(state,hero))return "Move into a free square before searching.";
     const id=room(hero,state);
-    if(!id.startsWith("pit:")&&!HQ.trial.rooms.includes(id))return "Treasure can only be searched for in rooms.";
+    if(!id.startsWith("pit:")&&!HQ.quests.current.rooms.includes(id))return "Treasure can only be searched for in rooms.";
+    if(id===HQ.quests.current.escort?.cellRoom)return "Treasure cannot be searched for in Sir Ragnar’s cell.";
     if(state.monsters.some(monster=>C.alive(monster)&&T.regions.get(C.cell(monster))===id))return "A monster remains in this room.";
     if(state.treasure.searched[hero.id].includes(id))return "This hero has already searched this room.";
     return "";
   }
   function spawn(state,hero) {
     const from=C.cell(hero),[hx,hr]=T.parse(from),id=T.regions.get(C.cell(hero));
-    const free=HQ.trial.floor.filter(cell=>T.regions.get(cell)===id&&!T.solid(cell,state)&&!T.furniture.has(cell)&&!T.occupiedHero(state,cell,null)&&!T.monsterAt(state,cell));
+    const free=HQ.quests.current.floor.filter(cell=>T.regions.get(cell)===id&&!T.solid(cell,state)&&!T.furniture.has(cell)&&!T.occupiedHero(state,cell,null)&&!T.monsterAt(state,cell));
     // CPU policy: a legal adjacent square first; otherwise the nearest free
     // square in this room. Never move or attack when adjacency is impossible.
     const adjacent=free.filter(cell=>T.connected(from,cell,state));
     const distance=cell=>{const [x,row]=T.parse(cell);return Math.abs(x-hx)+Math.abs(row-hr);};
     const cell=(adjacent.length?adjacent:free).sort((a,b)=>distance(a)-distance(b)||a.localeCompare(b))[0];
     if(!cell)return null;
-    const kind=HQ.trial.wanderingMonster.kind,[x,row]=T.parse(cell),stats=HQ.combatData.monsters[kind];
-    const monster={id:"wanderer-"+state.treasure.nextMonster++,kind,name:HQ.trial.wanderingMonster.name,x,row,...stats,maxBody:stats.body,effects:HQ.spells.monsterEffects(),diedInPlay:false};
+    const kind=HQ.quests.current.wanderingMonster.kind,[x,row]=T.parse(cell),stats=HQ.combatData.monsters[kind];
+    const monster={id:"wanderer-"+state.treasure.nextMonster++,kind,name:HQ.quests.current.wanderingMonster.name,x,row,...stats,maxBody:stats.body,effects:HQ.spells.monsterEffects(),diedInPlay:false};
     state.monsters.push(monster);state.discoveredEntities.push(monster.id);state.monsterMemory[monster.id]={id:monster.id,x,row};
     return {monster,adjacent:adjacent.includes(cell)};
   }
@@ -32,9 +33,10 @@
     state.treasure.searched[hero.id].push(id);state.actionUsed=true;state.extraAttack=false;
     if(state.movement.started){state.movement.closed=true;state.movement.remaining=0;}
     let detail="",endTurn=false;
-    const special=HQ.trial.treasureRooms[id];
+    const special=HQ.quests.current.treasureRooms[id];
     if(special&&!state.treasure.claimed.includes(id)) {
       state.treasure.claimed.push(id);search.specialId=special.note;search.gold=special.gold||0;detail=special.description;
+      if(special.itemKind){search.itemId="quest-find-"+state.nextCombatId;hero.inventory.items.push({id:search.itemId,kind:special.itemKind});}
     } else {
       // The booklet requires shuffling before EVERY draw, including returned
       // hazards/monsters. Physical duplicates retain independent identifiers.

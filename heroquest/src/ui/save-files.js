@@ -27,7 +27,7 @@
         if(file.size>S.maxFileBytes)throw new Error("Choose a HeroQuest save file smaller than 2 MB.");
         const saved=S.importText(await file.text()),s=saved.state,details=document.createElement("p"),party=document.createElement("p");
         const phase={"hero-turn":"Heroes’ turn","monster-turn":"Zargon’s turn",victory:"Quest completed",retreat:"Party retreated",defeat:"Party defeated"}[s.phase];
-        details.textContent="The Trial · Round "+s.round+" · "+phase;
+        details.textContent=HQ.quests.forState(s).title+" · Round "+s.round+" · "+phase;
         party.textContent=s.heroes.map(hero=>hero.owner+" · "+hero.name).join(", ");
         const replacing=Boolean(getSnapshot()),confirmed=await HQ.dialogs.ask({title:replacing?"Replace this adventure?":"Load this adventure?",kicker:"IMPORT SAVE",
           description:"Replaces this browser’s save for this mode, if any, then reloads the game.",confirmLabel:"Import save",content:[details,party]});

@@ -1,22 +1,24 @@
 (function () {
   "use strict";
-  const HQ=window.HeroQuest,Q=HQ.trial,T=HQ.topology,C=HQ.combat,Data=HQ.combatData;
+  const HQ=window.HeroQuest,Q=HQ.quests.current,T=HQ.topology,C=HQ.combat,Data=HQ.combatData;
   const heroNames=new Map(HQ.heroes.map(h=>[h.id,h.name]));
   const monsterNames={orc:"Orc",goblin:"Goblin",skeleton:"Skeleton",zombie:"Zombie",mummy:"Mummy",fimir:"Fimir","chaos-warrior":"Chaos Warrior",gargoyle:"Gargoyle"};
-  const schemaVersion=15;
+  const schemaVersion=16;
   const active=state=>state.heroes[state.turnIndex];
-  const freshMovement=()=>({dice:[],remaining:0,rolled:false,started:false,closed:false,veilOfMist:false,passThroughRock:false,swiftWind:false});
+  const freshMovement=()=>({dice:[],remaining:0,rolled:false,started:false,closed:false,veilOfMist:false,passThroughRock:false,swiftWind:false,rockTrail:[]});
   function beginMove(state,hero,cost) {
     if(!cost||state.movement.started)return;
     for(const flag of ["veilOfMist","passThroughRock"])if(hero.effects[flag]){state.movement[flag]=true;hero.effects[flag]=false;}
   }
   function sight(state,extraOrigins=[]) {
+    const Q=HQ.quests.forState(state),T=HQ.topology.forQuest(Q);
     const origins=[...new Set([...state.heroes.filter(C.inPlay).flatMap(h=>T.spaceCells(C.cell(h))),...extraOrigins])];
     const cells=Q.floor.filter(id=>origins.some(from=>T.canSee(state,from,id)));
     const figures=state.monsters.filter(C.alive).filter(m=>origins.some(from=>T.canSee(state,from,C.cell(m),true))).map(m=>m.id);
     return {cells,figures};
   }
   function discover(state,extraOrigins=[]) {
+    const Q=HQ.quests.forState(state),T=HQ.topology.forQuest(Q);
     const view=sight(state,extraOrigins),cells=new Set(state.discoveredCells),rooms=new Set(state.discoveredRooms),entities=new Set(state.discoveredEntities),doors=new Set(state.discoveredDoors);
     for(const id of view.cells){cells.add(id);const region=T.regions.get(id);if(region!=="corridor")rooms.add(region);}
     for(const roomId of rooms)for(const id of Q.floor)if(T.regions.get(id)===roomId)cells.add(id);
@@ -36,6 +38,7 @@
   function die(state){let value;do{value=nextRandom(state);}while(value>=4294967292);return value%6+1;}
   function randomInt(state,count){const limit=Math.floor(4294967296/count)*count;let value;do{value=nextRandom(state);}while(value>=limit);return value%count;}
   function createSession(config,seed) {
+    const Q=HQ.quests.byId(config.questId)||HQ.quests.first;
     const heroIds=config.heroIds??HQ.heroes.map(h=>h.id);
     if(!Array.isArray(heroIds)||heroIds.length<1||heroIds.length>4||new Set(heroIds).size!==heroIds.length||heroIds.some(id=>!heroNames.has(id)))
       throw new Error("Choose between one and four different heroes.");
@@ -48,8 +51,10 @@
       monsters:Q.monsters.map(m=>({id:m.id,kind:m.kind,x:m.x,row:m.row,...Data.monsters[m.kind],
         maxBody:Data.monsters[m.kind].body,name:m.name||monsterNames[m.kind],effects:HQ.spells.monsterEffects(),diedInPlay:false,
         ...(m.note==="C"?{attack:Q.notes.C.attackDice,overrideSource:Data.sources.guardian}:{})})),
-      dungeon:HQ.dungeon.fresh(),movement:freshMovement(),openDoors:[],discoveredCells:[],discoveredRooms:[Q.startingRoom],
+      questState:HQ.escort.fresh(Q),dungeon:HQ.dungeon.fresh(Q.dungeonLayout||"trial"),movement:freshMovement(),openDoors:[],discoveredCells:[],discoveredRooms:[Q.startingRoom],
       discoveredEntities:[],discoveredDoors:[],monsterMemory:{},settings:{realisticLOS:false,fairLootRecovery:config.fairLootRecovery===true},log:[],nextEventId:1};
+    for(const hero of state.heroes)if(Q.starts)[hero.x,hero.row]=Q.starts[hero.id];
+    state.campaign=HQ.campaign.fresh(state);
     state.treasure=HQ.treasure.fresh(state.heroes);
     discover(state);log(state,"The party enters the stairway room. Choose your route together.");return state;
   }
@@ -61,19 +66,21 @@
     const outcome=HQ.quest.outcome(state);
     if(!outcome)return false;
     state.phase=outcome;state.monsterTurn=null;state.movement=freshMovement();state.extraAttack=false;
-    const text={victory:"The Trial is complete. Verag is defeated and a hero has returned safely.",
-      retreat:"The Trial ended before a hero completed its objective and returned safely.",defeat:"The party has fallen. The Trial has failed."};
+    const text={victory:Q.title+" is complete. A hero has returned safely after fulfilling the objective.",
+      retreat:Q.title+" ended without completing the objective and returning safely.",defeat:"The party has fallen. "+Q.title+" has failed."};
     log(state,text[outcome]);completeRecovery(state);return true;
   }
   function completeRecovery(state){
-    if(!HQ.recovery.complete(state))return;
-    for(const result of state.questRecovery){
+    const recovered=HQ.recovery.complete(state);
+    if(recovered)for(const result of state.questRecovery){
       const name=heroNames.get(result.heroId);
       log(state,name+" returns to life after the completed quest."+(result.carrierId?" Their sealed bag was recovered by "+heroNames.get(result.carrierId)+"; possessions returned.":" Their bag was not brought back by a completing hero; possessions lost."));
     }
+    if(HQ.campaign.settle(state))log(state,"The party rests between quests. Surviving heroes recover their Body, Mind and spells."+(state.phase==="victory"&&Q.reward?" The "+Q.reward+" gold reward is shared among completing heroes.":""));
   }
-  function advanceTurn(state) {
+  function advanceTurn(state,{skipEscort=false}={}) {
     state.extraAttack=false;
+    if(!skipEscort&&HQ.escort.begin(state,active(state)))return;
     const index=state.heroes.findIndex((hero,i)=>i>state.turnIndex&&C.inPlay(hero));
     if(index>=0){handoff(state,index);return;}
     const queue=state.monsters.filter(monster=>C.alive(monster)&&state.discoveredEntities.includes(monster.id)).map(monster=>monster.id);
@@ -93,21 +100,43 @@
     if(!HQ.inventory.recoveryHero(state))finishQuest(state);
     discover(state);
   }
+  function findEscort(state,hero){
+    if(HQ.escort.find(state,hero.id))log(state,"Sir Ragnar is found! An alarm sounds; every remaining room is revealed and every door opens. "+hero.name+" controls his one-die movement after their turn. Ragnar cannot attack and defends with two dice.");
+  }
   function reject(state,message){return {ok:false,state,message};}
   function trapped(state,hero) {
     const before=hero.body;hero.body=0;hero.trapped=true;state.movement.remaining=0;state.movement.closed=true;
     hero.effects.passThroughRock=false;state.movement.passThroughRock=false;state.movement.veilOfMist=false;
     const report={type:"stone-move",id:state.nextCombatId++,attackerId:hero.id,attackerName:hero.name,defenderId:hero.id,defenderName:hero.name,
-      bodyBefore:before,bodyAfter:0,maxBody:hero.maxBody,defeated:true,detail:"Movement ended inside an object or outside the playable area. Trapped forever."};
+      bodyBefore:before,bodyAfter:0,maxBody:hero.maxBody,defeated:true,detail:"Movement ended in solid rock or outside the playable area. Trapped forever."};
     state.lastReport=report;state.pending={type:"report",reportId:report.id};log(state,hero.name+": "+report.detail);finishQuest(state);discover(state);
   }
-  const commands=new Set(["ROLL_MOVEMENT","MOVE","OPEN_DOOR","ATTACK","FINISH_ATTACKS","CAST_SPELL","RECOVER_SPELL","TAKE_BELONGINGS","SEARCH_TREASURE","SEARCH_TRAPS","SEARCH_SECRET_DOORS","DISARM_TRAP","JUMP_TRAP","ESCAPE_FALLING_BLOCK","USE_ITEM","GIVE_ITEM","BUY_EQUIPMENT","SELL_EQUIPMENT","SET_EQUIPMENT","SET_RULES","END_TURN","EXIT_QUEST","ACK_HANDOFF","RESOLVE_MONSTER","ACK_REPORT"]);
-  const pendingCommands=new Set(["ACK_HANDOFF","ACK_REPORT","RESOLVE_MONSTER","USE_ITEM","RECOVER_SPELL","ESCAPE_FALLING_BLOCK"]);
+  function recordRockStep(state,hero) {
+    const id=C.cell(hero),trail=state.movement.rockTrail;
+    if(!T.unsafe(state,hero)){state.movement.rockTrail=[id];return;}
+    const previous=trail.indexOf(id);
+    if(previous>=0)trail.length=previous+1;else trail.push(id);
+  }
+  function settleRock(state,hero,motion) {
+    if(T.solid(C.cell(hero),state)){trapped(state,hero);return {motion};}
+    const path=T.rockReturnPath(state,hero,state.movement.rockTrail);
+    if(!path)return {reason:"There is no clear square to return to. Choose another route before ending movement."};
+    const from=C.cell(hero),to=path.at(-1);
+    [hero.x,hero.row]=T.parse(to);
+    state.movement.remaining=0;state.movement.closed=true;
+    state.movement.passThroughRock=false;state.movement.veilOfMist=false;state.movement.rockTrail=[];hero.effects.passThroughRock=false;
+    log(state,hero.name+" cannot finish inside furniture or another figure. Returns to the last clear square; movement ends.");
+    discover(state);
+    return {motion:motion?{...motion,path:[...motion.path,...path]}:{actorId:hero.id,from,path}};
+  }
+  const commands=new Set(["EMBARK_QUEST","ROLL_ESCORT","ACK_ESCORT_ROLL","MOVE_ESCORT","END_ESCORT","ROLL_MOVEMENT","MOVE","OPEN_DOOR","ATTACK","FINISH_ATTACKS","CAST_SPELL","RECOVER_SPELL","TAKE_BELONGINGS","SEARCH_TREASURE","SEARCH_TRAPS","SEARCH_SECRET_DOORS","DISARM_TRAP","JUMP_TRAP","ESCAPE_FALLING_BLOCK","USE_ITEM","GIVE_ITEM","BUY_EQUIPMENT","SELL_EQUIPMENT","SET_EQUIPMENT","SET_RULES","END_TURN","EXIT_QUEST","ACK_HANDOFF","RESOLVE_MONSTER","ACK_REPORT"]);
+  const pendingCommands=new Set(["ACK_HANDOFF","ACK_REPORT","RESOLVE_MONSTER","USE_ITEM","RECOVER_SPELL","ESCAPE_FALLING_BLOCK","ROLL_ESCORT","ACK_ESCORT_ROLL","MOVE_ESCORT","END_ESCORT"]);
   const heroCommands=new Set(["ROLL_MOVEMENT","MOVE","OPEN_DOOR","ATTACK","FINISH_ATTACKS","CAST_SPELL","SEARCH_TREASURE","SEARCH_TRAPS","SEARCH_SECRET_DOORS","DISARM_TRAP","JUMP_TRAP","END_TURN","EXIT_QUEST"]);
   const movementCommands=new Set(["ROLL_MOVEMENT","MOVE"]),freeGroundCommands=new Set(["OPEN_DOOR","ATTACK","CAST_SPELL","EXIT_QUEST"]);
   function commandReason(state,command){
     if(!state||state.contentVersion!==Q.id)return "Start a new adventure first.";
     if(!command||!commands.has(command.type))return "That action is not available.";
+    if(state.pending?.type==="escort"&&!["ROLL_ESCORT","ACK_ESCORT_ROLL","MOVE_ESCORT","END_ESCORT"].includes(command.type))return "Finish Sir Ragnar’s movement first.";
     if(state.pending&&!pendingCommands.has(command.type))return "Finish the current handoff or result first.";
     if(heroCommands.has(command.type)&&(state.phase!=="hero-turn"||!C.inPlay(active(state))))return "Wait for a living hero’s turn.";
     if(state.extraAttack&&movementCommands.has(command.type))return "Take your second attack or choose Finish attacks before moving.";
@@ -118,23 +147,52 @@
     const reason=commandReason(state,command);if(reason)return reject(state,reason);
     const next=JSON.parse(JSON.stringify(state)),hero=active(next);let motion=null;
     switch(command.type) {
+      case "EMBARK_QUEST": {
+        const reason=HQ.campaign.reason(next,command.mode);if(reason)return reject(state,reason);
+        return {ok:true,state:HQ.campaign.embark(next,command.mode),message:"",reload:true,motion:null};
+      }
+      case "ROLL_ESCORT": {
+        if(next.pending?.type!=="escort"||next.pending.die!==null)return reject(state,"Roll Sir Ragnar’s movement once after his rescuer’s turn.");
+        next.pending.die=die(next);next.pending.remaining=next.pending.die;
+        log(next,"Sir Ragnar rolls "+next.pending.die+" for movement.");break;
+      }
+      case "ACK_ESCORT_ROLL": {
+        if(next.pending?.type!=="escort"||next.pending.die===null||next.pending.ready)return reject(state,"Finish the escort roll first.");
+        next.pending.ready=true;break;
+      }
+      case "MOVE_ESCORT": {
+        const escort=HQ.escort.get(next),chosen=HQ.escort.routes(next).get(command.to);
+        if(!chosen)return reject(state,"Choose a clear square within Sir Ragnar’s remaining movement.");
+        const arrival=chosen.findIndex(id=>T.stairs.has(id)),path=arrival<0?chosen:chosen.slice(0,arrival+1),to=path.at(-1);
+        motion={actorId:escort.id,from:C.cell(escort),path};
+        next.pending.remaining-=T.routeCost(C.cell(escort),path);[escort.x,escort.row]=T.parse(to);discover(next);
+        log(next,"Sir Ragnar moves towards safety.");
+        if(T.stairs.has(to)){escort.exit="completed";log(next,"Sir Ragnar reaches the stairway alive. Return the heroes to safety to complete the rescue.");}
+        if(escort.exit||next.pending.remaining===0){next.pending=null;advanceTurn(next,{skipEscort:true});}break;
+      }
+      case "END_ESCORT": {
+        if(next.pending?.type!=="escort"||!next.pending.ready)return reject(state,"Roll Sir Ragnar’s movement first.");
+        next.pending=null;advanceTurn(next,{skipEscort:true});break;
+      }
       case "ROLL_MOVEMENT": {
-        if(next.movement.closed)return reject(state,"Movement ended when you acted after moving.");
+        if(next.movement.closed)return reject(state,"Your movement has ended this turn.");
         if(next.movement.rolled)return reject(state,"Movement has already been rolled this turn.");
         const swiftWind=hero.effects.swiftWind,dice=Array.from({length:HQ.inventory.movementDice(hero)*(swiftWind?2:1)},()=>die(next));hero.effects.swiftWind=false;
         next.movement={...freshMovement(),dice,swiftWind,remaining:dice.reduce((a,b)=>a+b,0),rolled:true};
         log(next,hero.name+" rolls "+dice.join(" + ")+" for "+next.movement.remaining+" movement.");break;
       }
       case "MOVE": {
-        if(next.movement.closed)return reject(state,"You cannot move again after moving and then acting.");
+        if(next.movement.closed)return reject(state,"Your movement has ended this turn.");
         const path=T.routes(next,hero).get(command.to);if(!path)return reject(state,!next.movement.rolled?"Roll movement first.":"Choose an unoccupied highlighted square within your remaining movement.");
         motion={actorId:hero.id,from:C.cell(hero),path:[]};let interrupted=false;const rock=T.magic(next,hero,"passThroughRock");
+        if(rock&&!next.movement.rockTrail.length)recordRockStep(next,hero);
         for(const id of path) {
           if(next.movement.remaining<=0)break;
           const monster=T.monsterAt(next,id);
           if(monster&&!rock&&!T.magic(next,hero,"veilOfMist")){if(!next.discoveredEntities.includes(monster.id))next.discoveredEntities.push(monster.id);interrupted=true;break;}
           const cost=T.movementCost(C.cell(hero),id),[x,row]=T.parse(id);beginMove(next,hero,cost);hero.x=x;hero.row=row;next.movement.remaining-=cost;if(cost)next.movement.started=true;motion.path.push(id);
-          const added=discover(next),trap=HQ.dungeon.at(next,id);
+          if(rock)recordRockStep(next,hero);
+          const added=discover(next);findEscort(next,hero);const trap=HQ.dungeon.at(next,id);
           if(trap&&(!T.occupiedHero(next,id,hero.id)||T.stairs.has(id))) {
             const previous=motion.path.length>1?motion.path.at(-2):motion.from;
             next.lastReport=HQ.dungeon.spring(next,hero,trap,die,previous);next.pending={type:"report",reportId:next.lastReport.id};
@@ -151,7 +209,9 @@
         }
         if(motion.path.length){const spent=T.routeCost(motion.from,motion.path);log(next,spent?hero.name+" moves "+spent+" space"+(spent===1?"":"s")+".":hero.name+" moves within the stairway.");}
         if(interrupted)log(next,"New ground comes into view. Review the reveal before continuing your movement.");
-        if(rock&&!next.pending&&next.movement.remaining===0&&T.unsafe(next,hero))trapped(next,hero);
+        if(rock&&hero.body>0&&next.movement.remaining===0&&T.unsafe(next,hero)&&!HQ.dungeon.mustEscape(next)){
+          const settled=settleRock(next,hero,motion);if(settled.reason)return reject(state,settled.reason);motion=settled.motion;
+        }
         break;
       }
       case "OPEN_DOOR": {
@@ -159,7 +219,7 @@
         if(!door||!next.discoveredDoors.includes(door.id))return reject(state,"Select a discovered closed door.");
         if(next.openDoors.includes(door.id))return reject(state,"That door is already open.");
         if(!T.endpoints(door).includes(C.cell(hero)))return reject(state,"Move next to the door to open it.");
-        next.openDoors.push(door.id);discover(next);log(next,hero.name+" opens a door. Opening a door uses no movement or action.");break;
+        next.openDoors.push(door.id);discover(next);findEscort(next,hero);log(next,hero.name+" opens a door. Opening a door uses no movement or action.");break;
       }
       case "ATTACK": {
         const options=command.throwItemId===undefined?{}:{throwItemId:command.throwItemId};
@@ -186,7 +246,7 @@
         const report=HQ.spells.resolve(next,hero,card,target,die,command.mode);
         next.lastReport=report;next.pending={type:"report",reportId:report.id};
         log(next,hero.name+" casts "+card.name+(doorMode?" to open a door.":" on "+target.name+". "+(report.detail||report.damage+" Body lost.")));
-        finishQuest(next);discover(next,doorMode?T.endpoints(target):[]);break;
+        finishQuest(next);discover(next,doorMode?T.endpoints(target):[]);findEscort(next,hero);break;
       }
       case "BUY_EQUIPMENT": {
         const owner=next.heroes.find(hero=>hero.id===command.heroId),reason=HQ.armoury.buyReason(next,owner,command.kind);
@@ -287,15 +347,18 @@
         log(next,hero.name+" searches for treasure: "+report.detail);
         if(!HQ.inventory.recoveryHero(next))finishQuest(next);discover(next);break;
       }
-      case "END_TURN":
-        if(T.magic(next,hero,"passThroughRock")&&T.unsafe(next,hero))trapped(next,hero);
-        else advanceTurn(next);
-        break;
+      case "END_TURN": {
+        if(T.magic(next,hero,"passThroughRock")&&T.unsafe(next,hero)){
+          const settled=settleRock(next,hero,motion);if(settled.reason)return reject(state,settled.reason);motion=settled.motion;
+          if(!C.inPlay(hero))break;
+        }
+        advanceTurn(next);break;
+      }
       case "EXIT_QUEST": {
         const reason=HQ.quest.exitReason(next,hero);
         if(reason)return reject(state,reason);
         hero.exit=HQ.quest.objectiveComplete(next)?"completed":"retreated";
-        log(next,hero.name+(hero.exit==="completed"?" returns safely and completes The Trial.":" leaves the dungeon before completing The Trial."));
+        log(next,hero.name+(hero.exit==="completed"?" returns safely and completes "+Q.title+".":" leaves the dungeon before completing "+Q.title+"."));
         discover(next);
         if(!finishQuest(next))advanceTurn(next);
         break;
@@ -328,7 +391,7 @@
         const other=T.monsterAt(next,C.cell(monster),false,monster.id);
         if(other)return reject(state,"A monster cannot finish on another monster’s square.");
         if(motion.path.length)log(next,monster.name+" moves "+motion.path.length+" square"+(motion.path.length===1?"":"s")+".");
-        const target=next.heroes.find(h=>h.id===plan.targetId&&C.inPlay(h));
+        const target=HQ.escort.allies(next).find(h=>h.id===plan.targetId&&C.inPlay(h));
         if(target&&C.adjacent(next,monster,target))combat(next,monster,target,"monster");
         else {
           const report={type:"monster-move",id:next.nextCombatId++,attackerId:monster.id,attackerName:monster.name,steps:motion.path.length};
@@ -373,6 +436,8 @@
         next.pending=null;log(next,hero.owner+" takes the "+hero.name+"’s turn.");break;
       }
     }
+    if(next.movement.closed||next.movement.remaining===0)next.movement.rockTrail=[];
+    else if(next.movement.rockTrail.length&&!T.unsafe(next,active(next)))next.movement.rockTrail=[C.cell(active(next))];
     if(state.phase==="hero-turn"&&next.turnIndex===state.turnIndex&&next.round===state.round)hero.actionUsed=next.actionUsed;
     // A zero-health sandbox fixture is not a death. Mark only real accepted
     // living-to-dead transitions so decorative blood has an actual cause.
@@ -382,14 +447,14 @@
   function project(state) {
     const view=sight(state),known=new Set(state.discoveredEntities),hero=active(state);
     const controllable=state.phase==="hero-turn"&&!state.pending&&C.inPlay(hero);
-    const reachable=!controllable||state.movement.closed||state.extraAttack?new Map():T.routes(state,hero);
+    const reachable=state.pending?.type==="escort"?HQ.escort.routes(state):!controllable||state.movement.closed||state.extraAttack?new Map():T.routes(state,hero);
     const doors=HQ.dungeon.doors(state).filter(d=>state.discoveredDoors.includes(d.id)).map(d=>({...d,open:state.openDoors.includes(d.id)}));
     const monsters=state.monsters.filter(m=>C.alive(m)&&known.has(m.id)).map(m=>({...m}));
     const spellTargets=controllable?[...state.heroes.filter(C.inPlay),...monsters,...doors].filter(target=>HQ.spells.book(hero).some(card=>!HQ.spells.reason(state,hero,card,target,card.id==="genie"&&doors.some(door=>door.id===target.id)?"door":"attack"))).map(target=>target.id):[];
-    const focusFigure=state.phase==="monster-turn"||state.phase==="defeat"?monsters.find(m=>m.id===(state.lastReport?.attackerId))||hero:hero;
+    const focusFigure=state.pending?.type==="escort"?HQ.escort.get(state):state.phase==="monster-turn"||state.phase==="defeat"?monsters.find(m=>m.id===(state.lastReport?.attackerId))||hero:hero;
     const throwable=C.throwables(hero)[0];
     const fallen=state.monsters.filter(figure=>figure.body===0&&figure.diedInPlay&&known.has(figure.id)&&state.discoveredCells.includes(C.cell(figure))).map(({id,x,row})=>({id,x,row}));
-    return {heroes:state.heroes.filter(C.inPlay),activeHero:hero,focusFigure,phase:state.phase,visibleCells:view.cells,discoveredCells:state.discoveredCells,
+    return {heroes:[...state.heroes.filter(C.inPlay),...(HQ.escort.get(state)?.found&&C.inPlay(HQ.escort.get(state))?[HQ.escort.get(state)]:[])],activeHero:hero,focusFigure,phase:state.phase,visibleCells:view.cells,discoveredCells:state.discoveredCells,
       doors,monsters,fallen,belongings:state.belongings.filter(loot=>!loot.carrierId&&state.discoveredCells.includes(T.key(loot.x,loot.row))).map(loot=>({...loot,kind:"belongings",name:heroNames.get(loot.heroId)+"’s belongings"})),traps:HQ.dungeon.projection(state),blocked:[...Q.blocked,...HQ.dungeon.blocked(state)].filter(id=>state.discoveredCells.includes(id)),dungeonLayout:state.dungeon.layout,furniture:Q.furniture.filter(f=>known.has(f.id)),reachable:[...reachable.keys()],attackTargets:C.targets(state,hero),throwTargets:throwable?C.targets(state,hero,{throwItemId:throwable.id}):[],spellTargets,
       belongingsTargets:state.belongings.filter(loot=>!HQ.recovery.takeReason(state,hero,loot)).map(loot=>loot.id),
       blindMovement:controllable&&!state.extraAttack&&state.movement.rolled&&!state.movement.closed&&state.movement.remaining>0&&T.magic(state,hero,"passThroughRock"),

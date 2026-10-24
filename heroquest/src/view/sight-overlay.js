@@ -6,7 +6,7 @@
   HQ.createSightOverlay=function({scene,world}) {
     const material=new T.MeshBasicMaterial({color:0x77cfff,transparent:true,opacity:.25,
       depthTest:true,depthWrite:false,side:T.DoubleSide,toneMapped:false});
-    const mesh=new T.InstancedMesh(new T.PlaneGeometry(.985,.985).rotateX(-Math.PI/2),material,HQ.trial.floor.length);
+    const mesh=new T.InstancedMesh(new T.PlaneGeometry(.985,.985).rotateX(-Math.PI/2),material,HQ.quests.current.floor.length);
     mesh.name="Hero line of sight";mesh.visible=false;mesh.count=0;mesh.frustumCulled=false;
     mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.renderOrder=20;mesh.raycast=()=>{};mesh.userData.visualEffect=true;scene.add(mesh);
     const pose=new T.Object3D();

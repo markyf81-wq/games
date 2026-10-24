@@ -2,8 +2,11 @@
   "use strict";
   const HQ=window.HeroQuest;
   const source=(pdfPage,printedLocator)=>Object.freeze({sourceId:"system-instruction-booklet",pdfPage,printedLocator,reviewStatus:"visually-reviewed"});
-  // Invented practice placements on the existing board, never quest additions.
-  const layouts={trial:{traps:[],doors:[]},practice:{
+  // Quest 2 uses its printed needle chest and secret door; only practice placements are invented.
+  const layouts={trial:{traps:[],doors:[]},ragnar:{
+    traps:[{id:"ragnar-needle",kind:"furniture",furnitureId:"ragnar-furniture-6",x:2,row:13,damage:1,source:HQ.ragnarQuest.notesSource}],
+    doors:[{id:"ragnar-secret",secret:true,axis:"h",x:8,row:13,source:HQ.ragnarQuest.source}]
+  },practice:{
     traps:[
       {id:"practice-pit",kind:"pit",x:3,row:16},
       {id:"practice-spear",kind:"spear",x:2,row:17},

@@ -3,9 +3,9 @@
   const HQ=window.HeroQuest,T=HQ.topology,C=HQ.combat;
   const layout=state=>HQ.dungeonData.layouts[state.dungeon?.layout||"trial"];
   const traps=state=>layout(state).traps;
-  const doors=state=>[...HQ.trial.doors,...layout(state).doors];
+  const doors=state=>[...HQ.quests.forState(state).doors,...layout(state).doors];
   const record=(state,id)=>state.dungeon?.traps?.[id]||{status:"hidden",foundRound:0,foundTurn:0};
-  const cell=trap=>trap.kind==="furniture"?C.cell(HQ.trial.furniture.find(item=>item.id===trap.furnitureId)):C.cell(trap);
+  const cell=trap=>trap.kind==="furniture"&&trap.x===undefined?C.cell(HQ.quests.list.flatMap(quest=>quest.furniture).find(item=>item.id===trap.furnitureId)):C.cell(trap);
   const names={pit:"Pit trap",spear:"Spear trap","falling-block":"Falling-block trap",furniture:"Trapped furniture"};
   const fresh=(id="trial")=>({layout:id,traps:Object.fromEntries(HQ.dungeonData.layouts[id].traps.map(trap=>[trap.id,{status:"hidden",foundRound:0,foundTurn:0}])),searched:{traps:[],doors:[]}});
   const at=(state,id)=>traps(state).find(trap=>trap.kind!=="furniture"&&cell(trap)===id&&record(state,trap.id).status!=="disarmed"&&!(["spear","falling-block"].includes(trap.kind)&&record(state,trap.id).status==="sprung"));
