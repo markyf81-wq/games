@@ -50,4 +50,6 @@ flat join posts with the source stone surface; world clipping follows connected
 wall heights without squashing stones. The original source/licence above applies.
 
 Runtime stone colours now vary per raised stone with stable quest/section seeds,
-including the join strips. Recessed mortar remains neutral. Geometry stays shared.
+including the join strips. The current palette is darker warm grey with a narrow
+shade/warmth range, replacing the earlier contrasting colour families. Lowered
+caps follow that palette. Recessed mortar remains neutral. Geometry stays shared.

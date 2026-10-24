@@ -57,7 +57,7 @@ Replace the current two imported tomb script tags in `index.html` with:
 
 Do not load both the original and painted versions. Keep the current
 `furniture-surfaces.js` / `stl-models.js` order. No factory, scene, occupancy,
-fitting, picking, Test room or model-viewer code change is needed. Both painted
+fitting, picking or model-viewer code change is needed. Both painted
 halves must be switched together because their face labels use the same five
 ordered materials. Original imported assets stay available for provenance and
 offline regeneration.

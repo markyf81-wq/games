@@ -57,7 +57,7 @@ Replace the current imported bench script in `index.html` with:
 ```
 
 Keep `furniture-surfaces.js` before `stl-models.js`. The existing ID/factory is
-unchanged, so Models, Test room and the dungeon use the same prepared asset. Do
+unchanged, so Models and the dungeon use the same prepared asset. Do
 not load both versions. No runtime/fitting/picking/occupancy/save edit is needed.
 
 `../../previews/alchemists-bench-painted.png` shows four offline software angles

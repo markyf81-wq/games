@@ -4,9 +4,9 @@
 
 - `system-quest-book`, PDF page 5, Quest 1 parchment: seek and destroy Verag. Visual review on 2026-10-22 confirms this is the Gargoyle named in the briefing. The existing map instance is `monster-21`.
 - `system-instruction-booklet`, PDF page 2, rotated 180 degrees, printed page 23, **Ending The Quest**: success requires achieving the goal and returning to the stairway. Players may end early by returning before completing the quest; all heroes dying also ends it.
-- The same printed page's **What Happens Between Quests?** describes recovery, restored spells and shopping. Those campaign systems are not implemented by this milestone.
+- The same printed page's **What Happens Between Quests?** describes recovery, restored spells and shopping. The Armoury is implemented; campaign carry-forward and survivor recovery remain future work.
 
-Runtime source locators are `trial.objective.source` and `trial.endingSource`. No reward is invented: The Trial lists treasure in room notes, but no separate completion payment. Treasure searches/cards and potions are now implemented in TREASURE.md; trap/secret-door mechanics now exist in isolated sandbox scenarios (TRAPS.md); The Trial has none. Campaign progression and equipment acquisition remain unfinished. An ending screen does not make this a complete implementation of the original quest.
+Runtime source locators are `trial.objective.source` and `trial.endingSource`. No reward is invented: The Trial lists treasure in room notes, but no separate completion payment. Treasure searches/cards and potions are now implemented in TREASURE.md; trap/secret-door mechanics now exist in isolated sandbox scenarios (TRAPS.md); The Trial has none. Campaign progression remains unfinished; equipment acquisition now uses the between-quest Armoury. An ending screen does not make this a complete implementation of the original quest.
 
 ## Engine behaviour
 
@@ -26,11 +26,24 @@ A hero who leaves before Verag dies retains their individual retreat result if t
 
 ## UI and saves
 
+Current-quest death handling supports immediate own potion/spell rescue. Standard
+deaths transfer possessions to an eligible companion or lose them, with no
+completion revival. Optional Fair loot recovery drops sealed bags and revives
+their owners after successful victory/final report acknowledgement. Only bags
+carried by a completed-exit hero return their items/gold; other contents are lost.
+No hero returns mid-quest. See RECOVERY.md for both modes and migration.
+
+Retreat/defeat is not successful completion. Surviving exited heroes and fair-mode
+revived heroes can visit the Armoury to buy, sell and equip gear. Campaign
+advancement, replaying with this party, survivor recovery and carrying holdings
+into Quest 2 remain future work; new adventures create fresh parties.
+
 The sidebar shows the objective without hidden positions/counts. Exited heroes remain in the party list with Completed/Retreated status but have no board miniature or focus action. The terminal modal lists each hero's result and supports returning to party setup. There is no automatic campaign/Quest 2 transition.
 
-The save key/envelope/content ID remain unchanged. State schema 3 adds `hero.exit: null | completed | retreated` and terminal `victory`/`retreat` phases. Schema 2 saves are explicitly validated/migrated with `exit: null`, preserving positions, Body Points, RNG, pending reports, dice stages and view settings. Migration happens in memory on load; the normal next save writes schema 3. Unknown/corrupt saves stay preserved. See SAVES.md.
+The save key/envelope/content ID remain unchanged. State schema 3 adds `hero.exit: null | completed | retreated` and terminal `victory`/`retreat` phases. Schema 2 saves are explicitly validated/migrated with `exit: null`, preserving positions, Body Points, RNG, pending reports, dice stages and view settings. Migration happens in memory on load; the normal next save writes the current schema (15). Unknown/corrupt saves stay preserved. See SAVES.md.
 
-For parties smaller than four, the all-heroes-out terminal condition applies to the selected party, consistent with Mark's existing smaller-party adaptation. Individual exits and per-hero outcome labels are the digital presentation of the printed ending rule; campaign credit/recovery is not implemented.
+For parties smaller than four, the all-heroes-out terminal condition applies to the selected party, consistent with Mark's existing smaller-party adaptation. Individual exits and per-hero outcome labels are the digital presentation of the printed ending rule; next-quest campaign credit remains unfinished; successful completion revival
+and sealed-bag returns now follow RECOVERY.md.
 
 ## Verification
 
@@ -50,3 +63,5 @@ never included. Closing or Escape returns to the existing turn without changing
 the initial briefing screen, rules, RNG or save. Existing modal guards suspend
 CPU progression while reading. The link shares temporary animation/target locks.
 Source/diff review only; no browser checks were run.
+
+See ARMOURY.md for between-quest shopping, practice and save/review limits.

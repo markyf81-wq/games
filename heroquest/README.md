@@ -24,7 +24,11 @@ precede it, but movement cannot be split around an attack/cast.
 Open door and Attack can walk into reach first when a fully known legal route
 fits the remaining movement. Discovery interrupts movement; choose again to
 continue. Every displayed piece except walls has a context panel, with unavailable
-actions disabled and explained. Roll movement and End turn remain global controls.
+actions disabled and explained. Roll movement, Spells, Inventory, Search, Finish
+attacks and End turn sit to the right of the level title in the scene header.
+Pause/Resume Zargon appears there during CPU turns. Hero details and dice remain
+in the sidebar; camera controls share that header on the right. Actions wrap
+below the title and camera controls on narrow screens.
 
 Drag to orbit, Shift-drag to pan, wheel/pinch or plus/minus to zoom. Arrow keys
 rotate; Home centres the active hero. Shift+arrows selects squares, [ / ] cycles
@@ -32,7 +36,7 @@ pieces, Enter opens their panel, Escape dismisses it. Camera focus glides betwee
 positions, follows moving figures and centres newly revealed areas.
 
 The POV button toggles the cinematic camera (on by default). Movement, spells,
-doors and most attacks use an over-the-shoulder view with the miniature visible.
+doors and most attacks use a view directly behind the unit with the miniature visible.
 Gentle position/turn following absorbs the movement hops. Linked actions keep
 one shot; visible CPU activations transition directly between units, returning
 to the board when Zargon's turn ends. Hero planning and discoveries return to
@@ -50,7 +54,7 @@ hazards, using the actual amount lost/restored. Misses and fully blocked hits sk
 board until dismissed, the next action
 or the next player’s turn;
 their details remain in the journal.
-Defeated pieces then fade/tip away automatically. End turn stays explicit; the
+Defeated pieces sink straight into the floor and fade automatically. End turn stays explicit; the
 Zargon’s portrait screen waits for Continue before the CPU queue starts. After
 that, moves/rolls play automatically, with Pause Zargon available between stages.
 Shared-device handoffs retain one compact acknowledgement; with one hero left,
@@ -72,13 +76,27 @@ static under reduced motion.
 
 **Inventory** opens a drawer for the active hero; its selector lets you inspect
 any party member. Hero miniature contexts also offer Inventory. Each hero keeps
-their own gold, starting equipped weapon and potions, with matching card artwork. Drink & roll consumes one
+their own gold, carried/equipped gear and potions, with matching card artwork.
+Equip weapons or armour in the drawer; only equipped items contribute bonuses.
+Body armour changes must happen before rolling movement. Equipment practice
+offers sandbox loadouts. After a quest, **Visit Armoury** buys original equipment
+with each hero’s gold, sells copies at half price rounded down and changes worn
+gear. Sandbox tools → **Prepare Armoury** supplies practice funds. Trades save
+with this party; next-quest carry-forward remains unfinished.
+Staff and Longsword permit diagonal melee. The Wizard can use a Staff, and Staff
+cannot be combined with a Shield. Successful defence rolls show a brief shield
+flash before any remaining damage feedback.
+Drink & roll consumes one
 healing potion and rolls a red die in the sidebar, without using movement or an
-action. A lethal hit offers potion recovery before removing a hero carrying one.
+action. A lethal hit offers recovery before removal: a carried healing potion,
+or the hero's own unused healing spell if their action is still unused. Otherwise
+a nearby companion inherits the possessions; unattended possessions are lost.
+Optional **Fair loot recovery** (off by default) uses sealed bags and successful-
+completion revival instead. Existing bags keep their rules when the option changes. See [death and recovery](docs/RECOVERY.md).
 Inventories and recorded potion rolls persist across refresh. New adventures
 start with no gold/potions. Search rooms to acquire them, or use the sandbox's
-inventory fixtures to practise. On the owner’s turn, select a potion and choose
-Give, then click another glowing hero to transfer one without spending movement
+inventory fixtures to practise. On the owner’s turn, select an item and choose
+Give, then click an adjacent glowing hero away from monsters to transfer one without spending movement
 or an action. See [inventory](docs/INVENTORY.md).
 
 **Search for treasure** opens a slide-out tray with the original card stack. Its
@@ -107,9 +125,11 @@ remain visible. Spell targeting still uses the individual caster's sight.
 Floor/grid brightness follows scene lighting.
 
 The main-view wall icon cycles Full walls, Automatic cutaway and Low walls.
-The bulb toggles lighting; the POV button toggles the cinematic camera; table and board
-icons select tabletop/overhead views.
-Hover tooltips name each control and its current state.
+The bulb toggles lighting; the POV button toggles the cinematic camera; the board icon toggles top view
+and returns to your previous camera framing when switched off.
+Hover tooltips name each control and its current state. Menu → **Show full board**
+keeps the printed board visible beneath unexplored areas, while their 3D walls,
+furniture and miniatures stay hidden. Discovery/movement rules remain unchanged.
 Automatic cutaway clears actual obstructions to the active/defending hero's room,
 or the hero point in corridors. Walls have deterministic stone/section variation
 and sculpted joins. Dynamic lighting toggles gloomy torch/hearth lighting versus
@@ -130,16 +150,31 @@ use the original printed tile artwork. [Asset audit](docs/ASSET-AUDIT.md) record
 sources, remaining assembly and limits. No new models are currently needed for
 The Trial; the gargoyle's separate supplied wings still need assembly.
 
+Crossbow ranged combat is implemented with original restrictions, clear-sight
+checks, manual dice and a bolt visual before block/damage feedback. Use Gameplay
+sandbox → Sandbox tools → Equipment loadout → Crossbow → Prepare equipment
+practice with Barbarian, Dwarf or Elf. Source/offline artwork review only; no
+new engine/save/browser checks have run. See [combat guide](docs/COMBAT.md).
+
+Carried Daggers can be thrown from a monster's context, with one attack die plus
+active bonuses. Each thrown copy is lost even on a miss. A spare Dagger replaces
+an equipped thrown one; without a spare the hero becomes unarmed until another
+weapon is equipped. Equipment practice includes spare/last-Dagger presets.
+
 ## Inspection and practice
+
+The eye button beside the lighting/POV controls highlights whole explored tiles
+with clear sight from the active hero. Walls, closed doors and intervening unit
+tiles block it; miniature size and lowered walls do not affect it. Any gameplay
+action switches it off; enable it again when you want another sight check.
 
 [Model painter](model-painter.html) is a separate authoring tool: brush named
 regions on the supplied neutral sculpts, orbit/pan/zoom, undo/redo and export
 markings for refinement. Drafts use independent `heroquest.paint.v1.<model>`
 browser keys; they do not change game paint or adventure saves.
 
-**Models** rotates any of 36 public model types. **Test room** displays them all,
-including the newly painted cupboard, in an invented neutral-floor showroom.
-These viewers share game factories but reveal no quest placements or save state.
+**Models** rotates any of 36 public model types, including the painted cupboard.
+The viewer shares game factories but reveals no quest placements or save state.
 
 **Gameplay sandbox** opens [a separate practice game](index.html?sandbox=1).
 Its tools prepare each spell, traps/secret doors, movement, heroes and original opponents through
@@ -149,7 +184,7 @@ separate from the adventure. See [sandbox guide/checklist](docs/SANDBOX.md).
 ## Saves, rules and implementation
 
 Adventure autosave uses heroquest.session.v1; practice uses heroquest.sandbox.v1.
-Envelope 1/state schema 8 retain RNG, spent cards, the treasure deck/search ledger, pending dice/reports, CPU queue
+Envelope 1/state schema 15 retain RNG, spent cards, the treasure deck/search ledger, pending dice/reports, CPU queue
 and view preferences. Accepted outcomes save before presentation. Refresh resumes
 recorded results without recasting/rerolling. Invalid saves remain until explicit
 replacement. Menu → Export save downloads a JSON file; Menu → Import save loads
@@ -165,7 +200,7 @@ stays within the quest's playable floor; ending inside any object with no moveme
 left, or ending the turn there, is fatal. Original base cards/items/quests only;
 no expansion/remake/fan content. Trap/secret-door searches, jumping and disarming
 are implemented with isolated practice scenarios; see [traps](docs/TRAPS.md).
-Gold/equipment trading, throwing,
+Gold/equipment trading,
 Chaos spells and campaign progression are still unfinished. Original treasure
 searches and all four base treasure potions are implemented; see the current
 limits in [treasure](docs/TREASURE.md).
@@ -176,7 +211,10 @@ limits in [treasure](docs/TREASURE.md).
 [model viewer](docs/MODEL-VIEWER.md) describe responsibilities and decisions.
 Shared reusable components own camera motion, discovery-keyed terrain, control
 locks, recorded dice, target selection and bounded effects. Display-only session
-snapshots live in session/presentation.js; drawer layout lives in drawers.css. Geometry/textures,
+snapshots live in session/presentation.js; dice descriptors and route planning have
+focused session components. Save I/O, ordered migrations and recorded-report
+checks are separate. Drawer layout lives in drawers.css. Route buffers and
+inventory buttons are reused; geometry/textures,
 wall layouts and unchanged portraits are cached; cutaway rays are reused across
 walls. These are source-level optimisations, not benchmarked performance claims.
 
@@ -193,3 +231,7 @@ Latest spell particles, sandbox/targeting/phasing, camera/lighting and cleanup h
 source/diff review only. No new automated/browser checks, build, lint/typecheck or
 performance benchmark were run; Mark is testing manually. Historical approved
 checks and exact limits remain in the feature docs and do not verify this revision.
+
+
+The latest cleanup shares inventory/Armoury card construction and removes stale
+viewer state/documentation. Verification remains source/diff review only.

@@ -14,6 +14,8 @@
     document.querySelector(".dice-row").hidden=!heroTurn||!state.movement.rolled;
     $("roll-movement").disabled=pending||!heroTurn||state.movement.rolled||state.movement.closed||state.extraAttack;$("end-turn").disabled=pending||!heroTurn;
     $("roll-movement").hidden=pending||!heroTurn||state.movement.rolled||state.movement.closed;
+    const moveDice=HQ.inventory.movementDice(hero)*(hero.effects.swiftWind?2:1);
+    $("roll-movement").title="Roll "+moveDice+" red "+(moveDice===1?"die":"dice")+" for movement";
     $("open-spellbook").hidden=!heroTurn||!HQ.spells.isCaster(hero);$("open-spellbook").disabled=pending||!heroTurn;
     $("open-inventory").disabled=ended;
     $("open-search").hidden=!heroTurn;$("open-search").disabled=pending||!heroTurn||state.actionUsed;
@@ -26,7 +28,7 @@
         const stat=document.createElement("span"),caption=document.createElement("span"),amount=document.createElement("strong");
         stat.className="hero-stat";caption.textContent=label;amount.textContent=value;stat.append(caption,amount);stats.append(stat);
       }
-      const weapon=document.createElement("span");weapon.className="weapon-name";weapon.textContent=HQ.combatData.weapons[hero.weapon].name+" · Melee";stats.append(weapon);
+      const weapon=document.createElement("span"),definition=HQ.combatData.weapons[hero.weapon];weapon.className="weapon-name";weapon.textContent=definition.name+" · "+(definition.ranged?"Ranged":definition.diagonal?"Melee + diagonal":"Melee");stats.append(weapon);
       for(const [active,label] of [[hero.effects.courage,"Courage"],[hero.effects.rockSkin,"Rock Skin"],[hero.effects.strengthPotion,"Strength"],[hero.effects.defensePotion,"Defense potion"],[hero.effects.heroicBrew,"Heroic Brew"]])if(active){const effect=document.createElement("span");effect.className="hero-stat-effect";effect.textContent=label;stats.append(effect);}
     }
     $("action-status").textContent=!heroTurn?"":state.extraAttack?"Heroic Brew · one attack remaining":state.actionUsed?"Action used":"Action available";

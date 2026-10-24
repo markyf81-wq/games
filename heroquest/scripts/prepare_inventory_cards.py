@@ -11,8 +11,10 @@ ROOT=Path(__file__).resolve().parents[1]
 SOURCE=ROOT/'references/fan-reference/drathe-system-equipment.pdf'
 OUT=ROOT/'assets/ui/equipment'
 # Normalized against the visually reviewed 1500px page renderings.
-CARDS={1:{'dagger':(765,33,1101,556),'broadsword':(38,575,375,1098)},
-       2:{'shortsword':(38,575,375,1098),'tool-kit':(401,575,738,1098)}}
+CARDS={1:{'dagger':(765,33,1101,556),'broadsword':(38,575,375,1098),
+          'battle-axe':(38,33,375,556),'chain-mail':(401,33,738,556),
+          'helmet':(765,575,1101,1098),'plate-mail':(1128,575,1465,1098),'longsword':(1128,33,1465,556),'crossbow':(401,575,738,1098)},
+       2:{'shortsword':(38,575,375,1098),'tool-kit':(401,575,738,1098),'shield':(38,33,375,556),'staff':(401,33,738,556)}}
 
 def prepare():
  OUT.mkdir(parents=True,exist_ok=True)

@@ -20,10 +20,13 @@
     list.replaceChildren();
     for (const hero of state.heroes) {
       const row = document.createElement("li");
-      HQ.portraits.set(row, [{...hero, role: hero.exit === "completed" ? "Completed the quest"
+      const recovery=state.questRecovery?.find(record=>record.heroId===hero.id);
+      HQ.portraits.set(row, [{...hero, role: recovery?(recovery.carrierId?"Revived · "+recovery.items+" items and "+recovery.gold+" gold returned":"Revived · possessions lost"):hero.exit === "completed" ? "Completed the quest"
         : hero.exit === "retreated" ? "Retreated safely" : "Fallen"}]);
       list.append(row);
     }
+    const shop=$("open-armoury");shop.disabled=!HQ.armoury.visitors(state).length;
+    shop.title=shop.disabled?"No surviving or revived hero can visit the Armoury.":"Buy, sell and equip gear between quests.";
     HQ.dialogs.show("quest-outcome-dialog");
   }
 
@@ -38,8 +41,8 @@
     const completed = HQ.quest.objectiveComplete(state);
     return HQ.dialogs.ask({title: completed ? "Return to safety?" : "Leave The Trial early?",
       kicker: "THE STAIRWAY", confirmLabel: completed ? "Complete quest" : "Retreat",
-      description: completed ? "This hero will leave the dungeon and complete The Trial. Other heroes can continue."
-        : "This hero will retreat without completing The Trial. Other heroes can continue."});
+      description: completed ? "This hero will leave the dungeon and complete The Trial. Other heroes can continue. Any sealed bags carried by this hero will be returned to their owners when the quest ends."
+        : "This hero will retreat without completing The Trial. Other heroes can continue. Any sealed bags they carry will not count as recovered."});
   }
 
   HQ.questUI = Object.freeze({render, showInfo, showOutcome, confirmExit});

@@ -15,9 +15,10 @@
     result.textContent=report.type==="combat"?(report.damage?"−"+report.damage+" Body":"No damage"):report.healed?"+"+report.healed+" Body":report.damage?"−"+report.damage+" Body":report.detail||report.reason||(report.steps?"Moved "+report.steps+" squares":"No hero within reach");
     content.append(result);
     if(report.type==="trap"&&report.damage){const detail=document.createElement("p");detail.textContent=report.detail;content.append(detail);}
+    if(report.belongings){const text=document.createElement("p"),loot=report.belongings;text.textContent=loot.outcome==="dropped"?"A sealed bag remains for a companion to recover.":loot.outcome==="claimed"?"Possessions recovered by "+state.heroes.find(hero=>hero.id===loot.recipientId).name+".":loot.outcome==="lost"?"Possessions lost.":"No possessions to recover.";content.append(text);}
     if(Number.isFinite(report.maxBody)){const health=document.createElement("div");health.append(HQ.health.body(report.recovery?.bodyAfter??report.bodyAfter,report.maxBody));content.append(health);}
-    if(report.recovery){const text=document.createElement("p");text.textContent=report.defenderName+" saved by a healing potion · +"+report.recovery.healed+" Body";content.append(text);}
-    else if(report.defeated){const text=document.createElement("p");text.textContent=HQ.inventory.recoveryHero(state)?report.defenderName+" · drink a potion to escape death":report.defenderName+" defeated";content.append(text);}
+    if(report.recovery){const text=document.createElement("p");text.textContent=report.defenderName+" saved by "+(report.recovery.spellId?HQ.spellData.byId[report.recovery.spellId].name:"a healing potion")+" · +"+report.recovery.healed+" Body";content.append(text);}
+    else if(report.defeated){const text=document.createElement("p");text.textContent=HQ.inventory.recoveryHero(state)?report.defenderName+" · use your own healing to escape death":report.defenderName+" defeated";content.append(text);}
   }
   function renderItem(state,use) {
     $("feedback-kicker").textContent="POTION";$("feedback-heading").textContent=HQ.itemData.byId[use.itemKind].name;

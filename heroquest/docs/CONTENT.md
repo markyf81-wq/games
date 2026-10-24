@@ -18,7 +18,8 @@ Starting weapons, personal gold and all four base treasure potions are defined
 in data/items.js/rules/inventory.js. Original 24-card searches/deck and The Trial's
 A/B/D/E finds are implemented in data/treasure.js/rules/treasure.js. TREASURE.md
 records the complete visual card audit, negative-note interpretation and limits.
-Trading, equipment acquisition and other decks remain future work; this does
+Item trading and Armoury equipment acquisition are implemented; gold sharing
+and other decks remain future work. This does
 not certify the remaining targets below.
 
 These targets come from the index, not a completed record-by-record audit:
@@ -99,3 +100,11 @@ Mark's digital presentation choice hides undiscovered terrain completely. Discov
 ## Review ledger
 
 For subsequent transcription, add rows with: content ID, source/locator, transcription status, visual review status, ambiguity/ruling, implemented handler, and approved verification evidence. Keep `not-transcribed`, `transcribed`, `visually-reviewed`, and `implemented` distinct. The limited reviewed/implemented exploration ledger is in [EXPLORATION.md](EXPLORATION.md); the remaining rules/cards/quests are not certified complete.
+
+## Newer-edition comparison
+
+Mark requested a read-only comparison with the 2021 remake and First Light.
+[EDITION-COMPARISON.md](EDITION-COMPARISON.md) records official sources and
+relevant clarifications adopted with Mark’s approval: standard death/loot, solid
+furniture, adjacent trading and Armoury stock/sellback. Original North American
+cards, equipment prices and quest content remain authoritative.

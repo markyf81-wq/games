@@ -7,7 +7,7 @@ around the room while searching. As with attack/cast, searching after paid
 movement closes remaining movement; searching first allows movement afterwards.
 A hazard instead ends the whole turn after its pending damage/recovery result.
 
-Click Search for treasure in the sidebar, or the active hero/current room's
+Choose Search → Treasure in the board toolbar, or the active hero/current room's
 furniture. A nonmodal slide-out tray shows the original card-back stack: its top
 card lifts, slides out and flips over in 1.5 seconds. The card's name, full printed
 wording and outcome appear below after the flip, within reserved space. Continue

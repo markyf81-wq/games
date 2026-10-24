@@ -24,6 +24,14 @@ The exploration entry uses the original Trial layout and actual discovery. The r
 
 Unexplored floors, rooms and corridors are absent. Once discovered, terrain, furniture and living miniatures remain visible; explored terrain brightness follows scene lighting alone. The realistic line-of-sight display option has been removed. Full room reveals and individual spell/attack sight still follow their own rules; do not reuse display visibility as targeting legality.
 
+The separate eye-button sight guide optionally tints whole explored floor tiles
+blue when their centres pass the same figure-blocked topology query as targeting.
+It uses one cached instanced plane, with ordinary depth testing and stair/pit
+heights. No partial-tile visibility polygon, mesh-size obstruction, new light or
+continuous recalculation. Any gameplay action turns it off persistently until
+explicitly enabled again; it never hides revealed pieces or changes discovery.
+Source/diff review only; no visual/browser check has run for this addition.
+
 ## Model inspection modal
 
 The main Models button and setup View models button open a 32-type grouped
@@ -202,7 +210,7 @@ Use simple material groups and bases to keep pieces distinguishable at board sca
 
 Mark's supplied STL collection replaces the handmade miniature studies. Forty source files cover the four heroes, standard monsters and weapon variants, a Chaos Warlock, separate gargoyle wings, furniture/components, a combat die and six tile models. The original files are preserved locally under ignored `references/stl-source/`; see the source inventory and `assets/models/imported/catalog.json` for exact filenames, hashes and actual conversion counts.
 
-The exploration entry loads the four heroes, Trial monster types and required scenery from supplied derivatives. Models and the Test room share the board factories. The barbarian has authored paint; furniture/doors/rubble now use painted derivatives, while other heroes/monsters retain simple colours. STL supplies shape without painted material regions or textures, so keep paint separate from geometry. The original stance/anatomy come from the supplied sculpt.
+The exploration entry loads the four heroes, Trial monster types and required scenery from supplied derivatives. Models shares the board factories. The barbarian has authored paint; furniture/doors/rubble now use painted derivatives, while other heroes/monsters retain simple colours. STL supplies shape without painted material regions or textures, so keep paint separate from geometry. The original stance/anatomy come from the supplied sculpt.
 
 The barbarian uses eight materials: skin, dark chestnut hair, red cloth, leather, ivory fur, steel, bronze and a dark grey base. Sculpt-landmark contours are refined around the hairline/crown, loincloth, belt, boot cuffs and sword fittings. The offline recipe cuts crossing triangles at material seams, interpolating the existing surface/normals, rather than assigning whole faces across clothing boundaries. The original imported sculpt remains unchanged; the guarded paint asset supplies the prepared surface. Metal retains separate roughness/metalness and local reflections; there is no baked wash or pigment noise. Runtime decoding/material grouping is cached. Every other hero/monster also gets a separate dark grey (#35383b) top/rim material for its two-unit-high base. Furniture/door materials stay independent. See `scripts/paint_barbarian.py`, `assets/models/barbarian-paint.js` and `assets/previews/barbarian-painted.png`. Source and front/three-quarter/back/above offline authoring views were reviewed; no new browser check was run.
 
@@ -235,3 +243,29 @@ The main table separates turn controls, discovered 3D terrain and an adventure j
 ## Miniature portraits
 
 `src/ui/portraits.js` renders small bust views of the actual painted hero/monster models. Setup selections, party/active hero, handoffs, miniature context panels, movement/combat rolls and attack/defence summaries share these portraits. Combat shows both participants next to readable names/roles. The shared lazy 160x160 renderer captures each kind once, caches PNGs and has no idle loop. Geometry stays shared; portrait materials/reflections remain independent from dungeon lighting. Missing WebGL keeps a decorative initial and all readable text/actions. Portrait UI has source review only; no new browser/layout check.
+
+## Rear action camera / top-view toggle — 24 October
+
+POV follows directly behind the acting unit, without lateral shoulder offset.
+Height, distance, lens, damped tracking, swoop and occasional true-eye attacks
+remain unchanged. The table icon/preset is removed. Top view stores full previous
+framing (yaw, elevation, zoom, target, follow); toggling off glides back to it.
+The optional overheadReturn snapshot retains this bookmark across refresh.
+Source/diff review only; no browser check was run.
+
+Dropped sealed bags have brighter cloth, a mild warm emissive finish and a static
+golden floor halo/rim. Shared geometry/materials and a lazy cached gradient avoid
+new lights or animation timers. Glow retains depth testing, casts no shadows and
+is excluded from picking/hover silhouettes. Source review only; no browser check.
+
+The active-unit marker is restored to the original gold floor circle, with
+ordinary depth testing, its original size/position and movement tracking.
+The inset rectangle/base-height metadata are removed. Source review only;
+no browser verification was run.
+
+Menu Show full board uses a dim unlit printed-board plane under unknown cells,
+with a discovery mask that leaves known cells/pits untouched. It shares the
+original atlas and printed-blood cleanup, adds no light/timer and cannot be
+picked. Optional fullBoardEnabled is view-only and saved across refresh.
+Unknown walls, furniture, units and gameplay targets remain hidden. Source
+review only; no browser check ran.

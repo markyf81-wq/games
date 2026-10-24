@@ -19,31 +19,45 @@ loader, runtime fetch or new dependency is required. Keep file:// compatibility.
 session/app.js applies and saves a command before any presentation. It then awaits
 movement/camera/spell/removal promises and renders recorded dice or outcomes.
 Interrupted presentation cannot reroll, recast or advance a turn twice. Current
-state schema is 8; content ID and save keys remain unchanged. SAVES.md records
+state schema is 15; content ID and save keys remain unchanged. SAVES.md records
 search/potion state and earlier migrations. Sandbox fixtures remain in their separate save slot.
 
 ## Reusable components
 
 - data/dungeon.js, rules/dungeon.js: original trap/search/jump/disarm rules,
   stable layout records and pure pending falling-block escape choices.
-- ui/search.js: native sidebar Search modal; reuses per-choice rule reasons.
+- ui/search.js: native board-toolbar Search modal; reuses per-choice rule reasons.
 - ui/dungeon.js, view/dungeon-features.js: context actions and persistent pit/marker
   presentation. Terrain masks pits; wall records own sliding secret stone panels.
-- data/pieces.js: public metadata shared by contexts, Models and the Test room.
+- data/pieces.js: public metadata shared by contexts and Models.
 - ui/dialogs.js: native modal confirmations and nonmodal spell-drawer opening.
 - data/treasure.js, rules/treasure.js: 24 physical cards, source text/art, room
   search rules, quest overrides, deck returns and wandering-monster placement.
-- data/items.js, rules/inventory.js: source-linked starting equipment/healing
-  potion, personal holdings, eligibility, potion sharing and recorded potion/recovery effects.
-- ui/save-files.js: local file picker/download and import confirmation; storage
-  owns export wrapper parsing and shared save validation. app.js installs only
+- data/items.js, rules/inventory.js: source-linked melee/armour equipment and
+  potions, owned/equipped slots, bonuses/restrictions, potion sharing and recovery.
+- rules/recovery.js: pending casualty, own potion/spell eligibility, sealed death drops, free bag carrying and idempotent completion revival/returns.
+- view/belongings.js: shared sack geometry/materials, with no rule occupancy.
+- session/storage.js: localStorage, slot/envelope ownership and import/export
+  wrapper errors; no gameplay validation rules.
+- session/save-validation.js: actor/inventory/dungeon/turn validation and ordered
+  legacy migrations; shares bounded primitive checks with save-reports.js.
+- session/save-reports.js: recorded potion/combat/spell/trap/search results,
+  recovery and consumed-item references; never resolves another outcome.
+- ui/save-files.js: local file picker/download and import confirmation; app.js installs only
   confirmed imports and guards outgoing autosaves before reloading.
 - ui/treasure.js: finite slide/flip card reveal in the shared nonmodal drawer;
   recorded card only, reduced-motion/interruption completion, no rule or RNG work.
+- ui/item-card.js: shared inventory/Armoury card tile, keeping prices, counts and
+  selection under their caller’s ownership.
 - ui/inventory.js: per-hero nonmodal drawer using the spell drawer's shared
   position/finish, grouped possessions, manual Drink & roll and board-selected Give.
 - session/presentation.js: pure derived display snapshots, capped health deltas,
   pending-roll status masks and held casualties; no DOM/timers/state mutations.
+- session/movement-actions.js: movement reasons, partial-route actions, cached
+  previews and free auto-approach destinations. The controller still sequences
+  move-then-act and rechecks the accepted endpoint after reveals.
+- session/dice-flow.js: read-only tray/prompt descriptors and recorded-stage
+  transitions. app.js retains manual roll triggers, saves, pacing and effects.
 - session/pacing.js: one cancellable keyed presentation timer, CPU pause and
   hidden-tab/modal suspension; commands and RNG remain in the engine.
 - ui/dice.js: cached sidebar 3D tray; explicit hero Roll and automatic CPU rolls,
@@ -61,6 +75,11 @@ search/potion state and earlier migrations. Sandbox fixtures remain in their sep
   one bounded arrival wait. The tabletop retains serializable framing goals.
 - view/board-terrain.js: instanced floor atlas and grid strips, rebuilt only when
   the discovery key changes; cached floor meshes also serve picking.
+- view/route-preview.js: two fixed GPU buffers and one cached endpoint for
+  blue/yellow path overlays. Hover changes coordinates/draw ranges only.
+- view/sight-overlay.js: optional whole-tile floor sight guide, reusing
+  topology.canSee with public tile/figure data and one cached instanced plane.
+  Session actions switch it off before presentation; no camera/frame recalculation.
 - view/figure-motion.js: exact recorded route hops/facing and owned removal fades.
 - view/combat-impact.js: finite post-dice melee shove and one reused signed health-change
   sprite; exact pose restoration, interruption handling and no rule mutations.
@@ -92,8 +111,8 @@ search/potion state and earlier migrations. Sandbox fixtures remain in their sep
   camera movement changes slot assignments without changing shader light counts.
 - view/model-surfaces.js, furniture-surfaces.js: shared reflection/finish recipes;
   geometry/textures stay cached while preview materials remain independent.
-- view/test-room.js, ui/model-viewer.js: invented 36-type showroom and isolated
-  inspection, sharing factories without quest placements or session state.
+- ui/model-viewer.js: isolated model inspection, sharing factories without quest
+  placements or session state.
 
 ## Cleanup scope, 22 October 2026
 
@@ -146,3 +165,37 @@ copies, retaining source ledgers and historical verification limits.
 No schema, game rule, RNG, external dependency, framework or build step is changed
 by this cleanup. Source/diff review only: no new tests, builds, typechecks, lint,
 browser automation, screenshots or performance benchmark was run.
+
+## Cleanup — 24 October 2026
+
+Split session controller responsibilities into movement-action planning and pure
+dice display/stage descriptions. Storage I/O is separate from state migrations
+and recorded-result validation, retaining validation order and schema 13. Engine
+command membership is allocated once; fresh movement, inventory limits, empty
+slots and equipment mirrors have shared owners instead of separate reset copies.
+
+Route preview buffers, materials and endpoint geometry are reused across hover
+changes. Inventory keeps unchanged select options and item buttons, updating
+counts, equipment state and selection without replacing focused nodes. Spell hand
+styling lives entirely in drawers.css; superseded modal sizes, responsive
+cascades and repeated no-op transition declarations are removed. Ordinary deferred
+script order and local-file operation remain part of the design.
+
+This is source/diff review only. No tests/build/lint/typecheck/browser checks or
+benchmarks were run. Behaviour and compatibility are intended to remain the same;
+manual engine/save/UI verification remains outstanding. No commit or push.
+
+Schema 14 adds optional fair loot recovery (default off), standard inheritance/loss,
+and a partial sealed-bag revival ledger. Top-view snapshots retain their return
+framing; table preset controls are removed. Furniture now blocks targeting sight
+as well as movement. See EDITION-COMPARISON.md and RECOVERY.md.
+
+rules/armoury.js owns between-quest stock, eligibility and transaction rules;
+ui/armoury.js owns hero/card browsing, issuing engine commands only. The controller
+keeps one shop modal open while rendering saved transactions. board-terrain.js
+owns the optional unknown-area board plane/mask; floors.js shares printed-art
+cleanup. The backdrop is excluded from picking and authoritative discovery.
+
+The final cleanup shares equipment-card construction across Inventory and Armoury,
+keeps viewer-only lighting/plinth variables local, simplifies sealed-bag settlement
+and updates stale recovery/shop docs. No tests/build/browser checks were run.

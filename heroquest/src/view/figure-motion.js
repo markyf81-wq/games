@@ -49,7 +49,7 @@
     function finishFigureEffect() {
       if(!figureEffect)return;
       const effect=figureEffect;figureEffect=null;
-      effect.model.position.copy(effect.origin);effect.model.rotation.copy(effect.rotation);
+      effect.model.position.copy(effect.origin);
       effect.model.visible=false;
       for(const [mesh,original,clones,shadow] of effect.materials) {
         mesh.material=original;mesh.castShadow=shadow;for(const material of clones)material.dispose();
@@ -62,18 +62,16 @@
       const elapsed=time-effect.started;
       if(elapsed>=effect.duration){finishFigureEffect();return;}
       const t=elapsed/effect.duration,fall=smooth(t),fade=smooth((t-.18)/.82);
-      effect.model.position.copy(effect.origin).addScaledVector(effect.direction,.08*fall);effect.model.position.y-=.32*fall;
-      effect.model.rotation.x=effect.rotation.x+effect.direction.z*.24*fall;
-      effect.model.rotation.z=effect.rotation.z-effect.direction.x*.24*fall;
+      effect.model.position.copy(effect.origin);effect.model.position.y-=effect.sinkDepth*fall;
       for(const [, ,materials] of effect.materials)for(const material of materials)material.opacity=material.userData.defeatOpacity*(1-fade);
     }
 
-    function animateDefeat(defenderId,attackerId) {
+    function animateDefeat(defenderId) {
       finishMovement();finishFigureEffect();
-      const entry=entities.get(defenderId),attacker=entities.get(attackerId);
+      const entry=entities.get(defenderId);
       if(!entry?.model.visible)return Promise.resolve();
       if(reducedMotion.matches||!contextReady()||document.visibilityState==="hidden"){entry.model.visible=false;invalidateShadows();requestRender();return Promise.resolve();}
-      const direction=attacker?entry.model.position.clone().sub(attacker.model.position):new T.Vector3(0,0,1);direction.y=0;direction.normalize();
+      const sinkDepth=Math.max(.32,new T.Box3().setFromObject(entry.model).max.y-entry.model.position.y+.08);
       return new Promise(resolve=>{
         const materials=[];
         entry.model.traverse(mesh=>{
@@ -83,7 +81,7 @@
           });
           materials.push([mesh,original,clones,mesh.castShadow]);mesh.material=Array.isArray(original)?clones:clones[0];mesh.castShadow=false;
         });
-        figureEffect={kind:"defeat",model:entry.model,origin:entry.model.position.clone(),rotation:entry.model.rotation.clone(),direction,materials,started:null,duration:700,resolve};requestRender();
+        figureEffect={kind:"defeat",model:entry.model,origin:entry.model.position.clone(),sinkDepth,materials,started:null,duration:700,resolve};requestRender();
       });
     }
     return Object.freeze({

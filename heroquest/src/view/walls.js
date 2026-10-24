@@ -29,33 +29,29 @@
       shader.vertexShader="attribute float wallStoneId; attribute float wallStoneMix; uniform float wallPaletteSeed;\n"+shader.vertexShader;
       shader.vertexShader=shader.vertexShader.replace("#include <color_vertex>",`#include <color_vertex>
         float stoneRandom=fract(sin(wallStoneId*127.1+wallPaletteSeed*311.7)*43758.5453);
-        float stoneShade=.80+fract(sin(wallStoneId*73.9+wallPaletteSeed*17.3)*19642.349)*.34;
-        vec3 stoneTone=vec3(.76,.84,.96);
-        if(stoneRandom>.16)stoneTone=vec3(1.12,.99,.81);
-        if(stoneRandom>.34)stoneTone=vec3(.85,.91,.78);
-        if(stoneRandom>.50)stoneTone=vec3(.83,.76,.69);
-        if(stoneRandom>.67)stoneTone=vec3(1.18,1.15,1.05);
-        if(stoneRandom>.84)stoneTone=vec3(.95,.97,.98);
-        vColor.rgb*=mix(vec3(1.0),stoneTone*stoneShade,wallStoneMix);
+        float stoneShade=.995+fract(sin(wallStoneId*73.9+wallPaletteSeed*17.3)*19642.349)*.01;
+        float stoneWarmth=(stoneRandom-.5)*.008;
+        vec3 stoneTone=vec3(.76+stoneWarmth,.79,.85-stoneWarmth);
+        // Flatten baked face-colour noise; retain the recessed mortar and sculpt lighting.
+        vColor.rgb=mix(vColor.rgb,vec3(.371,.332,.258)*stoneTone*stoneShade,wallStoneMix)*.74;
       `);
     };
-    material.customProgramCacheKey=()=>"heroquest-wall-stone-palette-v1";
+    material.customProgramCacheKey=()=>"heroquest-wall-stone-palette-v4";
   }
   HQ.createDungeonWalls=function () {
     const records=new Map(),secretRoots=new Map(),secretSections=new Map(),capGeometry=new T.BoxGeometry(1,.025,.15),blockedCapGeometry=new T.BoxGeometry(.99,.025,.99),footingGeometry=new T.BoxGeometry(1,.02,.28),coreGeometry=new T.BoxGeometry(1,1,1);
     const footingMaterial=HQ.models.material(0x535044,.98).clone();
-    const capMaterial=HQ.models.material(0x98917e,.94).clone(),nearPoint=new T.Vector3(),hit=new T.Vector3(),frustum=new T.Frustum(),viewProjection=new T.Matrix4(),rayPool=[];
+    const capMaterial=HQ.models.material(0x7e796e,.94).clone(),nearPoint=new T.Vector3(),hit=new T.Vector3(),frustum=new T.Frustum(),viewProjection=new T.Matrix4(),rayPool=[];
     // Cast from the actual stone surface. The default back-face shadow pass
     // lets narrow relief edges escape their own shadow and flash like seams.
     footingMaterial.shadowSide=capMaterial.shadowSide=T.FrontSide;
     let mode="cutaway",lastTime=null,animate=false,exploredTargets=[],protectedCells=new Set(),layoutKey=null,layoutItems=null;
-    function addStoneCore(model,plane,width,height,depth){
-      // Printing sculpts have tiny through-gaps between stones. A recessed,
-      // opaque mortar core closes them without lighting up like exposed stone.
-      // It still casts clipped shadows, but never reflects a torch through seams.
+    let secretMarkMaterial=null;
+    function addBlockedCore(model,plane,height){
+      // Blocked-square scenery retains an internal plug to keep the rubble solid.
       const material=new T.MeshBasicMaterial({color:0x24221f,side:T.DoubleSide,shadowSide:T.FrontSide,clippingPlanes:[plane],clipShadows:true});
       const core=new T.Mesh(coreGeometry,material),coreHeight=Math.max(.01,height-.12);
-      core.name="Solid stone mortar core";core.scale.set(width,coreHeight,depth);core.position.y=coreHeight/2;
+      core.name="Solid blocked-square core";core.scale.set(.82,coreHeight,.82);core.position.y=coreHeight/2;
       core.castShadow=true;core.raycast=()=>{};model.add(core);
     }
     function itemsFor(projection,hero=projection.activeHero) {
@@ -156,8 +152,6 @@
             part.material=part.material.clone();part.material.clippingPlanes=[plane];part.material.clipShadows=true;part.material.shadowSide=T.FrontSide;
             stoneAttributes(part.geometry);colourStones(part.material,wallHash("join:"+joint.key));
           });
-          const height=new T.Box3().setFromObject(mesh).max.y/mesh.scale.y;
-          addStoneCore(mesh,plane,.105,height,.065);
           record.model.add(mesh);record.joints.set(joint.key,mesh);
         }
         mesh.position.x=item.axis==="v"?-joint.offset:joint.offset;mesh.userData.wallJoint=joint;
@@ -169,16 +163,15 @@
       // Transform only the sculpt: joins/caps retain their exact grid frame.
       // Mirroring and turning expose four versions of the original stonework.
       const sculpt=model.children[0];sculpt.rotation.y=(seed&1)?Math.PI:0;sculpt.scale.x=(seed&2)?-1:1;
-      const warmth=((seed>>>12)&255)/255,shade=.88+((seed>>>20)&255)/255*.16;
+      const warmth=((seed>>>12)&255)/255,shade=.985+((seed>>>20)&255)/255*.01;
       let height=0;
       model.traverse(mesh=>{
         if(!mesh.isMesh)return;
         mesh.material=mesh.material.clone();mesh.material.clippingPlanes=[plane];mesh.material.clipShadows=true;mesh.material.shadowSide=T.FrontSide;
-        mesh.material.color.setRGB(shade,shade*(.975+warmth*.025),shade*(.94+warmth*.05));
+        mesh.material.color.setRGB(shade,shade*(.998+warmth*.002),shade*(.994+warmth*.004));
         stoneAttributes(mesh.geometry);colourStones(mesh.material,seed);
         height=Math.max(height,mesh.geometry.boundingBox.max.y*model.scale.y);
       });
-      addStoneCore(model,plane,item.length,height,.065);
       // A stone section face closes the visual cut; the sculpt is clipped,
       // never compressed vertically. Full-height jagged tops retain their shape.
       const cap=new T.Mesh(capGeometry,capMaterial);cap.scale.x=item.length;cap.visible=false;cap.castShadow=true;cap.receiveShadow=true;model.add(cap);
@@ -195,12 +188,19 @@
       // These opaque markings must write depth so later stone draws cannot
       // paint over them. Foreground scenery still occludes them normally.
       const material=new T.MeshBasicMaterial({color:0xffffff,toneMapped:false});
+      if(!secretMarkMaterial){
+        const canvas=document.createElement("canvas");canvas.width=canvas.height=128;
+        const context=canvas.getContext("2d");context.fillStyle="#fff";context.font="bold 104px Georgia,serif";context.textAlign="center";context.textBaseline="middle";context.fillText("?",64,68);
+        const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;
+        secretMarkMaterial=new T.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,toneMapped:false});
+      }
       border.name="Secret door inset borders";border.userData.faces=[];
       for(const sign of [-1,1]){
         const face=new T.Group();face.position.z=sign<0?bounds.min.z-.004:bounds.max.z+.004;face.rotation.y=sign<0?Math.PI:0;
         for(let i=0;i<4;i++){
           const stroke=new T.Mesh(geometry,material);stroke.userData.visualEffect=true;stroke.raycast=()=>{};face.add(stroke);
         }
+        const mark=new T.Mesh(geometry,secretMarkMaterial);mark.name="Secret door question mark";mark.userData.visualEffect=true;mark.raycast=()=>{};face.add(mark);
         border.add(face);border.userData.faces.push(face);
       }
       record.secretBorder=border;return border;
@@ -209,11 +209,12 @@
       const border=record.secretBorder;if(!border?.visible)return;
       const width=.78,thickness=.02,bottom=.08,top=Math.max(bottom+.04,record.current-.08),height=top-bottom;
       for(const face of border.userData.faces){
-        const [lower,upper,left,right]=face.children;
+        const [lower,upper,left,right,mark]=face.children;
         lower.position.set(0,bottom,0);lower.scale.set(width,thickness,1);
         upper.position.set(0,top,0);upper.scale.set(width,thickness,1);
         left.position.set(-width/2,(top+bottom)/2,0);left.scale.set(thickness,height+thickness,1);
         right.position.set(width/2,(top+bottom)/2,0);right.scale.set(thickness,height+thickness,1);
+        const markSize=Math.min(.32,height*.66);mark.position.set(0,(top+bottom)/2,.001);mark.scale.set(markSize,markSize,1);
       }
     }
     function makeSecret(item){
@@ -249,7 +250,7 @@
         if(mesh.userData.blockedStone)stoneAttributes(mesh.geometry);
         mesh.material=Array.isArray(mesh.material)?mesh.material.map(clone):clone(mesh.material);
       });
-      addStoneCore(model,plane,.82,height,.82);
+      addBlockedCore(model,plane,height);
       const surface=HQ.models.material(0xffffff,1).clone();surface.map=HQ.componentTextures.get("falling-block");
       const cap=new T.Mesh(blockedCapGeometry,surface);cap.visible=false;cap.castShadow=true;cap.receiveShadow=true;model.add(cap);
       // Permanent blocked passages and sprung traps share the printed rubble

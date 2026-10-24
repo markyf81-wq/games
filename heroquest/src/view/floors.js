@@ -2,7 +2,8 @@
   "use strict";
   const HQ=window.HeroQuest,T=window.HQThree;
   // User-supplied board artwork, cropped to 26x19 cells offline. The renderer
-  // still creates only discovered geometry; the image never defines rules.
+  // creates discovered floors separately from the optional printed-board backdrop;
+  // the image never defines rules.
   HQ.createFloorTexture=function(){return HQ.componentTextures.get("board");};
   // Four decorative red splashes belong to the supplied scan, not gameplay.
   // Cover just those patches with adjacent matching floor one tile away. The
@@ -39,5 +40,15 @@
       shader.fragmentShader=shader.fragmentShader.replace("#include <map_fragment>",floorMap);
     };
     material.customProgramCacheKey=()=>"heroquest-floor-atlas-v2";return material;
+  };
+  HQ.boardBackdropMaterial=function(texture,knownMask){
+    const material=new T.MeshBasicMaterial({map:texture,color:0x7c8174});
+    material.onBeforeCompile=shader=>{
+      shader.uniforms.hqKnownFloor={value:knownMask};
+      shader.fragmentShader="uniform sampler2D hqKnownFloor;\n"+shader.fragmentShader;
+      const map=T.ShaderChunk.map_fragment.replace("diffuseColor *= sampledDiffuseColor;",cleanPrintedBlood.replaceAll("vFloorUv","vMapUv")+"\ndiffuseColor *= sampledDiffuseColor;");
+      shader.fragmentShader=shader.fragmentShader.replace("#include <map_fragment>","if(texture2D(hqKnownFloor,vMapUv).r>.5)discard;\n"+map);
+    };
+    material.customProgramCacheKey=()=>"heroquest-board-backdrop-v1";return material;
   };
 })();

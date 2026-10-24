@@ -62,9 +62,10 @@
     else if(card.id==="pass-through-rock"){target.effects.passThroughRock=true;detail="May cross walls on the next move. Ending in solid rock is fatal.";}
     else if(card.id==="swift-wind") {
       if(state.heroes[state.turnIndex].id===target.id&&state.movement.rolled&&!state.movement.started&&!state.movement.closed) {
-        redDice.push(die(state),die(state));state.movement.dice.push(...redDice);state.movement.remaining+=redDice.reduce((a,b)=>a+b,0);
-        rollRole="hero";rollDescription="Two additional movement dice";detail="Movement increased to "+state.movement.remaining+".";
-      } else {target.effects.swiftWind=true;detail="Four red dice on the next movement roll.";}
+        for(let i=0;i<HQ.inventory.movementDice(target);i++)redDice.push(die(state));
+        state.movement.dice.push(...redDice);state.movement.swiftWind=true;state.movement.remaining+=redDice.reduce((a,b)=>a+b,0);
+        rollRole="hero";rollDescription=redDice.length+" additional movement "+(redDice.length===1?"die":"dice");detail="Movement increased to "+state.movement.remaining+".";
+      } else {target.effects.swiftWind=true;detail="Twice the usual number of red dice on the next movement roll.";}
     } else if(card.id==="sleep") {
       for(let i=0;i<target.mind;i++)redDice.push(die(state));
       target.effects.sleep=!redDice.includes(6);rollDescription="Any 6 breaks Sleep";

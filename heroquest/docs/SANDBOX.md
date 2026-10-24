@@ -13,8 +13,8 @@ Legacy saves without markers do not infer blood from omitted monsters.
 
 Open **Gameplay sandbox** in the top bar (`index.html?sandbox=1`). This is a
 separate live practice session using the real engine, rules, dice, spells, CPU,
-3D board and original base-game pieces. The existing **Test room** remains a
-visual model/furniture showroom and does not run gameplay.
+3D board and original base-game pieces. Individual sculpts can be inspected
+separately through **Models**.
 
 Sandbox storage is `heroquest.sandbox.v1`; the adventure remains at
 `heroquest.session.v1`. Both use the same guarded schema/envelope. Returning to
@@ -34,7 +34,8 @@ not an authentic quest. No new spell, equipment card or expansion is added.
   cards/effects, wound heroes, select the corresponding Elf/Wizard and put an Orc
   nearby. Pass Through Rock resets discoveries to the starting area so blind
   movement/reveal pauses can be exercised. Return to play and cast normally.
-- Reset turn / switch hero; Give 12 movement (a fixture override, not a roll).
+- Reset turn / switch hero; Give maximum movement (six per normal movement die,
+  respecting plate mail; a fixture override, not a roll).
 - Restore heroes & spells; choose the Elf group, with the Wizard retaining the
   other three. This deliberately resets used cards and effects in this save only.
 - Wound heroes for healing, without killing them.
@@ -66,7 +67,7 @@ refresh. Also refresh a pending dice/result stage to check it does not replay.
 | Fire of Wrath | One red die; 5/6 prevents the single Body damage. |
 | Tempest | Monster misses one activation, then acts normally next round; refresh must not duplicate the skip. |
 | Genie | Choose monster or revealed closed door on the board. Attack uses five combat dice plus normal defence; door opening is remote and reveals beyond. Hidden doors never appear as choices. |
-| Swift Wind | Next movement roll uses four red dice. If already rolled but not moved, keep those two and add two. Free stair repositioning must not consume it. |
+| Swift Wind | Next roll uses twice the normal dice: four, or two in Plate Mail. If already rolled but not moved, retain the original dice and add the same number. Free stair repositioning must not consume it. |
 | Courage | +2 dice for the next ordinary attack, then consumed. Ends earlier if the hero loses sight of every monster. Genie does not consume that bonus. |
 | Sleep | One initial red die per Mind; any 6 resists. Otherwise no movement/attack/defence. Check again on later activation; a wake can continue that same activation. Undead cannot be targeted. |
 | Veil of Mist | Next movement may pass monsters, but cannot stop on an occupied square; normal furniture/walls still block. |
@@ -123,11 +124,89 @@ Source/diff review only; these new flows have not been run in the engine/browser
 
 ## Exploration practice
 
+Equipment practice: choose a hero and Equipment loadout, then Prepare equipment
+practice. This starts a fresh fixture with the supported melee weapons, four
+armour pieces and Tool Kit carried. Presets equip Helmet/Shield/Chain Mail,
+Helmet/Shield/Plate Mail or Battle Axe/Helmet/Plate Mail. Inventory shows the full
+card and Equip/Unequip controls. Staff/Longsword presets equip that weapon and
+place the selected opponent on a free reachable diagonal when available. The
+Wizard may use Staff; choosing Longsword leaves his Dagger equipped with an
+explanation. No gear enters the adventure save. Plate Mail rolls one
+movement die; Swift Wind doubles it to two. Give maximum movement grants six per
+normal die. Source/diff review only; Mark retains manual verification.
+
 Select a hero and an Exploration practice scenario, then Prepare exploration
-scenario. Twelve moves are ready; the active trap starts concealed. Search from
-a tile or hero context, walk into a hidden trap, or select Jump over. Reset the
-hero’s turn after discovery to enable Disarm; non-Dwarfs carry a practice Tool Kit.
+scenario. Twelve moves are ready; the active trap starts concealed. Use the
+board-toolbar Search button, walk into a hidden trap, or jump a discovered floor trap
+or sprung pit. Reset the hero’s turn after discovery to enable Disarm; non-Dwarfs
+carry a practice Tool Kit.
 A trapped chest uses a one-Body practice consequence before treasure, not an
 invented quest note. Secret-door practice hides the area behind the concealed
 panel until opened. Pending rolls, sprung pits/blocks and move-clear choices
-remain in the separate sandbox save (schema 8). No engine/browser checks run.
+remain in the separate sandbox save (currently schema 13). No engine/browser checks run.
+
+## Crossbow practice
+
+Choose Barbarian, Dwarf or Elf in Sandbox tools, then Equipment loadout →
+Crossbow · ranged attack → Prepare equipment practice. This starts a fresh
+practice fixture with carried gear and the Crossbow equipped, attempting to put
+the selected opponent on a clear line about four squares away. Click that
+opponent and choose Shoot, then manually roll as usual. The Wizard keeps his
+Dagger and gets an explanatory restriction message instead.
+
+For a repeatable animation check, select **Crossbow · guaranteed miss** and
+Prepare equipment practice. Return to play → opponent → Shoot → Roll. The next
+ordinary attack is seeded to roll zero skulls. Shoot before movement/potion/spell
+rolls; those consume the prepared RNG sequence. Reprepare to repeat. The seed is
+selected using cloned normal ATTACK resolutions, without spending the fixture's
+action, recording a report or adding a production force-roll flag.
+
+Manual cases: a clear ranged/diagonal shot; an orthogonally adjacent target;
+an intervening hero or monster; a closed versus open doorway; switching between
+Crossbow and melee weapons; move-then-shoot; Heroic Brew and attack buffs; a miss,
+full block and damage; refreshing during recorded dice; hidden/reduced-motion
+presentation. These are suggested checks, not completed results. No automatic
+engine/save/Chrome pass was run for this addition.
+
+## Death and recovery practice
+
+Death / recovery practice → Prepare death / recovery starts a fresh fixture.
+The unused-action and action-used presets use Elf/Wizard with one Body, no
+healing potion and a lethal upcoming Orc attack. Return to play and Continue
+Zargon, then reveal the normal attack/defence rolls. Own healing is offered only
+for the unused-action case. With Fair loot recovery enabled, nearby-heroes and
+nearby-monster presets both leave sealed bags after death. Treasure-hazard practice
+prepares a lethal search: search before any other roll, then move a companion
+beside the bag and pick it up. Its contents stay out of the carrier's usable inventory. A carrier death
+drops it again. At successful completion only bags with a completed-exit carrier
+return to their revived owners. See RECOVERY.md for the house rule, persistence
+and suggested manual cases. Source review only; these scenarios have not been
+executed in the engine/browser by the agent.
+
+## Dagger throwing practice
+
+Choose any hero, then Equipment loadout → **Throw Dagger · spare available** →
+Prepare equipment practice. Click the opponent → Throw Dagger → Roll. One copy
+is lost on hit or miss; a spare Dagger remains equipped. Other gear stays carried.
+Alternatively choose **Throw last Dagger · unarmed afterwards**: the fixture
+removes other weapons, so throwing leaves an empty weapon slot and one-die
+orthogonal unarmed combat. Both fixtures attempt a clear ranged opponent position.
+
+Suggested manual cases: cancel before Roll; throw from beside a monster; blocked
+sight; throw while a different weapon is equipped; hit, miss and full block;
+Courage/Strength, Heroic Brew, last copy versus spare, and refresh during dice.
+Confirm that only one copy is removed and the saved projectile identity survives
+item removal. These are practice instructions, not completed test results.
+
+Death/recovery practice uses Fair loot recovery from Adventure menu. There is
+no separate fixture rule selector. All sandbox presets and Reset practice area
+preserve this setting, including fresh spell/exploration/death fixtures. Standard
+mode covers inheritance/loss; Fair mode covers sealed bags and completion revival.
+The tools show the current rule. This corrects a duplicate selector that silently
+reset fair mode to Standard when preparing a death. Source/diff review only;
+Mark retains manual gameplay verification.
+
+Sandbox tools → Prepare Armoury opens the between-quest shop with 2,000 practice
+gold per hero. It preserves Fair loot recovery and cannot change adventure funds.
+After shopping, close the results, open tools and reset a hero’s turn to try
+their gear. See ARMOURY.md for suggested manual cases; no new checks were run.

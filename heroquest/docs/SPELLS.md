@@ -8,8 +8,9 @@ left/right/Home/End keys, held mouse/pen drags and thumb swipes. Cast cards leav
 the hand, with used status retained in the save. The selected card's full printed
 description, target and Cast button sit below the hand. Short rule summaries
 remain separate from the original wording and artwork.
-No potions, Chaos spells, possession transfer or general emergency-healing system
-is added here.
+Potions and emergency own healing now have their own recovery flow in RECOVERY.md;
+Chaos spells remain unfinished. Ordinary spell targeting still requires living
+targets; the dedicated emergency command is an own-spell exception only.
 
 ## Sources reviewed visually, 2026-10-22
 
@@ -27,12 +28,12 @@ All PDFs are the original NA scans under `references/original-na/`.
 | Fire of Wrath | Same, p1, upper right face | One Body damage unless one red resistance die is 5/6 |
 | Water of Healing | `system-water-spells`, PDF p1, upper right face | Restore up to four lost Body, capped at starting Body, one hero including self |
 | Genie | `system-air-spells`, PDF p1, upper left | Open a placed/revealed door without caster sight, revealing beyond, OR five combat dice against a visible monster with normal defence |
-| Swift Wind | Same, p1, lower left | Four red dice on the next movement roll; if already rolled but not moved, retain those two dice and roll two additional dice |
+| Swift Wind | Same, p1, lower left | Twice the usual movement dice: four normally, two in Plate Mail; if already rolled but not moved, retain those dice and roll the same number again |
 | Pass Through Rock | `system-earth-spells`, PDF p1, lower left | Cross walls during the next move; ending in shaded solid rock traps the hero forever |
 | Courage | `system-fire-spells`, PDF p1, lower left | +2 dice for one attack; ends earlier if no monster remains in the recipient's own sight — Mark explicitly chose this reading on 2026-10-22 |
 | Sleep | `system-water-spells`, PDF p1, upper left | Target cannot move/attack/defend; one red die per Mind, at casting and at the start of a future activation, any 6 breaks it; Mummies/Zombies/Skeletons immune |
 | Veil of Mist | Same, p1, lower left | Pass through monster squares on the next move, still end on a legal unoccupied space |
-| Death / escaping death | Instruction booklet, PDF p3 upright printed p22 and PDF p2 rotated 180° printed p23 | Healing cannot target a dead hero. Emergency self-healing after a future own-turn hazard remains future work, alongside hazards/potions; never revive a fallen hero with another hero's later spell |
+| Death / escaping death | Instruction booklet, PDF p3 upright printed p22 and PDF p2 rotated 180° printed p23 | Own potion or unused healing spell before removal, with unused action for the spell; RECOVERY.md records off-turn timing. Never revive a fallen hero with another hero's later spell |
 
 ## Digital choices and boundaries
 
@@ -43,6 +44,10 @@ suggestion of Fire for the Wizard's first choice and Earth for the Elf.
 
 Casting checks the individual caster's centre-to-centre grid sight with figure
 occlusion, independent of combined party discovery and remembered monsters.
+Crossing any part of an intermediate occupied square blocks sight; touching only
+its corner does not. Both grazed side squares may hold figures without blocking
+an otherwise open diagonal; sealed wall corners still use the topology route guard.
+The optional whole-tile floor sight overlay calls the same query.
 Revealed miniatures remain displayed even outside current sight. Casting retains the existing grid corner
 and user-requested four-square stair footprint. Targets exposed by the board picker
 come from live heroes or the filtered revealed-monster projection; an unseen
@@ -124,10 +129,12 @@ Tempest consumes a whole missed activation before any Sleep check. Damage does
 not itself break Sleep; the card does not say that it does.
 
 Swift Wind's extra dice are genuine recorded rolls, never doubling the original
-sum. Before an unrolled move, a pending buff changes the next roll to four dice.
-After rolling but before traversing a square, it records two additional hero dice
+sum. Before an unrolled move, a pending buff doubles the next roll's dice count.
+After rolling but before traversing a square, it records the normal number of additional hero dice
 and adds them to the existing movement. Casting after moving closes movement and
-leaves the buff for the next turn. The sidebar/tray support two or four dice.
+leaves the buff for the next turn. Plate Mail changes normal movement to one die,
+so Swift Wind grants two there. The saved movement.swiftWind flag distinguishes
+that buff from an ordinary two-die roll.
 
 Veil/rock effects activate on the first positive-cost movement step, remaining
 through all MOVE requests in that phase. A free shared-stair reposition does not

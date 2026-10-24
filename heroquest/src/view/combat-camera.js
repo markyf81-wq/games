@@ -57,7 +57,6 @@
     function actorPose(model,direction,eyeHeight,style,aim,eye,target){
       const firstPerson=style==="first-person";
       eye.copy(model.position).addScaledVector(direction,firstPerson ? .06 : -1.65);
-      if(!firstPerson){eye.x+=direction.z*.48;eye.z-=direction.x*.48;}
       eye.y+=eyeHeight+(firstPerson?0:.85);
       if(aim){target.copy(aim);if(!firstPerson)target.lerp(headPosition.copy(model.position).add(new T.Vector3(0,.65,0)),.25);}
       else {target.copy(model.position).addScaledVector(direction,firstPerson?3:1.25);target.y+=firstPerson?eyeHeight-.12:.65;}

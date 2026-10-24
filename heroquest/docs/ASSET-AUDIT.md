@@ -8,7 +8,7 @@ Reviewed against actual factories and the supplied component catalog, updated 20
 | Eight monster types | Supplied STL sculpts; three Orc and three Goblin weapon varieties integrated; simple base colours | Paint existing geometry; assemble supplied gargoyle wings |
 | Gargoyle wings | Prepared STL, not assembled | Existing `gargoyle-wings` source; no new model needed |
 | Closed / open doors | Supplied stone arches, walnut panels, iron hinges/rings and charcoal bases | Offline multi-angle paint authoring; furniture/SCENERY.md |
-| Cupboard | Supplied walnut/iron/ivory sculpt, now in Models and Test room | 3×1 display fit; no quest placement added; furniture/SCENERY.md |
+| Cupboard | Supplied walnut/iron/ivory sculpt, now in Models | 3×1 display fit; no quest placement added; furniture/SCENERY.md |
 | Blocked passages | Wall-height solid stone assembly using original wall sculpts and supplied painted rubble; shares wall cutaway | Current game uses 1×1 only; original rubble derivatives remain intact; furniture/SCENERY.md and WALLS.md |
 | Wooden table / treasure chest | Supplied sculpts with seam-cut walnut/iron/brass finishes and aligned grain UVs | First two-piece batch completed 2026-10-22; [recipe/review](../assets/models/furniture/README.md) |
 | Throne / fireplace | Supplied sculpts painted walnut/red cloth/brass and limestone/iron/brass | Offline multi-angle paint authoring completed 2026-10-22; discovered fireplace has particle fire and warm light |
@@ -25,7 +25,7 @@ Reviewed against actual factories and the supplied component catalog, updated 20
 | Dice | Supplied combat sculpt/paint; blank hull with red/white pips for movement | Existing geometry/materials; no new models needed |
 
 Useful supplied files: `Bookcase_NoShelf_Full_Textured.stl`,
-`Bookcase_OnlyShelf.stl`, `GargoyleWings.stl`. The supplied cupboard is now painted and available in Models/Test room for later quests. The 40 supplied STLs include variants/components,
+`Bookcase_OnlyShelf.stl`, `GargoyleWings.stl`. The supplied cupboard is now painted and available in Models for later quests. The 40 supplied STLs include variants/components,
 not 40 assembled game objects. Their source licence/creator remains unknown
 beyond Mark's earlier open-licence statement; wall models have separate notices.
 

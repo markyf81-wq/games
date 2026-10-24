@@ -1,19 +1,69 @@
 (function () {
   "use strict";
   const HQ=window.HeroQuest;
-  const fresh=hero=>({gold:0,items:[{id:"starting-"+hero.id,kind:hero.weapon}]});
+  const limit=2048,slots=Object.freeze(["weapon","armour","head","shield"]);
+  const emptyEquipment=()=>({weapon:null,armour:null,head:null,shield:null});
+  const empty=()=>({gold:0,items:[],equipped:emptyEquipment()});
+  const fresh=hero=>({gold:0,items:[{id:"starting-"+hero.id,kind:hero.weapon}],equipped:{...emptyEquipment(),weapon:"starting-"+hero.id}});
+  const equipped=(hero,item)=>Boolean(item&&Object.values(hero.inventory.equipped||{}).includes(item.id));
+  const worn=(hero,slot)=>HQ.itemData.byId[hero.inventory.items.find(item=>item.id===hero.inventory.equipped?.[slot])?.kind];
+  function equipmentKinds(inventory){
+    const hero={inventory};
+    return {weapon:worn(hero,"weapon")?.id||"unarmed",armour:worn(hero,"armour")?.id||null};
+  }
+  function setInventory(hero,inventory){hero.inventory=inventory;Object.assign(hero,equipmentKinds(inventory));}
+  const defenceBonus=hero=>hero.inventory?slots.reduce((sum,slot)=>sum+(worn(hero,slot)?.defence||0),0):0;
+  const movementDice=hero=>hero.inventory?worn(hero,"armour")?.movementDice||2:2;
+  function validEquipment(hero){
+    const gear=hero.inventory.equipped;if(!gear||typeof gear!=="object"||Array.isArray(gear)||Object.keys(gear).length!==slots.length||!slots.every(slot=>Object.hasOwn(gear,slot)))return false;
+    for(const slot of slots){
+      if(gear[slot]===null)continue;
+      const definition=worn(hero,slot);if(typeof gear[slot]!=="string"||definition?.slot!==slot||hero.id==="wizard"&&!definition.wizardAllowed)return false;
+    }
+    return hero.weapon===(worn(hero,"weapon")?.id||"unarmed")&&hero.armour===(worn(hero,"armour")?.id||null)&&!(worn(hero,"weapon")?.twoHanded&&gear.shield!==null);
+  }
+  function equipReason(state,hero,itemId,putOn){
+    if(!hero)return "Choose a hero.";
+    const betweenQuests=HQ.quest.isEnded(state.phase)&&!HQ.armoury.visitReason(state,hero);
+    if(!betweenQuests){
+      if(state.phase!=="hero-turn"||state.pending||state.heroes[state.turnIndex]?.id!==hero.id)return "Change equipment on this hero’s turn or at the Armoury.";
+      if(!HQ.combat.inPlay(hero)||hero.trapped)return "This hero is no longer in the dungeon.";
+      if(HQ.topology.unsafe(state,hero))return "Reach a free square before changing equipment.";
+    }
+    const item=hero.inventory.items.find(item=>item.id===itemId),definition=HQ.itemData.byId[item?.kind];
+    if(!definition?.slot)return "This item does not need equipping.";
+    if(putOn===equipped(hero,item))return putOn?"Already equipped.":"This item is not equipped.";
+    if(!putOn&&definition.slot==="weapon")return "Equip another weapon to replace this one.";
+    if(putOn&&hero.id==="wizard"&&!definition.wizardAllowed)return "The Wizard cannot use this equipment.";
+    if(definition.slot==="armour"&&state.movement.rolled)return "Change body armour before rolling movement.";
+    if(putOn&&definition.slot==="shield"&&worn(hero,"weapon")?.twoHanded)return "Equip a one-handed weapon before using a shield.";
+    return "";
+  }
+  function equip(hero,itemId,putOn){
+    const item=hero.inventory.items.find(item=>item.id===itemId),definition=HQ.itemData.byId[item.kind],gear=hero.inventory.equipped;
+    gear[definition.slot]=putOn?item.id:null;
+    if(putOn&&definition.twoHanded)gear.shield=null;
+    Object.assign(hero,equipmentKinds(hero.inventory));
+    return definition;
+  }
+  function removeItem(hero,itemId){
+    const index=hero.inventory.items.findIndex(item=>item.id===itemId),[item]=hero.inventory.items.splice(index,1);
+    for(const slot of slots)if(hero.inventory.equipped[slot]===itemId){
+      const spare=slot==="weapon"?hero.inventory.items.find(other=>other.kind===item.kind):null;
+      hero.inventory.equipped[slot]=spare?.id||null;
+    }
+    Object.assign(hero,equipmentKinds(hero.inventory));return item;
+  }
   const effects=()=>({strengthPotion:false,defensePotion:false,heroicBrew:false});
   const potions=hero=>hero.inventory.items.filter(item=>HQ.itemData.byId[item.kind]?.category==="potion");
   function recoveryHero(state) {
-    const report=state.pending?.type==="report"?state.lastReport:null;
-    if(!report?.defeated||report.recovery||!["combat","treasure","trap"].includes(report.type))return null;
-    return state.heroes.find(hero=>hero.id===report.defenderId&&hero.body===0&&!hero.trapped&&!hero.exit&&potions(hero).some(item=>item.kind==="potion-of-healing"))||null;
+    return HQ.recovery.hero(state);
   }
   function reason(state,hero,itemId) {
     if(!hero)return "Choose a hero.";
     const item=hero.inventory.items.find(item=>item.id===itemId),definition=HQ.itemData.byId[item?.kind];
     if(!definition)return "This hero no longer carries that item.";
-    if(definition.category!=="potion")return "Already equipped.";
+    if(definition.category!=="potion")return equipped(hero,item)?"Equipped.":"Carried.";
     if(HQ.quest.isEnded(state.phase)||hero.exit||hero.trapped)return "This hero is no longer in the dungeon.";
     if(state.pending?.type==="handoff")return "Finish the device handoff first.";
     const recovery=recoveryHero(state);
@@ -43,17 +93,22 @@
   }
   function giveReason(state,hero,itemId,target=null) {
     if(!hero)return "Choose a hero.";
-    if(state.phase!=="hero-turn"||state.pending||state.heroes[state.turnIndex]?.id!==hero.id)return "Give potions only on this hero’s turn.";
+    if(state.phase!=="hero-turn"||state.pending||state.heroes[state.turnIndex]?.id!==hero.id)return "Give items only on this hero’s turn.";
     if(!HQ.combat.inPlay(hero)||hero.trapped)return "This hero is no longer in the dungeon.";
     const item=hero.inventory.items.find(item=>item.id===itemId);
     if(!item)return "This hero no longer carries that item.";
-    if(HQ.itemData.byId[item.kind]?.category!=="potion")return "Only carried potions can be given.";
-    if(HQ.topology.unsafe(state,hero))return "Reach a free square before giving a potion.";
+    if(HQ.topology.unsafe(state,hero))return "Reach a free square before giving an item.";
+    if(HQ.itemData.byId[item.kind]?.slot==="armour"&&equipped(hero,item)&&state.movement.rolled)return "Give equipped body armour before rolling movement.";
+    const threatened=owner=>state.monsters.some(monster=>HQ.combat.adjacent(state,owner,monster));
+    if(threatened(hero))return "Cannot trade while beside a monster.";
     if(target) {
       if(target.id===hero.id)return "Choose another hero.";
       if(!state.heroes.includes(target)||!HQ.combat.inPlay(target)||target.trapped)return "Choose a hero still in the dungeon.";
-      if(target.inventory.items.length>=2048)return "This hero’s inventory is full.";
-    } else if(!state.heroes.some(other=>other.id!==hero.id&&HQ.combat.inPlay(other)&&!other.trapped&&other.inventory.items.length<2048))return "No other hero can receive this potion.";
+      if(!HQ.combat.adjacent(state,hero,target))return "Move beside the receiving hero.";
+      if(threatened(target))return "The receiving hero is beside a monster.";
+      if(HQ.topology.unsafe(state,target))return "The receiving hero must reach a free square.";
+      if(target.inventory.items.length>=limit)return "This hero’s inventory is full.";
+    } else if(!state.heroes.some(other=>!giveReason(state,hero,itemId,other)))return "No adjacent hero can receive this item away from monsters.";
     return "";
   }
   function giveTargets(state,hero,itemId) {
@@ -61,8 +116,7 @@
     return state.heroes.filter(target=>!giveReason(state,hero,itemId,target));
   }
   function give(hero,target,itemId) {
-    const index=hero.inventory.items.findIndex(item=>item.id===itemId),[item]=hero.inventory.items.splice(index,1);
-    target.inventory.items.push(item);return item;
+    const item=removeItem(hero,itemId);target.inventory.items.push(item);return item;
   }
-  HQ.inventory=Object.freeze({fresh,effects,potions,recoveryHero,reason,drink,giveReason,giveTargets,give});
+  HQ.inventory=Object.freeze({limit,empty,emptyEquipment,equipmentKinds,setInventory,fresh,effects,potions,equipped,worn,defenceBonus,movementDice,validEquipment,equipReason,equip,removeItem,recoveryHero,reason,drink,giveReason,giveTargets,give});
 })();

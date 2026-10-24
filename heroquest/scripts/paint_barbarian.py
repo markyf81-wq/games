@@ -200,15 +200,25 @@ def connected_material_field(points,faces,field,low,high,keep_count=1):
     return (np.maximum(np.abs(values),.015)*np.where(keep,1,-1))[inverse]
 
 
-def paint_surface(points,normals,faces):
+def paint_surface(points,normals,faces,source_regions=False):
     fields=regions();lookup=dict(fields)
     hair=connected_material_field(points,faces,lookup['hair'](points),22.3,32.7)
     cloth=connected_material_field(points,faces,lookup['cloth'](points),12.0,17.9)
     triangles=np.concatenate([points[faces],normals[faces],hair[faces,None],cloth[faces,None]],axis=2)
+    if source_regions:
+        # Constant source-face IDs survive seam interpolation. The painter uses
+        # one region per original triangle, chosen by painted surface area.
+        source_ids=np.broadcast_to(np.arange(len(faces))[:,None,None],(len(faces),3,1))
+        triangles=np.concatenate([triangles,source_ids],axis=2)
     labels=np.full(len(faces),ID['skin'],dtype=np.uint8)
     for name,field in fields:triangles,labels=cut_region(triangles,labels,name,field,{'hair':6,'cloth':7}.get(name))
     area=np.linalg.norm(np.cross(triangles[:,1,:3]-triangles[:,0,:3],triangles[:,2,:3]-triangles[:,0,:3]),axis=1)
     triangles=triangles[area>1e-10];labels=labels[area>1e-10]
+    if source_regions:
+        weights=np.zeros((len(faces),len(MATERIALS)))
+        source_ids=np.rint(triangles[:,0,8]).astype(int)
+        np.add.at(weights,(source_ids,labels),area[area>1e-10])
+        return weights.argmax(axis=1)
     # Deduplicate coincident position+normal pairs, retaining existing creases.
     vertices,inverse=np.unique(np.round(triangles[:,:,:6].reshape(-1,6),7),axis=0,return_inverse=True)
     p=vertices[:,:3];n=vertices[:,3:];n/=np.maximum(np.linalg.norm(n,axis=1)[:,None],1e-12)
@@ -245,8 +255,28 @@ def preview(points,normals,faces,labels):
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--preview',action='store_true');args=parser.parse_args()
-    asset,p,n,f=load();points,normals,faces,labels=paint_surface(p,n,f)
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--preview',action='store_true');parser.add_argument('--export-regions',type=Path,help='Export original-face markings for the model painter without rewriting the game asset.');args=parser.parse_args()
+    asset,p,n,f=load()
+    saved_regions=ROOT/'scripts/paint-regions/barbarian.json'
+    if saved_regions.exists():
+        from paint_barbarian_regions import markings,build
+        if args.export_regions:
+            markings(asset)  # Guard source identity before copying editable markings.
+            args.export_regions.write_text(saved_regions.read_text())
+            print('Exported current Barbarian painter regions to',args.export_regions)
+        else:build(args.preview)
+        return
+    if args.export_regions:
+        labels=paint_surface(p,n,f,source_regions=True)
+        fingerprint=hashlib.sha256(b''.join(base64.b64decode(asset[key])for key in ['positions','normals','indices'])).hexdigest()
+        data={'kind':'heroquest-model-paint-regions','version':1,'model':'barbarian','sourceFile':asset['sourceFile'],
+            'geometrySha256':fingerprint,'vertices':asset['vertices'],'triangles':asset['triangles'],
+            'palette':[{'name':'Unmarked / erase','colour':'#b9b6ad'}]+[{'name':m['name'].title(),'colour':m['colour']}for m in MATERIALS],
+            'faceRegions':(labels+1).tolist()}
+        args.export_regions.write_text(json.dumps(data,separators=(',',':'))+'\n')
+        print('Exported',len(labels),'original-face regions to',args.export_regions)
+        return
+    points,normals,faces,labels=paint_surface(p,n,f)
     data={'id':'barbarian','geometrySha256':asset['geometrySha256'],'triangles':asset['triangles'],
         'vertices':asset['vertices'],'materials':MATERIALS,'geometry':pack(points,normals,faces),
         'faceMaterials':base64.b64encode(labels.tobytes()).decode()}

@@ -5,6 +5,45 @@ those files as open-licence, but creator, source link and exact licence remain
 unverified; these paint derivatives do not establish new rights to the sculpts.
 No model from Free3D is included.
 
+## Barbarian — 24 October 2026
+
+Current paint uses Mark's `barbarian-paint-regions (1).json`, preserved unchanged
+as `scripts/paint-regions/barbarian.json`. Its original source is
+`Minis/BarbarianNewBase.stl`; the packed source fingerprint is
+`cb53f56b4763856057578024a19ae5bb07ceeb8cb92d29d75e00a50ac6cf650e`.
+The recipe `scripts/paint_barbarian_regions.py` validates source/counts/regions,
+preserves Mark's body/material colours, and refines painted boundaries. The
+originally painted angular Eye/white patches are landmarks for level, rounded
+muted-blue eyes with pupils/highlights, restrained off-white openings and upper
+lids. Extra subdivisions stay around the eyes; face normals blend gently across
+shared vertices. The sword blade is straightened above the guard: sampled horizontal
+cross-sections locate its curved centre in both axes, and a cubic fit removes
+the nonlinear bend while retaining the blade-root tangent and surface detail.
+Normals follow the inverse transpose of that local warp. The grip, guard, body,
+face and paint remain unchanged; no new mouth or body proportion/pose change.
+The current derivative has 46,168 triangles, 27,902 vertices and 13 materials.
+
+The game still loads `barbarian-paint.js` through its original source guard. That
+asset embeds the prepared surface, palette/face groups and authoring-file hash.
+Original imports and the supplied export stay immutable. Run the new recipe with
+`--preview` for offline three-angle face and four-angle full-body authoring
+images. Those latest views were inspected; no browser/gameplay checks ran.
+`paint_barbarian.py` delegates normal regeneration to this recipe when the saved
+export exists. Its historical authored seams remain as a fallback for older
+source sets.
+
+## Barbarian painter export
+
+`scripts/paint_barbarian.py --export-regions <path>` copies the current validated
+painter export if present; otherwise it converts the historical seam-cut
+materials into version 1 painter JSON for the original Barbarian import.
+It retains editable colours and the original packed-geometry fingerprint,
+vertex count and triangle order. Source-face IDs are carried through the existing
+seam cuts, and the material occupying the largest area of each original triangle
+wins. This makes fine boundaries coarser than the runtime cut mesh, while keeping
+the export compatible with the painter's editable source. It does not overwrite
+the runtime asset or an existing browser draft. Choose Barbarian before Import.
+
 ## Wizard — 23 October 2026
 
 `wizard.js` replaces only the runtime Wizard asset. Its source is

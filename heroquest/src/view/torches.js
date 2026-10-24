@@ -2,7 +2,14 @@
   "use strict";
   const HQ=window.HeroQuest,T=window.HQThree;
   // Decorative wall/hearth fire: never add it to occupancy or sight data.
-  const items=HQ.placeQuestTorches(HQ.trial,HQ.board);
+  const placements=new Map();
+  function itemsFor(projection){
+    const layout=projection.dungeonLayout||"trial";
+    // Reserve every secret-door edge before discovery so finding/opening a
+    // panel cannot leave a torch mounted on it or reshuffle nearby fixtures.
+    if(!placements.has(layout))placements.set(layout,HQ.placeQuestTorches(HQ.trial,HQ.board,HQ.dungeonData.layouts[layout].doors));
+    return placements.get(layout).filter(item=>projection.discoveredCells.includes(HQ.topology.key(item.x,item.row)));
+  }
   function flameSample(index,seed){
     let hash=Math.imul(index,374761393)^Math.imul(seed,668265263);
     hash=Math.imul(hash^(hash>>>13),1274126177);
@@ -160,7 +167,7 @@
       active=nearby.length>0;return changed;
     }
     return Object.freeze({root,lights:pool,make,registerFireplace,update,
-      itemsFor(projection){return items.filter(item=>projection.discoveredCells.includes(HQ.topology.key(item.x,item.row)));},
+      itemsFor,
       setEnabled(value){enabled=Boolean(value);},get enabled(){return enabled;},get active(){return active;}
     });
   };

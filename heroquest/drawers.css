@@ -13,8 +13,12 @@ dialog.inventory-drawer{width:min(600px,calc(100% - 24px))}
 #inventory-gold{display:block;color:var(--hq-gold);font-size:13px}
 .inventory-browser{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);gap:14px;flex:1 1 0;min-height:0}
 .inventory-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:8px;overflow:auto;overscroll-behavior:contain;min-height:0;padding:2px 4px 4px 2px;scrollbar-width:thin}
-.inventory-item{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;width:100%;padding:10px 5px;border:1px solid #c7a66c40;border-radius:6px;background:#101a1580;color:var(--hq-paper);text-align:center;cursor:pointer;font:inherit}
+.inventory-item{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;width:100%;padding:10px 5px;border:1px solid #c7a66c40;border-radius:6px;background:#101a1580;color:var(--hq-paper);text-align:center;cursor:pointer;font:inherit}
+.inventory-item-count{position:absolute;top:5px;right:5px;min-width:22px;padding:3px 5px;border:1px solid var(--hq-gold);border-radius:12px;background:#14221b;color:var(--hq-paper);font:700 11px/1.2 Arial,sans-serif;box-shadow:0 1px 3px #0006;pointer-events:none}
 .inventory-item[aria-pressed=true]{border-color:var(--hq-gold);background:#c7a66c12}
+.inventory-item.is-equipped{border:2px solid #75b79b;background:#254a40;padding:9px 4px}
+.inventory-item.is-equipped small{color:#b4dfc9;font-weight:700}
+.inventory-item.is-equipped[aria-pressed=true]{background:#30594c;box-shadow:0 0 0 1px var(--hq-gold)}
 .inventory-item:focus-visible{outline:2px solid var(--hq-gold);outline-offset:2px}
 .inventory-item-art{width:48px;height:75px;flex:0 0 auto;object-fit:contain;border-radius:3px;box-shadow:0 2px 5px #0005}
 .inventory-item strong,.inventory-item small{display:block}
@@ -31,8 +35,10 @@ dialog.inventory-drawer{width:min(600px,calc(100% - 24px))}
 .inventory-details p{font:13px/1.6 Georgia,serif;margin:0 0 10px}
 .inventory-details .hq-muted{font:12px/1.5 system-ui,sans-serif;margin-bottom:0}
 .inventory-drawer .dialog-actions{margin-top:12px;padding-top:12px;flex:0 0 auto;flex-wrap:nowrap;gap:8px}
-.inventory-drawer .dialog-actions:has([hidden]){display:none}
+.inventory-drawer .dialog-actions:not(:has(>button:not([hidden]))){display:none}
+#inventory-loadout{font-size:10px;line-height:1.5;margin:4px 0 0}
 .inventory-drawer #use-item{flex:2;min-width:0;justify-content:center}
+.inventory-drawer #equip-item{flex:1;min-width:0;justify-content:center}
 .inventory-drawer #give-item{flex:1;min-width:0;justify-content:center}
 @media(max-width:700px){dialog.game-drawer{inset:auto 8px 8px auto;width:min(380px,calc(100% - 16px));height:min(570px,65svh);max-height:calc(100% - 16px)}}
 @media(max-width:700px){dialog.inventory-drawer{inset:8px 8px 8px auto;width:min(600px,calc(100% - 16px));height:auto}.inventory-header{gap:10px}.inventory-browser{gap:10px}}
@@ -71,14 +77,44 @@ dialog.treasure-drawer{width:min(430px,calc(100% - 24px))}
 @media(max-width:700px){dialog.treasure-drawer{width:min(430px,calc(100% - 16px))}.treasure-draw-stage{--treasure-card-width:clamp(90px,15svh,110px);--treasure-gap:20px;margin-bottom:10px}.treasure-card-details{min-height:60px}.treasure-card-details p{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.treasure-drawer[open]{animation:none}}
 
-/* Nonmodal card drawer: the board and camera remain available alongside it. */
-.spell-drawer h2{font-size:23px}
-.spell-drawer #spell-note{font-size:11px;line-height:1.5;margin-bottom:6px}
-.spell-drawer .spell-cards{--card-width:clamp(100px,20svh,145px);flex:0 0 clamp(170px,26svh,235px);height:clamp(170px,26svh,235px)}
-.spell-drawer .spell-deck-controls{margin:0 0 10px}
-.spell-drawer .spell-details{padding:13px;min-height:90px;overflow:auto;overscroll-behavior:contain}
-.spell-drawer .spell-details h3{font-size:21px}
-.spell-drawer .spell-details>#spell-detail-description{min-height:0;font-size:13px}
-.spell-drawer .dialog-actions{flex-wrap:nowrap;margin-top:12px;padding-top:12px;gap:8px}
+/* Spell hand: one layout shared by pointer, touch and keyboard selection. */
+.spell-drawer .dialog-title-row{margin-bottom:0}
+.spell-drawer #spell-note{flex:0 0 auto;min-height:0;font-size:11px;line-height:1.5;margin:0 0 6px}
+.spell-cards{--card-width:clamp(100px,20svh,145px);--fan-step:calc(var(--card-width)*.9);position:relative;display:block;flex:0 0 clamp(170px,26svh,235px);height:clamp(170px,26svh,235px);max-height:none;overflow:hidden;padding:0;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y pinch-zoom}
+.spell-card{position:absolute;left:50%;top:12px;width:var(--card-width);height:auto;aspect-ratio:480/754;display:block;padding:0;border:0;border-radius:7px;background:#f4ecd9;overflow:hidden;box-shadow:0 4px 14px #0008;transform-origin:50% 100%;transform:translateX(calc(-50% + var(--fan-offset)*var(--fan-step))) translateY(calc(var(--fan-distance)*10px)) rotate(calc(var(--fan-offset)*7deg)) scale(calc(1 - var(--fan-distance)*.045));z-index:calc(20 - var(--fan-distance));transition:none;cursor:inherit}
+.spell-card[aria-pressed=true]{border-color:var(--hq-gold);background:#c7a66c14}
+.spell-card:disabled{opacity:.5;cursor:default}
+.spell-card:focus-visible{outline:2px solid var(--hq-gold);outline-offset:1px}
+.spell-card img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.spell-card.is-centred{outline:2px solid var(--hq-gold);outline-offset:3px;box-shadow:0 7px 25px #000a;background:#f4ecd9}
+.spell-card.is-away{opacity:0;pointer-events:none}
+.spell-cards.is-dragging{cursor:grabbing}
+.spell-deck-controls{display:flex;flex:0 0 auto;align-items:center;justify-content:center;gap:20px;margin:0 0 10px}
+.spell-deck-controls .hq-button{min-height:34px;justify-content:center}
+.spell-deck-controls>span{font-size:11px;color:var(--hq-soft);min-width:40px;text-align:center}
+.spell-details{flex:1 1 auto;min-height:90px;padding:13px;overflow:auto;overscroll-behavior:contain}
+.spell-details>.eyebrow{margin:0 0 8px}
+.spell-details h3{font:21px Georgia,serif;margin:0 0 10px}
+.spell-details>#spell-detail-description{font:13px/1.6 Georgia,serif;min-height:0;margin:0;white-space:pre-line}
+.spell-details>#spell-detail-status{margin:8px 0;min-height:20px}
+.spell-details #spell-mode-field{margin:10px 0}
+.spell-drawer .dialog-actions{flex:0 0 auto;flex-wrap:nowrap;margin-top:12px;padding-top:12px;gap:8px}
 .spell-drawer .dialog-actions .hq-button{min-width:0;justify-content:center}
 .spell-drawer #cast-spell{flex:1}
+
+/* Between-quest shop shares the inventory grid and full-card detail layout. */
+dialog.armoury-dialog{width:min(900px,calc(100% - 24px));max-width:900px;max-height:calc(100svh - 24px);padding:24px}
+dialog.armoury-dialog[open]{display:flex;flex-direction:column;height:min(790px,calc(100svh - 24px));overflow:hidden}
+.armoury-dialog .dialog-title-row,.armoury-dialog .inventory-header,.armoury-modes,.armoury-note,.armoury-dialog .dialog-actions{flex:0 0 auto}
+.armoury-dialog .dialog-title-row h2{margin:0;font-size:32px}
+.armoury-dialog .dialog-title-row .eyebrow{margin:0 0 7px}
+.armoury-modes{display:flex;gap:8px;margin-bottom:8px}
+.armoury-modes [aria-pressed=true]{background:#514a36;color:var(--hq-paper);border-color:var(--hq-gold)}
+.armoury-note{font-size:11px;margin:0 0 12px}
+#armoury-gold{display:block;color:var(--hq-gold);font-size:18px}
+#armoury-loadout{font-size:11px;margin:5px 0 0}
+#armoury-message{flex:0 0 auto;min-height:18px;margin:10px 0 0;font-size:12px;color:var(--hq-gold)}
+.armoury-dialog .dialog-actions{margin-top:10px;padding-top:12px;gap:8px}
+.armoury-dialog .dialog-actions .hq-button{justify-content:center;min-width:0}
+#armoury-trade{flex:1}
+@media(max-width:480px){dialog.armoury-dialog{padding:14px}.armoury-dialog .inventory-browser{grid-template-columns:90px minmax(0,1fr)}.armoury-dialog .inventory-items{grid-template-columns:1fr}.armoury-dialog .dialog-actions{flex-wrap:wrap}.armoury-modes .hq-button{flex:1;font-size:12px}.armoury-note{line-height:1.4}}

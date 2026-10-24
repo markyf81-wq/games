@@ -12,7 +12,7 @@ This repository holds independent browser games behind one shared selection page
 - `type-tails/`: the Type & Tails typing game. Read `type-tails/AGENTS.md` before changing it.
 - `bomb-major/`: the Chicken Major chase-and-dodge game. Read `bomb-major/AGENTS.md` before changing it.
 - `fateless-kingdoms/`: Mark's physical card game adapted for a human versus CPU. Read `fateless-kingdoms/AGENTS.md` before changing it.
-- `heroquest/`: original North American HeroQuest prototype with The Trial, pass-and-play heroes, CPU monsters, elemental spells, Treasure/inventories and local saves. Traps, equipment/campaign progression and other base mechanics remain unfinished. Read `heroquest/AGENTS.md` before changing it.
+- `heroquest/`: original North American HeroQuest prototype with The Trial, pass-and-play heroes, CPU monsters, elemental spells, Treasure/inventories and local saves. Includes traps, equipment, between-quest Armoury and optional fair loot recovery; campaign progression and other base mechanics remain unfinished. Read `heroquest/AGENTS.md` before changing it.
 
 All games live in this repository. Do not list an unavailable game as playable or introduce a separate repository for a game without a request.
 

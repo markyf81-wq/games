@@ -52,7 +52,7 @@ Replace the current weapons-rack source script in `index.html` with:
 ```
 
 Keep `src/view/furniture-surfaces.js` before `src/view/stl-models.js` as currently
-configured. The asset retains ID `weapons-rack`; the board, Test room and Models
+configured. The asset retains ID `weapons-rack`; the board and Models
 use its existing factory, rotation and uniform fit. No runtime changes needed.
 Do not load both rack assets or discard the original source/notices.
 

@@ -3,8 +3,17 @@
   const HQ=window.HeroQuest;
   const source=(sourceId,pdfPage,printedLocator)=>Object.freeze({sourceId,pdfPage,printedLocator,reviewStatus:"visually-reviewed"});
   const definitions={};
-  for(const [id,name,attack] of [["broadsword","Broadsword",3],["shortsword","Shortsword",2],["dagger","Dagger",1]])
-    definitions[id]=Object.freeze({id,name,category:"equipment",artwork:"assets/ui/equipment/"+id+".jpg",description:attack+" combat "+(attack===1?"die":"dice")+" when attacking.",source:HQ.combatData.sources.equipment});
+  for(const [id,name,attack,price,twoHanded] of [["broadsword","Broadsword",3,250,false],["shortsword","Shortsword",2,150,false],["dagger","Dagger",1,25,false],["battle-axe","Battle Axe",4,450,true],["staff","Staff",1,100,true],["longsword","Longsword",3,350,false],["crossbow","Crossbow",3,350,false]]){
+    const wizardAllowed=id==="dagger"||id==="staff",diagonal=Boolean(HQ.combatData.weapons[id].diagonal);
+    definitions[id]=Object.freeze({id,name,category:"equipment",slot:"weapon",attack,price,twoHanded,wizardAllowed,...(id==="dagger"?{throwable:true}:{}),artwork:"assets/ui/equipment/"+id+".jpg",
+      description:attack+" combat "+(attack===1?"die":"dice")+" when attacking."+(id==="crossbow"?" Fire at any monster you can see, except one directly beside, in front of or behind you. Unlimited ammunition.":"")+(diagonal?" May also attack diagonally.":"")+(twoHanded?" You may not use a shield with this weapon.":"")+(!wizardAllowed?" May not be used by the Wizard.":"")+(id==="dagger"?" A dagger may also be thrown at any monster you can see. It is lost once thrown, whether it hits or misses.":""),source:HQ.combatData.sources.equipment});
+  }
+  for(const [id,name,slot,defence,price,description,movementDice] of [
+    ["helmet","Helmet","head",1,125,"This protective headpiece gives you 1 extra combat die in defence. May not be worn by the Wizard."],
+    ["shield","Shield","shield",1,150,"This hand-held armour gives you 1 extra combat die in defence. May not be used with the Battle Axe or the Staff. May not be used by the Wizard."],
+    ["chain-mail","Chain Mail","armour",1,500,"This light metal armour gives you 1 extra combat die in defence. May be combined with the Helmet and/or Shield. May not be worn by the Wizard."],
+    ["plate-mail","Plate Mail","armour",2,850,"This heavy metal armour gives you 2 extra combat dice in defence. You may only roll 1 red die for movement while wearing it. May be combined with the Helmet and/or Shield. May not be worn by the Wizard.",1]
+  ])definitions[id]=Object.freeze({id,name,category:"equipment",slot,defence,price,description,wizardAllowed:false,...(movementDice?{movementDice}:{}),artwork:"assets/ui/equipment/"+id+".jpg",source:HQ.combatData.sources.equipment});
   definitions["tool-kit"]=Object.freeze({id:"tool-kit",name:"Tool Kit",category:"equipment",price:250,artwork:"assets/ui/equipment/tool-kit.jpg",
     description:"Disarm a discovered, unsprung trap. Roll one combat die: either shield disarms it; a skull springs it. The Dwarf uses his own improved disarming roll.",summary:"Disarm from the trap’s context panel.",source:HQ.combatData.sources.equipment});
   definitions["potion-of-healing"]=Object.freeze({id:"potion-of-healing",name:"Potion of Healing",category:"potion",healingDice:1,
@@ -21,6 +30,8 @@
     potions:source("system-instruction-booklet",8,"rotate 180 degrees; printed p17, Potions"),
     giving:source("system-instruction-booklet",8,"rotate 180 degrees; printed p17, Potions, final sentence: give one potion to a fellow Hero only on your turn"),
     recovery:source("system-instruction-booklet",3,"printed p22, How A Hero Escapes Death, paragraph 1"),
+    spellRecovery:source("system-instruction-booklet",2,"rotate 180 degrees; printed p23, How A Hero Escapes Death, continuation: unused own action and self-healing only"),
+    possessions:source("system-instruction-booklet",3,"printed p22, What Happens To A Dead Hero / Warning: recovery by another hero or loss to monsters"),
     starting:source("system-character-cards",1,"hero faces: starting weapon and no starting armour"),
     searches:source("system-instruction-booklet",9,"printed p16, Search For Treasure")
   })});

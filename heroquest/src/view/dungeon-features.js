@@ -39,13 +39,13 @@
         part(root,dark,0,-.36,0,.94,.035,.94);
         const face=new T.Mesh(pitFace,pitArtwork);face.rotation.x=-Math.PI/2;face.position.y=-.337;face.receiveShadow=true;root.add(face);
         for(const sign of [-1,1]){part(root,stone,sign*.46,-.17,0,.055,.38,.96);part(root,stone,0,-.17,sign*.46,.87,.38,.055);}
-      } else {
-        // A digital pointer to Zargon's indicated square, not a sprung trap tile.
-        floorWarningMaterial??=new T.MeshBasicMaterial({map:warningIconMaterial().map,transparent:true,depthWrite:false,toneMapped:false});
-        const icon=new T.Mesh(warningFace,floorWarningMaterial);icon.rotation.x=-Math.PI/2;icon.position.y=.04;icon.userData.visualEffect=true;root.add(icon);
-        for(const sign of [-1,1]){
-          part(root,warning,sign*.39,.025,0,.035,.015,.815);part(root,warning,0,.025,sign*.39,.815,.015,.035);
-        }
+      }
+      // A location warning: open pits keep it, spent spears retain it only
+      // through their pending result. It never reveals an untriggered hidden trap.
+      floorWarningMaterial??=new T.MeshBasicMaterial({map:warningIconMaterial().map,transparent:true,depthWrite:false,toneMapped:false});
+      const icon=new T.Mesh(warningFace,floorWarningMaterial);icon.rotation.x=-Math.PI/2;icon.position.y=pit?-.325:.04;icon.userData.visualEffect=true;root.add(icon);
+      for(const sign of [-1,1]){
+        part(root,warning,sign*.39,.025,0,.035,.015,.815);part(root,warning,0,.025,sign*.39,.815,.015,.035);
       }
       return root;
     }

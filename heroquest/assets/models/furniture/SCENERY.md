@@ -23,9 +23,10 @@ boundary stays straight. Both door faces have separate fitting-depth thresholds.
 Doors have warm walnut panels, forged iron hinges/rings, and matching warm-grey
 limestone arches and bases. Cupboard panels/frame use matching walnut, iron
 fittings and an ivory skull. Rubble has dark joints, limestone and a charcoal moulded rim.
-Door arches use the wall bricks' stone colour families with deliberately stronger
-contrast: cool grey, sandstone, sage-grey, taupe and pale limestone. The darker
-stones stay distinct under warm lighting. Raised
+Door arches use darker warm greys close to the wall bricks, based on sRGB
+126/121/110 with moderate whole-stone shade variation, more distinct than the
+near-uniform walls. This replaces the
+earlier contrasting cool-grey, sandstone, sage, taupe and pale palette. Raised
 stone islands seed surface-distance colour propagation across each whole stone;
 the earlier raised-tip-only tint was too faint. Raised-face thresholds follow
 the thickening legs to keep their stones separated. A balanced sequence spreads
@@ -42,7 +43,7 @@ and cupboard palettes: system-furniture-closed-door.gif, open-door.gif and
 cupboards.gif. They are angled reference photos, not texture maps.
 
 Index loads the painted closed/open door and one-square blocker instead of the
-plain imports. The cupboard is added to Models and the invented Test room with
+plain imports. The cupboard is added to Models with
 a uniform 3×1 display fit; it adds no quest placement or gameplay rule. The
 prepared two-square blocked derivative remains unused until a layout needs it.
 Raw trap/weak-floor/spiral-stair variants remain archival, not new game content.
@@ -51,6 +52,9 @@ Offline four-angle previews in `assets/previews/*-painted.png` informed boundary
 refinement. They show source-normal shaded colours, omitting runtime grain,
 metal reflections and torch lighting. No browser, gameplay/save, performance,
 automated test, build or lint check was run; Mark is testing manually.
+
+The darker palette was regenerated for both door states on 24 October 2026.
+This adjustment has source review only; no new rendered or browser check ran.
 
 ## Shared door stonework — 23 October 2026
 

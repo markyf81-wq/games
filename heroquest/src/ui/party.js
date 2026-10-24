@@ -67,7 +67,8 @@
       const n=document.createElement("span");n.className="turn-number";n.textContent=String(i+1);
       const copy=document.createElement("span"),name=document.createElement("strong"),owner=document.createElement("small");name.textContent=E.heroNames.get(h.id);owner.textContent=h.owner||"Choose a player";copy.append(name,owner);
       if(state){const health=document.createElement("small");health.className="hero-health";
-        if(h.exit)health.textContent=h.exit==="completed"?"Quest completed":"Retreated";
+        if(HQ.recovery.revived(state,h))health.textContent="Revived after quest";
+        else if(h.exit)health.textContent=h.exit==="completed"?"Quest completed":"Retreated";
         else {const hearts=HQ.health.body(h.body,h.maxBody);health.append(hearts);if(h.body<=0)health.append(" Fallen");button.setAttribute("aria-label",button.getAttribute("aria-label")+", "+hearts.getAttribute("aria-label")+(h.body<=0?", fallen":""));}
         copy.append(health);
       }
@@ -77,11 +78,12 @@
   }
   function config() {
     const players=playerFields.slice(0,playerCount());
-    return {heroIds:players.map(field=>field.select.value),
+    return {fairLootRecovery:$("setup-fair-loot").checked,heroIds:players.map(field=>field.select.value),
       owners:Object.fromEntries(players.map((field,index)=>[field.select.value,playerName(index)])),
       spellGroups:{elf:[elfPick.value],wizard:HQ.spellData.groups.filter(group=>group!==elfPick.value)}};
   }
-  function restore(heroes) {
+  function restore(heroes,settings) {
+    $("setup-fair-loot").checked=settings?.fairLootRecovery===true;
     const choices=[...heroes,...HQ.heroes.filter(hero=>!heroes.some(chosen=>chosen.id===hero.id))];
     $("player-count").value=String(heroes.length);
     for(const [index,field] of playerFields.entries()) {

@@ -7,15 +7,54 @@
   const record=(state,id)=>state.dungeon?.traps?.[id]||{status:"hidden",foundRound:0,foundTurn:0};
   const cell=trap=>trap.kind==="furniture"?C.cell(HQ.trial.furniture.find(item=>item.id===trap.furnitureId)):C.cell(trap);
   const names={pit:"Pit trap",spear:"Spear trap","falling-block":"Falling-block trap",furniture:"Trapped furniture"};
-  const fresh=(id="trial")=>({layout:id,traps:Object.fromEntries(HQ.dungeonData.layouts[id].traps.map(trap=>[trap.id,{status:"hidden",foundRound:0,foundTurn:0}]))});
+  const fresh=(id="trial")=>({layout:id,traps:Object.fromEntries(HQ.dungeonData.layouts[id].traps.map(trap=>[trap.id,{status:"hidden",foundRound:0,foundTurn:0}])),searched:{traps:[],doors:[]}});
   const at=(state,id)=>traps(state).find(trap=>trap.kind!=="furniture"&&cell(trap)===id&&record(state,trap.id).status!=="disarmed"&&!(["spear","falling-block"].includes(trap.kind)&&record(state,trap.id).status==="sprung"));
   const blocked=state=>traps(state).filter(trap=>trap.kind==="falling-block"&&record(state,trap.id).status==="sprung").map(cell);
+  const jumpable=(state,trap)=>Boolean(trap&&["pit","spear","falling-block"].includes(trap.kind)&&
+    (record(state,trap.id).status==="found"||trap.kind==="pit"&&record(state,trap.id).status==="sprung"));
   const inPit=(state,actor)=>at(state,C.cell(actor))?.kind==="pit"&&record(state,at(state,C.cell(actor)).id).status==="sprung";
   const pitRoom=(state,actor)=>inPit(state,actor)?"pit:"+at(state,C.cell(actor)).id:null;
+  function corridorCells(state,from) {
+    const known=new Set(state.discoveredCells),cells=new Set([from]);
+    const corridor=id=>known.has(id)&&T.regions.get(id)==="corridor"&&!T.blockedAt(state,id);
+    function run(start,dx,dy) {
+      const result=[start];
+      for(const sign of [-1,1]){
+        let previous=start;
+        while(true){
+          const [x,row]=T.parse(previous),next=T.key(x+dx*sign,row+dy*sign);
+          if(!corridor(next)||!T.connected(previous,next,state))break;
+          if(sign<0)result.unshift(next);else result.push(next);previous=next;
+        }
+      }
+      return result;
+    }
+    // Trace straight runs only. Equal parallel runs include both lanes of a
+    // wide corridor, without flooding sideways into bends or other passages.
+    for(const [dx,dy] of [[1,0],[0,1]]){
+      const base=run(from,dx,dy),axis=dx?0:1;
+      for(const id of base)cells.add(id);
+      for(const sign of [-1,1]){
+        let previous=from;
+        while(true){
+          const [x,row]=T.parse(previous),next=T.key(x+dy*sign,row+dx*sign);
+          if(!corridor(next)||!T.connected(previous,next,state))break;
+          const parallel=run(next,dx,dy);
+          if(parallel.length!==base.length||T.parse(parallel[0])[axis]!==T.parse(base[0])[axis])break;
+          for(const id of parallel)cells.add(id);previous=next;
+        }
+      }
+    }
+    return cells;
+  }
+  function searchArea(state,hero) {
+    const from=C.cell(hero),pit=pitRoom(state,hero),region=T.regions.get(from);
+    if(pit)return {keys:[pit],cells:new Set([from]),name:"pit"};
+    if(region==="corridor"){const cells=corridorCells(state,from);return {keys:[...cells],cells,name:"corridor stretch"};}
+    return {keys:[region],cells:new Set([...T.regions].filter(([,room])=>room===region).map(([id])=>id)),name:"room"};
+  }
   function within(state,hero,id) {
-    if(inPit(state,hero))return id===C.cell(hero);
-    const region=T.regions.get(C.cell(hero));
-    return region==="corridor"?T.regions.get(id)==="corridor"&&T.canSee(state,C.cell(hero),id):T.regions.get(id)===region;
+    return searchArea(state,hero).cells.has(id);
   }
   function actionReason(state,hero) {
     if(state.phase!=="hero-turn"||state.pending||!C.inPlay(hero)||state.heroes[state.turnIndex]?.id!==hero.id)return "Wait for your hero’s turn.";
@@ -23,19 +62,23 @@
     if(T.unsafe(state,hero))return "Reach a free square before acting.";
     return "";
   }
-  function searchReason(state,hero) {
-    return actionReason(state,hero)||(HQ.spells.seesMonster(state,hero)?"You cannot search while a monster is visible to this hero.":"");
+  function searchReason(state,hero,kind) {
+    const reason=actionReason(state,hero)||(HQ.spells.seesMonster(state,hero)?"You cannot search while a monster is visible to this hero.":"");
+    if(reason)return reason;
+    const area=searchArea(state,hero),searched=state.dungeon.searched[kind];
+    return area.keys.every(key=>searched.includes(key))?"Already searched for "+(kind==="traps"?"traps":"secret doors")+" in this "+area.name+".":"";
   }
   function spendAction(state,{continueMoving=false}={}) {
     state.actionUsed=true;state.extraAttack=false;
     if(state.movement.started&&!continueMoving){state.movement.closed=true;state.movement.remaining=0;}
   }
   function search(state,hero,kind) {
-    spendAction(state);let found=0;
-    if(kind==="traps")for(const trap of traps(state))if(record(state,trap.id).status==="hidden"&&within(state,hero,cell(trap))){
+    const area=searchArea(state,hero),searched=state.dungeon.searched[kind];
+    searched.push(...area.keys.filter(key=>!searched.includes(key)));spendAction(state);let found=0;
+    if(kind==="traps")for(const trap of traps(state))if(record(state,trap.id).status==="hidden"&&area.cells.has(cell(trap))){
       Object.assign(record(state,trap.id),{status:"found",foundRound:state.round,foundTurn:state.turnIndex});found++;
     }
-    if(kind==="doors")for(const door of layout(state).doors)if(!state.discoveredDoors.includes(door.id)&&T.endpoints(door).some(id=>within(state,hero,id))){state.discoveredDoors.push(door.id);found++;}
+    if(kind==="doors")for(const door of layout(state).doors)if(!state.discoveredDoors.includes(door.id)&&T.endpoints(door).some(id=>area.cells.has(id))){state.discoveredDoors.push(door.id);found++;}
     return {type:"dungeon-search",id:state.nextCombatId++,attackerId:hero.id,attackerName:hero.name,searchKind:kind,found,
       detail:found?found+" "+(kind==="traps"?"trap":"secret door")+(found===1?"":"s")+" found.":"No "+(kind==="traps"?"traps":"secret doors")+" found."};
   }
@@ -62,6 +105,7 @@
     return finishReport(report,hero);
   }
   function jumpLandings(state,hero,id) {
+    if(!jumpable(state,at(state,id)))return [];
     if(state.phase!=="hero-turn"||state.pending||state.extraAttack||state.movement.closed||!state.movement.rolled||state.movement.remaining<2)return [];
     const from=C.cell(hero);
     if(!state.discoveredCells.includes(id)||!T.connected(from,id,state)||T.furniture.has(id)||T.occupiedHero(state,id,hero.id)||T.monsterAt(state,id,true))return [];
@@ -73,8 +117,7 @@
     state.movement.started=true;state.movement.remaining-=2;
     const destination=face==="skull"?cell(trap):to;[hero.x,hero.row]=T.parse(destination);
     report.jumpFrom=from;report.jumpTo=destination;
-    if(face==="skull"&&trap.id){spring(state,hero,trap,die,from,report);endMovement(state);report.endTurn=true;}
-    else if(face==="skull")report.detail="Landed short on clear floor. Continue moving.";
+    if(face==="skull"){spring(state,hero,trap,die,from,report);endMovement(state);report.endTurn=true;}
     else report.detail="Jumped safely over the trap. Continue moving.";
     return finishReport(report,hero);
   }
@@ -112,8 +155,9 @@
     return state.pending?.type==="report"&&report.type==="trap"&&report.fallingFrom&&!report.escaped&&hero?.body>0;
   }
   function projection(state) {
-    return traps(state).filter(trap=>["found","sprung"].includes(record(state,trap.id).status)&&!(trap.kind==="spear"&&record(state,trap.id).status==="sprung"))
+    const report=state.pending?.type==="report"&&state.lastReport?.type==="trap"?state.lastReport:null;
+    return traps(state).filter(trap=>["found","sprung"].includes(record(state,trap.id).status)&&!(trap.kind==="spear"&&record(state,trap.id).status==="sprung"&&report?.trapId!==trap.id))
       .map(trap=>({...trap,...record(state,trap.id),name:names[trap.kind],cell:cell(trap)}));
   }
-  HQ.dungeon=Object.freeze({fresh,layout,traps,doors,record,cell,names,at,blocked,inPit,pitRoom,within,actionReason,searchReason,search,spring,jumpLandings,jump,disarmReason,disarm,escapeCells,mustEscape,projection});
+  HQ.dungeon=Object.freeze({fresh,layout,traps,doors,record,cell,names,at,blocked,jumpable,inPit,pitRoom,within,actionReason,searchReason,search,spring,jumpLandings,jump,disarmReason,disarm,escapeCells,mustEscape,projection});
 })();

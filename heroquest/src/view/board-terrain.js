@@ -5,6 +5,11 @@
   HQ.createBoardTerrain=function({scene,renderer,world}) {
     const tile=new T.BoxGeometry(.985,.15,.985),texture=HQ.createFloorTexture();
     texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+    // A flat printed board beneath unknown areas; never part of floor picking.
+    const maskPixels=new Uint8Array(HQ.board.columns*HQ.board.rows),knownMask=new T.DataTexture(maskPixels,HQ.board.columns,HQ.board.rows,T.RedFormat);
+    knownMask.minFilter=knownMask.magFilter=T.NearestFilter;knownMask.needsUpdate=true;
+    const backdrop=new T.Mesh(new T.PlaneGeometry(HQ.board.columns,HQ.board.rows),HQ.boardBackdropMaterial(texture,knownMask));
+    backdrop.rotation.x=-Math.PI/2;backdrop.position.y=-.001;backdrop.visible=false;backdrop.raycast=()=>{};backdrop.userData.visualEffect=true;scene.add(backdrop);
     const material=HQ.floorMaterial(texture),colours=[];
     for(let i=0;i<tile.attributes.normal.count;i++){const shade=tile.attributes.normal.getY(i)>.5?1:.3;colours.push(shade,shade,shade);}
     tile.setAttribute("color",new T.Float32BufferAttribute(colours,3));tile.clearGroups();
@@ -24,6 +29,7 @@
     function reveal(cells) {
       const key=cells.join("|");if(key===discoveryKey)return false;discoveryKey=key;
       known=new Set(cells);
+      maskPixels.fill(0);for(const id of known){const [x,row]=Topo.parse(id);maskPixels[(HQ.board.rows-1-row)*HQ.board.columns+x]=255;}knownMask.needsUpdate=true;
       for(const mesh of floors){mesh.userData.cells.forEach((id,i)=>{dummy.position.copy(world(id));dummy.scale.setScalar(known.has(id)&&id!==hole&&!permanentHoles.has(id)?1:0);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);});mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();}
       const positions=[],edges=new Set();
       for(const id of known) {
@@ -56,6 +62,6 @@
       const next=new Set(cells);if(next.size===permanentHoles.size&&[...next].every(id=>permanentHoles.has(id)))return;
       permanentHoles=next;discoveryKey=null;
     }
-    return Object.freeze({floors,reveal,setHole,setPermanentHoles,setGrid(enabled){grid.visible=enabled;}});
+    return Object.freeze({floors,reveal,setHole,setPermanentHoles,setGrid(enabled){grid.visible=enabled;},setFullBoard(enabled){backdrop.visible=enabled;}});
   };
 })();

@@ -15,7 +15,7 @@
     ["orc",8,3,2,1,2,"lower third"],["zombie",5,2,3,1,0,"lower right"]
   ])monsters[id]=Object.freeze({movement,attack,defend,body,mind,source:source("system-monster",1,location+" card")});
   HQ.combatData=Object.freeze({heroes:Object.freeze(heroes),monsters:Object.freeze(monsters),
-    weapons:Object.freeze({broadsword:{name:"Broadsword",attack:3},shortsword:{name:"Shortsword",attack:2},dagger:{name:"Dagger",attack:1}}),
+    weapons:Object.freeze({broadsword:{name:"Broadsword",attack:3},shortsword:{name:"Shortsword",attack:2},dagger:{name:"Dagger",attack:1,throwable:true},"battle-axe":{name:"Battle Axe",attack:4},staff:{name:"Staff",attack:1,diagonal:true},longsword:{name:"Longsword",attack:3,diagonal:true},crossbow:{name:"Crossbow",attack:3,ranged:true},unarmed:{name:"Unarmed",attack:1}}),
     // Six equally likely faces of the original white combat die.
     faces:Object.freeze(["skull","skull","skull","white-shield","white-shield","black-shield"]),
     sources:Object.freeze({
@@ -24,7 +24,8 @@
       ordering:source("system-instruction-booklet",12,"rotate 180 degrees; printed p12, On A Hero’s Turn"),
       monsterTurn:source("system-instruction-booklet",4,"rotate 180 degrees; printed p21, Zargon / Monster Movement"),
       heroDefence:source("system-instruction-booklet",3,"printed p22 left, How A Monster Attacks / How A Hero Defends / Dead Heroes"),
-      equipment:source("system-armoury-identification-guide",1,"right Armoury, Broadsword / Shortsword / Dagger"),
+      equipment:source("system-armoury-identification-guide",1,"right Armoury: melee weapons, armour, shields and Tool Kit"),
+      unarmed:source("system-quest-book",15,"upright, Quest 6 Legacy of the Orc Warlord, General Notes: weaponless heroes roll one attack die; precedent for the weaponless fallback"),
       dieFaces:Object.freeze({sourceId:"original-white-combat-die",url:"https://forum.yeoldeinn.com/viewtopic.php?f=165&t=4530",printedLocator:"Supplementary community corroboration of the original white die: 3 skulls, 2 white shields, 1 black shield",reviewStatus:"community-corroborated"}),
       guardian:source("system-quest-book",5,"lower half, The Trial, note C: mummy attacks with 4 dice")
     })

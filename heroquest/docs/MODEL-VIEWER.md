@@ -33,11 +33,11 @@ red movement die body/white pips and face mapping between the dice tray and
 viewer. The body is a blank hull of the combat sculpt with matching rounded
 corners (see DICE.md). The tray presents the same engine outcomes. The
 torch uses its existing fixture factory, including the direct wall backplate;
-individual model previews do not run flicker or game-light timers. The Test room mode below has its own bounded decorative fire updates. Walls are shown at full
+individual model previews do not run flicker or game-light timers. Walls are shown at full
 height. The tomb retains its existing assembly and gargoyle its current body.
 
 Individual model previews render only when the open, visible viewer changes;
-there is no automatic rotation. Test room fire uses the bounded timer below. Closing/backgrounding cancels scheduled rendering.
+there is no automatic rotation. Closing/backgrounding cancels scheduled rendering.
 Context loss shows a short status and restoration redraws the selected model.
 All assets/scripts stay local and deferred; no new runtime fetch, package,
 framework, build, physics, remote model loading or raw STL parsing is introduced.
@@ -65,54 +65,20 @@ finishes. The viewer and portraits remain static; fireplace fire/light attaches
 only on the discovered dungeon board. This batch has offline authoring/source
 review only, with no new Chrome model-viewer check.
 
-## Test room
+## Prepared models
 
-The Test room button in the header or setup opens a labelled display of all 36
-current game model types together. It reuses the existing viewer renderer/modal,
-geometry factories and local reflection recipe. It is an invented showroom, not
-a quest, and reads no adventure state, locations, discoveries or RNG. Closing it
-returns to the previous screen; nothing changes or is written to the browser save.
+Doors and blocked stone use painted derivatives. The cupboard in the catalog
+has walnut panels/frame, iron fittings and an ivory skull. See
+assets/models/furniture/SCENERY.md.
 
-`src/view/test-room.js` prepares/caches the room once: board-scale heroes,
-monsters and footprint-fitted furniture, plus scenery and small dice samples.
-Floor tiles use a uniform neutral matte stone material, with seams and real lighting/shadows, so the floor does not compete with painted models. Full
-backdrop walls leave the front/sides open and hide when orbiting behind them,
-so they cannot obscure the exhibits. Labels identify each
-piece. Click a piece or use the Piece selector, then Focus piece to frame it
-within the room, or Inspect model for its separate rotating preview. Test room
-in the viewer controls returns to the full display; Reset view fits the room.
-Existing orbit, wheel/pinch/keyboard zoom and Home work in both modes.
+Blocked stone composes the original wall sculpts and supplied rubble into a
+solid wall-height plug. Models shows full height; the dungeon applies its
+Full/Automatic/Low setting. See WALLS.md.
 
-Fully lit is the default. Dynamic lighting switches this room independently to
-its own torches and fireplace fire, using the same recipes as the dungeon. Its
-fire system has a private scheduler/records and one nearest-focus shadow caster;
-viewer materials/reflection maps cannot affect the board. A 34ms bounded timer
-requests frames only for an open, visible room with active fire and ordinary
-motion preferences. Closing, switching to a single model, hiding or context loss
-cancels it. Reduced motion uses steady flames/light without particles or a timer.
-Individual previews remain static. The room's light preference is memory-only.
+The Orc cleaver/mace/sword and Goblin sword/dagger/axe sculpts are cosmetic
+variants of the original Orc/Goblin rules. Wizard uses the painted hero factory
+in board, portraits and viewer.
 
-The header button is disabled during board presentation effects. Native-dialog
-stacking preserves setup/other pending decisions beneath the viewer. The retired
-standalone studio and credits pages remain removed.
-
-Source/diff review only for this addition. No new Chrome, layout, lighting,
-picking, gameplay/save, performance, build, lint or automated checks were run.
-
-Doors and blocked stone now use painted derivatives. The supplied cupboard joins
-the catalog and Test room (rear-right exhibit); it has walnut panels/frame, iron
-fittings and an ivory skull. These additions have offline authoring/source review
-only; no new browser check. See assets/models/furniture/SCENERY.md.
-
-The blocked-square factory now composes the original wall sculpts and supplied
-rubble into a solid wall-height stone plug. Models/Test room show full height;
-the dungeon applies its shared Full/Automatic/Low setting. Isolated Chrome
-authoring inspected the assembly and cutaway silhouette; no viewer-layout or
-Test room interaction pass was included. See WALLS.md.
-
-The Orc mace/sword and Goblin dagger/axe sculpts join the existing cleaver Orc
-and sword Goblin. The Test room places the four additions in a second figure
-row, with a longer neutral floor and relocated front exhibits. All six weapon
-sculpts remain cosmetic variants of the original Orc/Goblin rules. Wizard now
-uses the painted hero factory in board, portraits and viewer. Offline geometry/
-paint authoring only; no new viewer layout/picking or portrait browser check.
+The former Test room showroom, controls and renderer module have been removed.
+Gameplay practice remains in the sandbox. This removal has source/diff review
+only; no browser or gameplay checks were run.

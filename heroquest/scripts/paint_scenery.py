@@ -95,11 +95,10 @@ def door_stone_tints(key,p,faces):
   for a,b in [(face[0],face[1]),(face[1],face[2]),(face[2],face[0])]:
    if raised[a] and raised[b] and points[a,2]*points[b,2]>0:parent[root(a)]=root(b)
  ids=np.array([root(i) for i in range(len(points))]);islands,counts=np.unique(ids[raised],return_counts=True)
- # Use the walls' six stone families with stronger contrast for these smaller
- # warmly lit arch stones. Bake actual colours on a white material,
- # so pale stones are not clipped to the old grey material's maximum colour.
- palette=np.array([[.40,.52,.70],[1.15,.88,.53],[.55,.67,.43],[.48,.36,.28],[1.50,1.42,1.20],[.76,.80,.81]])
- srgb=np.array([164,156,139])/255
+ # Arches retain more whole-stone character than the near-uniform walls, while
+ # staying within the same dark grey family rather than multicoloured bricks.
+ palette=np.array([[.88,.91,.96],[1.08,1.04,.97],[.96,.98,.95],[.86,.85,.83],[1.13,1.11,1.06],[1.,1.,1.02]])
+ srgb=np.array([126,121,110])/255
  base=np.where(srgb<=.04045,srgb/12.92,((srgb+.055)/1.055)**2.4)
  linear=np.tile(base,(len(points),1));tones={};owner=np.full(len(points),-1);distance=np.full(len(points),np.inf);queue=[]
  stones=[]
@@ -111,7 +110,7 @@ def door_stone_tints(key,p,faces):
  for order,(_,_,island,mask,centre) in enumerate(sorted(stones,key=lambda stone:stone[:2])):
   seed=int(round((centre[0]+16)*137+(centre[1]+1)*311))
   hashed=(seed*2654435761)&0xffffffff
-  tones[island]=base*palette[[4,0,2,3,1,5][order%len(palette)]]*(.90+((hashed>>8)%1000)/999*.16)
+  tones[island]=base*palette[[4,0,2,3,1,5][order%len(palette)]]*(.96+((hashed>>8)%1000)/999*.08)
   for i in np.flatnonzero(mask):owner[i]=island;distance[i]=0;heapq.heappush(queue,(0,int(i)))
  # Colour the complete stone surface, rather than just the small raised tips.
  # Surface-distance propagation meets in recessed seams; it cannot jump across
@@ -139,7 +138,7 @@ def stone_tints(key,p,faces=None):
   # Both derivatives contain the exact same arch/base surface. Reuse its
   # canonical vertex paint, rather than reseeding colours around a wooden leaf.
   shared=door_stone_colours()
-  return np.array([shared.get(tuple(point),(164,156,139))for point in np.round(p,4)],np.uint8)
+  return np.array([shared.get(tuple(point),(126,121,110))for point in np.round(p,4)],np.uint8)
  # Smooth source-space tints avoid jagged material boundaries across a block.
  # Palette multipliers are linear-light values, packed as sRGB vertex colours.
  x,y,z=p.T

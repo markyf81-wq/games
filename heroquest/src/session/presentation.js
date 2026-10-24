@@ -14,7 +14,7 @@
   }
   function healthChanges(before,after) {
     const previous=new Map(actors(before).map(actor=>[actor.id,actor.body]));
-    return actors(after).filter(actor=>previous.has(actor.id)&&actor.body!==previous.get(actor.id))
+    return actors(after).filter(actor=>previous.has(actor.id)&&actor.body!==previous.get(actor.id)&&!HQ.recovery.revived(after,actor))
       .map(actor=>({id:actor.id,delta:actor.body-previous.get(actor.id)}));
   }
   function nextHeroTurn(before,after) {
@@ -25,7 +25,7 @@
     const report=pendingReport(state);
     return {
       statusMovement:{heroId:hero.id,passThroughRock:active&&move.passThroughRock,veilOfMist:active&&move.veilOfMist,
-        swiftWind:active&&move.dice.length===4,heroicBrew:state.phase==="hero-turn"&&state.extraAttack},
+        swiftWind:active&&move.swiftWind,heroicBrew:state.phase==="hero-turn"&&state.extraAttack},
       pendingSleep:dice&&report?.spellId==="sleep"?{id:report.defenderId,value:report.type==="sleep-check"}:null,
       pendingStatus:dice&&dice.stage!=="item"&&report?{reportId:report.id,id:report.defenderId}:null
     };
@@ -45,7 +45,10 @@
     const restore=figures=>figures.map(figure=>figure.id===report.defenderId&&Number.isFinite(report.bodyBefore)?{...figure,body:report.bodyBefore,
       ...(report.type==="trap"&&report.jumpFrom?{x:HQ.topology.parse(report.jumpFrom)[0],row:HQ.topology.parse(report.jumpFrom)[1]}:{})}:figure);
     const phase=HQ.quest.isEnded(state.phase)?report.attackerSide==="monster"?"monster-turn":"hero-turn":state.phase;
-    const dungeon=report.type==="trap"&&report.trapId?{...state.dungeon,traps:{...state.dungeon.traps,[report.trapId]:{...state.dungeon.traps[report.trapId],status:report.statusBefore}}}:state.dungeon;
+    // Springing a hidden trap reveals its location before its damage roll,
+    // while the spent trap/blocked square still waits for the result.
+    const trapStatus=report.statusBefore==="hidden"?"found":report.statusBefore;
+    const dungeon=report.type==="trap"&&report.trapId?{...state.dungeon,traps:{...state.dungeon.traps,[report.trapId]:{...state.dungeon.traps[report.trapId],status:trapStatus}}}:state.dungeon;
     return {...state,phase,dungeon,heroes:restore(state.heroes),monsters:restore(state.monsters),log:index<0?state.log:state.log.slice(0,index)};
   }
   HQ.sessionPresentation=Object.freeze({actors,pendingReport,defeatedReport,defeatedFigure,healthChanges,nextHeroTurn,statuses,unrevealed});

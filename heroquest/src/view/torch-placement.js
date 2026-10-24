@@ -3,9 +3,9 @@
   const HQ=window.HeroQuest;
   // Pure presentation layout: stable quest data in, wall fixtures out. Never
   // use gameplay RNG, discovery order, moving actors or the camera as inputs.
-  HQ.placeQuestTorches=function(quest,board){
+  HQ.placeQuestTorches=function(quest,board,reservedDoors=[]){
     const key=(x,row)=>x+","+row,edge=(a,b)=>[a,b].sort().join("|"),floor=new Set(quest.floor),blocked=new Set(quest.blocked),furniture=new Set();
-    const doors=new Set(quest.doors.map(door=>edge(...(door.axis==="v"
+    const doors=new Set([...quest.doors,...reservedDoors].map(door=>edge(...(door.axis==="v"
       ? [key(door.x-1,door.row),key(door.x,door.row)]
       : [key(door.x,door.row-1),key(door.x,door.row)]))));
     for(const item of quest.furniture)for(let row=item.row;row<item.row+item.depth;row++)for(let x=item.x;x<item.x+item.width;x++)furniture.add(key(x,row));

@@ -13,12 +13,16 @@
     const finGeometry=new T.BufferGeometry();finGeometry.setAttribute("position",new T.Float32BufferAttribute([0,0,-.44,.07,0,-.46,0,0,-.28],3));finGeometry.computeVertexNormals();
     for(let i=0;i<3;i++){const fin=new T.Mesh(finGeometry,feather);fin.rotation.z=i*Math.PI*2/3;arrow.add(fin);}
 
-    const spearPlane=new T.Plane(new T.Vector3(0,1,0),-.15),spearWood=wood.clone(),spearIron=iron.clone();
-    for(const material of [spearWood,spearIron]){material.clippingPlanes=[spearPlane];material.clipShadows=true;}
-    const spearShaft=new T.Mesh(new T.CylinderGeometry(.019,.024,.76,8),spearWood);spearShaft.position.y=.38;spear.add(spearShaft);
-    const spearHead=new T.Mesh(new T.OctahedronGeometry(.075,0),spearIron);spearHead.scale.set(1,2.4,.35);spearHead.position.y=.88;spear.add(spearHead);
-    const spearCollar=new T.Mesh(new T.CylinderGeometry(.035,.035,.08,8),spearIron);spearCollar.position.y=.72;spear.add(spearCollar);
-    spear.traverse(mesh=>{if(mesh.isMesh){mesh.castShadow=true;mesh.receiveShadow=true;}});
+    const spearPlane=new T.Plane(new T.Vector3(0,1,0),-.15),spearIron=iron.clone(),spearHeight=1.46;
+    spearIron.color.set(0xc2cbd0);spearIron.roughness=.32;spearIron.metalness=.75;
+    spearIron.clippingPlanes=[spearPlane];spearIron.clipShadows=true;
+    const spikePositions=[[0,0],[-.29,-.29],[.29,-.29],[-.29,.29],[.29,.29]],spikePose=new T.Object3D();
+    for(const [geometry,y,scale] of [[new T.CylinderGeometry(.043,.052,1.06,8),.53,[1,1,1]],
+      [new T.OctahedronGeometry(.105,0),1.2,[1,2.4,.45]],[new T.CylinderGeometry(.065,.065,.12,8),1.04,[1,1,1]]]){
+      const spikes=new T.InstancedMesh(geometry,spearIron,spikePositions.length);spikes.castShadow=true;spikes.receiveShadow=true;
+      spikePositions.forEach(([x,z],i)=>{spikePose.position.set(x,y,z);spikePose.scale.set(...scale);spikePose.updateMatrix();spikes.setMatrixAt(i,spikePose.matrix);});
+      spikes.instanceMatrix.needsUpdate=true;spear.add(spikes);
+    }
 
     const black=new T.MeshBasicMaterial({color:0x080a09});
     const stone=new T.MeshStandardMaterial({color:0x756e5b,roughness:1});
@@ -82,11 +86,11 @@
       finish();
       const entry=entities.get(report.defenderId),sprung=report.trapKind==="spear"&&report.rolls.some(group=>group.label==="Spear trap");
       if(!sprung||!entry?.model.visible||!available()||reducedMotion.matches)return Promise.resolve().then(()=>onImpact({recoil:true}));
-      const origin=entry.model.position,heading=entry.model.rotation.y,duration=1100;
+      const origin=entry.model.position,duration=1100;
       return new Promise(resolve=>{
         effect={kind:"trap-spear",model:entry.model,onImpact,resolve,duration,started:null,hit:false,impact:null,floorY:origin.y,timer:setTimeout(finish,duration+700)};
         spearPlane.constant=-origin.y;
-        spear.position.set(origin.x+Math.sin(heading)*.24,origin.y-1.06,origin.z+Math.cos(heading)*.24);
+        spear.position.set(origin.x,origin.y-spearHeight,origin.z);
         root.visible=true;spear.visible=true;arrow.visible=pit.visible=false;
         update(performance.now());requestRender();
       });
@@ -98,7 +102,7 @@
       if(!e.model.visible){finish();return;}
       if(e.kind==="trap-spear"){
         const thrust=smooth(ms/220)*(1-smooth((ms-500)/400));
-        spear.position.y=e.floorY-1.06+thrust*1.06;invalidateShadows();
+        spear.position.y=e.floorY-spearHeight+thrust*spearHeight;invalidateShadows();
         if(ms>=180)impact(e);
       } else if(e.kind==="hazard-arrow") {
         // Constant-speed flight: the arrowhead reaches the chest at 450ms.

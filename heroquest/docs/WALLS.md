@@ -105,7 +105,14 @@ Each section uses a stable hash of quest ID and wall coordinates. About one in
 four potential pairs stays as individual one-space sections, breaking up the
 regular two-square repeat. The sculpt independently turns 180 degrees and/or
 mirrors lengthwise to expose four orientations of each source mesh. Its material
-also receives a warm/neutral brightness variation. Raised stone islands receive stronger, independent grey, sand, olive, brown and pale tones. Their stable palette seed includes the section coordinates, so identical sculpt repeats no longer have identical stone colours; recessed mortar remains neutral.
+also receives a restrained warm/neutral brightness variation. Raised stone islands
+use closely related darker warm greys, with only a one-percent linear-light shade
+range and slight warmth variation. This replaces the earlier contrasting sand,
+olive, brown and pale families. Raised faces replace baked per-vertex colour
+noise with a uniform base; sculpt normals still provide lighting and shape.
+Section brightness varies by only one percent;
+joins and lowered caps follow the darker palette. Stable seeds include section
+coordinates; recessed mortar remains neutral.
 
 Only the inner sculpt is transformed; the wall's placement frame, join fillers
 and cutaway cap retain exact grid dimensions. Length, height and depth are
@@ -209,7 +216,7 @@ cap. Full walls shows the 1.864-square height, Low walls clips at 0.27, and
 Automatic cutaway lowers only an obstructing block using the same protected-area
 camera rays. Each block is independent from adjoining wall-run groups. Blocked
 stone is noninteractive like walls; its underlying square remains available to
-the ordinary board picker where rules permit it. Models/Test room show full height.
+the ordinary board picker where rules permit it. Models shows full height.
 
 Focused Chrome authoring renders inspected the full/low silhouette and automatic
 cutaway with a hero behind the block, then overhead with no obstruction: clipping
@@ -246,20 +253,18 @@ point-shadow camera extends to 6.8. Global ambient is unchanged and every light
 retains the room-boundary mask. Source review only; no new lighting/profile pass.
 
 
-## Solid mortar cores — 23 October 2026
+## Internal backing — updated 24 October 2026
 
-A recessed opaque mortar core closes pinholes through the printing sculpts.
-Ordinary wall sections use a .065-square-deep slab across their exact length;
-blocked squares use an internal .82-square plug. Sculpted join pieces also
-contain .105-wide, .065-deep backing, using their own joint clipping plane.
-All cores reuse one unit-box geometry and stop .12 below the crest. Their
-dark unlit, double-sided material (#24221f) keeps seams dark instead of letting
-torch-lit backing resemble a pinhole. They still cast clipped shadows and share
-the record's live clipping plane with clipShadows enabled. Full/Automatic/Low therefore
-clip the core together with the sculpt. Door openings, discovery boundaries,
-stone relief and full-height room-light barriers are unchanged. No extra lights
-or gameplay blockers are introduced. Source/diff review only; no new browser,
-shadow, cutaway or performance check ran.
+Wall torch layouts reserve every normal and secret-door edge, including secret
+panels that have not been discovered. Layouts are cached per dungeon layout, so
+finding/opening a secret door cannot leave a fixture on it or move the torches.
+
+Mark requested removal of the black mortar backing panels from ordinary walls
+and sculpted joins. Those sections now contain only the sculpt, cutaway caps and
+footings. Blocked-square scenery retains its internal .82-square solid plug,
+recessed .12 below the crest and clipped with the sculpt. Full-height room-light
+barriers remain independent of visual geometry. Source/diff review only; no new
+browser, shadow, cutaway or performance check ran.
 
 ## Flame-source shadow flicker — 23 October 2026
 

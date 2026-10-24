@@ -27,16 +27,28 @@ practice positions. The practice chest inflicts one Body for demonstration.
 ## Actions and discovery
 
 Search for traps and Search for secret doors are separate actions. They and
-Search for treasure live only in the sidebar Search menu; clicked-object panels
-offer actions specific to their target, including disarming found traps.
-A single sidebar Search button opens
+Search for treasure live in the board-toolbar Search menu; clicked-object panels
+offer actions specific to their target, including disarming found traps. Chest
+panels are the exception: Search for treasure is also available there as a
+shortcut to the same room-wide action, requiring the hero to be in that room.
+A single board-toolbar Search button opens
 a compact native modal with Treasure, Traps and Secret doors. Each choice shows
 its own eligibility reason; animation/roll/picker locks apply to the opener. The searching hero must be in play, on safe ground,
 have an unused action and see no living monster. Searches cover
-the current room; corridor searches cover its visible straight portion, without
-looking around corners or through closed doors. A sprung pit is a separate
+the current room; corridor searches cover discovered straight runs through the
+hero's square, stopping at closed edges, rubble and unexplored ground. Equal
+parallel runs include both lanes of a wider corridor. A junction permits its
+straight branches, but searches never turn around a corner. A sprung pit is a separate
 search area. Searching after moving ends remaining movement; searching first
 still permits movement afterwards.
+
+Trap and secret-door searches each have their own party-wide history. Once
+searched, a room or pit disables that choice for every hero with an Already
+searched reason. Corridors record covered squares, allowing a later search when
+the hero reaches a stretch containing unsearched ground. The command boundary
+rejects repeats before spending an action or changing a report. Treasure retains
+its separate per-hero room/pit limit. Unavailable choices stay visible with their
+eligibility reason. Party-wide repeat prevention is Mark's interface choice.
 
 Trap searches point out unsprung floor/furniture traps without springing them.
 The original rules give clues to their type: a dangerous-looking ceiling for
@@ -66,6 +78,12 @@ Discovered furniture traps show a camera-facing red warning triangle above the
 affected chest or furniture, with a Trapped note in its action panel. The marker
 uses normal depth testing and disappears when the trap is disarmed or sprung.
 
+Stepping onto a hidden floor trap also reveals the warning icon and border as
+the hero arrives, before pending damage dice finish. Damage and permanent terrain
+still wait for their normal presentation stage. Open pits keep their warning,
+with the icon on the pit floor; a spent spear keeps it through its pending result
+and clears it afterward. Fallen blocks use their permanent rubble artwork.
+
 Normal route previews consult only revealed trap records. They may stop at a
 known trap but never disclose a hidden trap by detouring or shortening a route.
 MOVE resolves squares in order and pauses at a trap even if a distant destination
@@ -80,8 +98,9 @@ was requested. Heroes spring traps; monsters do not spring hidden traps.
   entering it causes them no damage. Treasure searches use a per-hero pit ledger.
 - Spear: one combat die; a skull loses one Body and ends the turn. A shield
   dodges and permits remaining movement. The spear is spent after triggering;
-  there is no persistent spear tile. After the roll, a cached spear thrusts up
-  through the floor beside the hero's feet, pauses and retracts. Damage numbers
+  there is no persistent spear tile. After the roll, five larger all-metal spikes
+  thrust up across the tile (centre and four corners), pause and retract. Their
+  geometry is instanced and cached. Damage numbers
   and recoil begin at contact; a dodge still shows the spear firing. Successful
   disarming does not fire it. Reduced motion skips the thrust animation.
 - Falling block: three combat dice, one Body per skull, no defence. The square
@@ -96,6 +115,11 @@ was requested. Heroes spring traps; monsters do not spring hidden traps.
 - Furniture: a room treasure search springs an undisarmed trap before any card
   or treasure reward. Damage comes from its placement; the practice chest uses
   one Body. The trap is spent, and a later search may obtain the room's treasure.
+  A fiery blast launches from the furniture toward the searching hero, reusing
+  the fireball's projectile, burst and pooled coloured light. Damage/recoil occurs
+  on impact, with outcome feedback held until the effect finishes. This is
+  cosmetic: it adds no spell, fire damage rule or RNG. Reduced motion skips the
+  blast and shows the recorded damage directly; refresh does not replay it.
 
 Disarm is an action declared before entering a found, unsprung floor trap;
 entering costs one move. The context can walk the hero into reach first, reserving
@@ -110,11 +134,11 @@ occupied furniture square. It consumes the action without entering furniture.
 Jump over uses two moves, selects an unoccupied adjacent landing beyond the
 chosen square (including a perpendicular route), then waits for Roll. Either
 shield succeeds; a skull lands on the trap, springs it and ends the turn. A
-follow-up spear/block damage roll waits for another manual Roll. Players may
-also jump an ordinary adjacent square, so a suspected trap does not require
-searching first or leak its existence. A short jump onto clear floor spends the
-two moves but causes no trap consequence; the printed trap failure has no trap
-to spring in that case. A trapped landing resolves only on arrival.
+follow-up spear/block damage roll waits for another manual Roll. Jumping is only
+available for discovered, unsprung floor traps and visible sprung pits. Ordinary
+floor, hidden/disarmed traps, spent spears, fallen blocks and furniture cannot be
+jumped. The command boundary enforces the same rule as the menus. Older saved
+general-jump reports remain readable. A trapped landing resolves only on arrival.
 
 ## State and presentation
 

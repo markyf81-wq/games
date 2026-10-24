@@ -35,6 +35,96 @@
       "sha256": "04ab2ee19d7ce1af170ebefe140bbb657f0d1418d2de8d3857ae9510b52d902e"
     },
     {
+      "id": "battle-axe",
+      "pdfPage": 1,
+      "crop": [
+        61,
+        53,
+        600,
+        890
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "195710749f4f405e392290a86a1fe35f91a2bf7790eb3aa309ed8528ede2fb88"
+    },
+    {
+      "id": "chain-mail",
+      "pdfPage": 1,
+      "crop": [
+        642,
+        53,
+        1181,
+        890
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "83675e39fcd51a26a17a7e2b06fc43f99b35009d5b830858bf8584c5ca0e77b0"
+    },
+    {
+      "id": "helmet",
+      "pdfPage": 1,
+      "crop": [
+        1224,
+        920,
+        1762,
+        1757
+      ],
+      "size": [
+        400,
+        622
+      ],
+      "sha256": "8ea50d7c77cf7d296b19a7298fafcc48411030c9c6b0f6cf4008678f19e7b533"
+    },
+    {
+      "id": "plate-mail",
+      "pdfPage": 1,
+      "crop": [
+        1805,
+        920,
+        2344,
+        1757
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "2e282f42ea3eda4459643f243dd42a14e245f339322ca2d5f0f3ee0b3e13cbfc"
+    },
+    {
+      "id": "longsword",
+      "pdfPage": 1,
+      "crop": [
+        1805,
+        53,
+        2344,
+        890
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "7e8015d008c99070dbd1cfe21678baa45f91701ebcc65e830ed4241f65e34691"
+    },
+    {
+      "id": "crossbow",
+      "pdfPage": 1,
+      "crop": [
+        642,
+        920,
+        1181,
+        1757
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "8222a165e99baf5be72c7977149db613ea7bcb1065a80d7e0a21eef41994d979"
+    },
+    {
       "id": "shortsword",
       "pdfPage": 2,
       "crop": [
@@ -63,6 +153,36 @@
         621
       ],
       "sha256": "e1817556ac9669305f72b76f138b81dcd972cb104b5478a974935ac2b2194c30"
+    },
+    {
+      "id": "shield",
+      "pdfPage": 2,
+      "crop": [
+        61,
+        53,
+        600,
+        890
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "495d9fead9115214e4781ad589049271f764d12aea1f12b3ec7b92f0f4a3483a"
+    },
+    {
+      "id": "staff",
+      "pdfPage": 2,
+      "crop": [
+        642,
+        53,
+        1181,
+        890
+      ],
+      "size": [
+        400,
+        621
+      ],
+      "sha256": "c36c4133f10f74bcf6abf506d5b85a96cc8f8b8a6c477aef142d3a8b336f77e6"
     }
   ]
 }

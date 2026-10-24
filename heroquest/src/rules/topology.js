@@ -40,7 +40,7 @@
     if(item.kind==="stairs")return cells;
     return [...new Set([...cells,...cells.flatMap(id=>neighbors(id).filter(next=>!cells.includes(next)&&connected(id,next,state)))])];
   }
-  function occupiedHero(state,id,except) {return state.heroes.some(h=>h.body>0&&!h.exit&&h.id!==except&&key(h.x,h.row)===id);}
+  function occupiedHero(state,id,except) {return state.heroes.some(h=>h.body>0&&!h.exit&&!h.deathResolved&&h.id!==except&&key(h.x,h.row)===id);}
   function monsterAt(state,id,knownOnly=false,except=null) {return (knownOnly?Object.values(state.monsterMemory):state.monsters.filter(m=>m.body>0)).find(m=>m.id!==except&&key(m.x,m.row)===id);}
   function canStop(state,id,actorId) {return floor.has(id)&&!furniture.has(id)&&!blockedAt(state,id)&&!monsterAt(state,id,true)&&(!occupiedHero(state,id,actorId)||stairs.has(id));}
   const unsafe=(state,actor)=>solid(key(actor.x,actor.row),state)||furniture.has(key(actor.x,actor.row))||Boolean(monsterAt(state,key(actor.x,actor.row)))||(!stairs.has(key(actor.x,actor.row))&&occupiedHero(state,key(actor.x,actor.row),actor.id));
@@ -93,13 +93,15 @@
     const deltaX=dx?1/Math.abs(dx):Infinity,deltaY=dy?1/Math.abs(dy):Infinity;
     let crossX=deltaX*.5,crossY=deltaY*.5;
     const lineEdge=(a,b)=>connected(a,b,state)||(b===to&&blockedAt(state,b)&&floor.has(a)&&!blockedAt(state,a)&&regions.get(a)===regions.get(b));
-    const opaque=id=>figures&&(occupiedHero(state,id,null)||monsterAt(state,id));
+    const opaque=id=>furniture.has(id)||figures&&(occupiedHero(state,id,null)||monsterAt(state,id));
     while(x!==tx||y!==ty) {
       const current=key(x,y);
       if(Math.abs(crossX-crossY)<1e-9) {
         const nx=key(x+stepX,y),ny=key(x,y+stepY),next=key(x+stepX,y+stepY);
-        const viaX=lineEdge(current,nx)&&lineEdge(nx,next)&&!opaque(nx);
-        const viaY=lineEdge(current,ny)&&lineEdge(ny,next)&&!opaque(ny);
+        // These side squares are only touched at the shared corner, not
+        // crossed. Figures/furniture there cannot block; sealed wall routes still do.
+        const viaX=lineEdge(current,nx)&&lineEdge(nx,next);
+        const viaY=lineEdge(current,ny)&&lineEdge(ny,next);
         if(!viaX&&!viaY)return false;
         x+=stepX;y+=stepY;crossX+=deltaX;crossY+=deltaY;
       } else if(crossX<crossY) {

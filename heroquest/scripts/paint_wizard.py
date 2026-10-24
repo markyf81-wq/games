@@ -123,9 +123,9 @@ def eye_centres(p,f,marked,materials):
  return [(eye[0],level)for eye in eyes]
 
 
-def face_patches(tris,labels,centres,rx,ry,zmin,zmax):
+def face_patches(tris,labels,centres,rx,ry,zmin,zmax,passes=3):
  """Subdivide small surface patches, retaining positions/interpolated normals."""
- for _ in range(3):
+ for _ in range(passes):
   near=np.zeros(len(tris),bool);lo=tris[:,:,:3].min(1);hi=tris[:,:,:3].max(1)
   for x,y in centres:
    near|=(lo[:,0]<x+rx)&(hi[:,0]>x-rx)&(lo[:,1]<y+ry)&(hi[:,1]>y-ry)&(hi[:,2]>zmin)&(lo[:,2]<zmax)

@@ -70,13 +70,16 @@
     }
     function finish() {
       light.intensity=0;flames.finish();objects.finish();
-      if(!effect)return;const ended=effect;effect=null;clearTimeout(ended.timer);root.visible=false;ended.resolve();requestRender();
+      if(!effect)return;const ended=effect;effect=null;clearTimeout(ended.timer);root.visible=false;
+      ended.cancelled=true;
+      if(ended.onImpact)Promise.resolve(ended.impact).catch(()=>{}).then(ended.resolve);else ended.resolve();
+      requestRender();
     }
     function travel(t,out) {
       const u=clamp(t);out.lerpVectors(effect.from,effect.to,u);out.y+=Math.sin(Math.PI*u)*.2;return out;
     }
-    function play(report,anchors=locate(report)) {
-      finish();if(!anchors||!available())return Promise.resolve();
+    function play(report,anchors=locate(report),onImpact=null) {
+      finish();if(!anchors||!available())return Promise.resolve().then(()=>onImpact?.());
       const recipe=recipes[report.spellId],a=new T.Color(recipe.colours[0]),b=new T.Color(recipe.colours[1]);
       for(let i=0;i<recipe.count;i++){colour.copy(a).lerp(b,noise(i,3));colour.toArray(colours,i*3);}
       geometry.setDrawRange(0,recipe.count);geometry.attributes.particleColour.needsUpdate=true;
@@ -88,7 +91,7 @@
       const forward=anchors.to.clone().sub(anchors.from);forward.y=0;
       if(forward.lengthSq()<.001)forward.set(Math.sin(anchors.target.model.rotation.y),0,Math.cos(anchors.target.model.rotation.y));forward.normalize();
       return new Promise(resolve=>{
-        effect={...anchors,recipe,forward,door:Boolean(report.doorId),resolve,started:null,timer:setTimeout(finish,recipe.duration+600)};
+        effect={...anchors,recipe,forward,door:Boolean(report.doorId),resolve,onImpact,hit:false,impact:null,cancelled:false,started:null,timer:setTimeout(finish,recipe.duration+600)};
         objects.show(recipe.style,effect);
         update(performance.now(),1);requestRender();
       });
@@ -97,6 +100,9 @@
       if(!effect)return;if(!available()){finish();return;}
       const e=effect,r=e.recipe;if(e.started===null)e.started=time;
       const elapsed=time-e.started,t=elapsed/r.duration;if(t>=1){finish();return;}
+      if(e.onImpact&&!e.hit&&elapsed>=(r.travel||0)){
+        e.hit=true;e.impact=Promise.resolve().then(()=>{if(!e.cancelled)return e.onImpact();}).catch(()=>{});
+      }
       const style=r.style,flight=r.travel?elapsed/r.travel:1,burst=r.travel?clamp((elapsed-r.travel)/(r.duration-r.travel)):t;
       const envelope=ease(t/.1)*(1-ease((t-.78)/.22)),h=e.height;
       if(style==="wrath")flames.update(elapsed/1000,t,envelope);
