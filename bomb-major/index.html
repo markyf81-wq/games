@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7f4ec"><meta name="description" content="A little courtyard. A little chaos. Keep your characters safe in this cozy chase-and-dodge arcade game.">
+<title>Chicken Major — Small moves. Big escapes.</title>
+<link rel="stylesheet" href="styles.css?v=gentler1"><script src="content.js?v=gentler1" defer></script><script src="marketplace.js?v=gentler1" defer></script><script src="scores.js?v=gentler1" defer></script><script src="game.js?v=gentler1" defer></script>
+</head>
+<body>
+<div class="app">
+<nav class="library-navigation" aria-label="Library"><a href="../index.html">← Games library</a></nav>
+<header class="topbar"><a class="brand" href="./index.html" aria-label="Chicken Major home"><span class="brand-icon" aria-hidden="true"><svg class="bomb-art" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="32" cy="60" rx="23" ry="3" fill="#70815e" opacity=".2"/>
+<path d="M25 49V57L18 59M25 57L30 59M40 49V57L35 59M40 57L47 59" fill="none" stroke="#bb884c" stroke-width="3" stroke-linecap="round"/>
+<path d="M18 33Q6 34 5 21Q13 23 16 16Q22 22 24 32" fill="#d9c79e" stroke="#b69c70" stroke-width="2" stroke-linejoin="round"/>
+<path class="bomb-shell" d="M19 28Q23 19 34 21Q36 8 46 10Q58 12 55 28Q59 42 49 49Q32 58 19 48Q11 42 19 28Z" fill="#f6ecd4" stroke="#b69c70" stroke-width="2"/>
+<path d="M37 12Q32 6 37 3Q41 1 43 7Q45 -1 49 3Q52 5 49 11" fill="#bd7764" stroke="#a76957" stroke-width="1.5"/>
+<path d="M54 22L63 27L54 30Z" fill="#e4b65f" stroke="#b78c45" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M51 29Q58 37 51 39Q45 37 49 29" fill="#bd7764"/>
+<path d="M23 33Q37 25 43 36Q41 46 28 46Q34 40 23 33Z" fill="#e4d5b1" stroke="#bda77e" stroke-width="1.5" stroke-linejoin="round"/>
+<circle cx="48" cy="20" r="2.5" fill="#465443"/><circle cx="48.7" cy="19.2" r=".8" fill="#fff9e8"/>
+<path d="M40 16Q42 13 45 14" fill="none" stroke="#fff9e8" stroke-width="2" stroke-linecap="round"/>
+</svg></span><span>chicken<span class="brand-soft">major</span><span class="brand-dot">.</span></span></a><div class="top-controls"><button id="market-button" class="market-button" type="button">Marketplace ↗</button><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">Sound on</button></div></header>
+<main>
+<div class="page-heading"><div><div class="eyebrow">A LITTLE COURAGE. A LITTLE CHAOS.</div><h1>Small moves.<br>Big escapes.</h1></div><p>Keep your characters out of trouble.<br>Make room for one more little win.</p></div>
+<div class="game-layout">
+<section class="arena-card" aria-label="Chicken Major game">
+<div class="arena-heading"><span><i class="live-dot" aria-hidden="true"></i>The little courtyard</span><span class="small-tag">CLICK · COLLECT · DODGE</span></div>
+<div class="scoreboard" aria-label="Game scores">
+<div class="score-stat"><span class="stat-label"><span class="coin-icon" aria-hidden="true">✦</span>Coin purse</span><strong id="coinTotal">0</strong></div>
+<div class="score-stat"><span class="stat-label">This round</span><strong id="roundCoins">0</strong></div>
+<div class="score-stat"><span class="stat-label">Characters still in</span><strong id="aliveCount">1</strong></div>
+<div class="next-friend"><span class="friend-sprout" aria-hidden="true">✳</span><span id="nextCharacter">Next character in 10 coins</span></div>
+</div>
+<div class="effect-tray" id="active-effects" aria-label="Active abilities">Unlock helpful drops in the marketplace.</div>
+<div class="playSpace" aria-label="Courtyard game area">
+<svg class="tether-art" hidden aria-hidden="true" preserveAspectRatio="none"><line id="tether-line" stroke="#ae8654" stroke-width="3" stroke-dasharray="5 3" stroke-linecap="round"/></svg>
+<button class="clickyBlock" type="button" aria-label="Click Me: send the bouncing block toward the chicken">Click Me</button>
+<button class="character" type="button" aria-label="Move character to a random position"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="32" cy="59" rx="17" ry="3" fill="#7b8060" opacity=".2"/>
+<path d="M25 44L24 54M39 44L40 54" fill="none" stroke="#697b70" stroke-width="8" stroke-linecap="round"/>
+<path d="M19 57H27M37 57H45" stroke="#8e6c53" stroke-width="6" stroke-linecap="round"/>
+<path d="M22 31L14 41M42 31L50 41" fill="none" stroke="#e7b78f" stroke-width="7" stroke-linecap="round"/>
+<rect x="20" y="27" width="24" height="21" rx="8" fill="#759a87"/>
+<path d="M28 29Q32 34 36 29M32 36V44" stroke="#fff1d4" stroke-width="2" fill="none" stroke-linecap="round"/>
+<ellipse cx="32" cy="17" rx="14" ry="15" fill="#edc49e"/>
+<path d="M18 16Q14 2 28 2Q40 -3 46 10L46 19L41 13Q34 17 26 9Q25 16 18 16Z" fill="#7a5b48"/>
+<ellipse cx="23" cy="22" rx="3" ry="2" fill="#de9e87"/><ellipse cx="41" cy="22" rx="3" ry="2" fill="#de9e87"/>
+<circle cx="27" cy="18" r="1.6" fill="#4c493a"/><circle cx="37" cy="18" r="1.6" fill="#4c493a"/>
+<path d="M28 24Q32 28 36 24" fill="none" stroke="#946850" stroke-width="1.8" stroke-linecap="round"/>
+</svg></button>
+<template id="catTemplate"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="31" cy="59" rx="21" ry="3" fill="#7b8060" opacity=".2"/>
+<path d="M43 47Q60 52 57 32Q56 27 53 29" fill="none" stroke="#c37d4e" stroke-width="7" stroke-linecap="round"/>
+<ellipse cx="30" cy="43" rx="16" ry="17" fill="#d8915d"/><ellipse cx="30" cy="47" rx="9" ry="11" fill="#f1c994"/>
+<path d="M14 24L13 5L25 14M36 14L49 5L48 25" fill="#d8915d" stroke="#d8915d" stroke-width="2" stroke-linejoin="round"/>
+<path d="M17 12L18 22L24 17M44 12L38 17L44 22" fill="#e9b3a0"/>
+<ellipse cx="31" cy="25" rx="20" ry="17" fill="#dfa06c"/>
+<path d="M26 10L27 15M32 9V15M38 11L37 15" stroke="#b7784b" stroke-width="2.5" stroke-linecap="round"/>
+<ellipse cx="19" cy="29" rx="4" ry="2.5" fill="#edb59a"/><ellipse cx="43" cy="29" rx="4" ry="2.5" fill="#edb59a"/>
+<ellipse cx="24" cy="25" rx="2" ry="3" fill="#4a3a30"/><ellipse cx="38" cy="25" rx="2" ry="3" fill="#4a3a30"/>
+<path d="M28 30Q31 28 34 30L31 33Z" fill="#aa695e"/>
+<path d="M31 33V35Q27 39 25 35M31 35Q35 39 37 35" fill="none" stroke="#805741" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M19 32L8 29M19 35L8 37M43 32L54 29M43 35L54 37" stroke="#a97550" stroke-width="1.2" stroke-linecap="round"/>
+<ellipse cx="20" cy="57" rx="8" ry="4" fill="#df9f6c"/><ellipse cx="40" cy="57" rx="8" ry="4" fill="#df9f6c"/>
+</svg></template>
+<template id="magnetTemplate"><button class="magnet" type="button" aria-label="Activate magnet to pull all coins to ClickyBlock"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+<path d="M11 9V24A9 9 0 0 0 29 24V9" fill="none" stroke="#be7b67" stroke-width="8"/>
+<path d="M11 7V14M29 7V14" stroke="#839e94" stroke-width="8"/>
+<path d="M8 7H14M26 7H32" stroke="#f5e7c8" stroke-width="2"/>
+</svg></button></template>
+<div class="bomb" role="img" aria-label="Chasing chicken"><svg class="bomb-art" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="32" cy="60" rx="23" ry="3" fill="#70815e" opacity=".2"/>
+<path d="M25 49V57L18 59M25 57L30 59M40 49V57L35 59M40 57L47 59" fill="none" stroke="#bb884c" stroke-width="3" stroke-linecap="round"/>
+<path d="M18 33Q6 34 5 21Q13 23 16 16Q22 22 24 32" fill="#d9c79e" stroke="#b69c70" stroke-width="2" stroke-linejoin="round"/>
+<path class="bomb-shell" d="M19 28Q23 19 34 21Q36 8 46 10Q58 12 55 28Q59 42 49 49Q32 58 19 48Q11 42 19 28Z" fill="#f6ecd4" stroke="#b69c70" stroke-width="2"/>
+<path d="M37 12Q32 6 37 3Q41 1 43 7Q45 -1 49 3Q52 5 49 11" fill="#bd7764" stroke="#a76957" stroke-width="1.5"/>
+<path d="M54 22L63 27L54 30Z" fill="#e4b65f" stroke="#b78c45" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M51 29Q58 37 51 39Q45 37 49 29" fill="#bd7764"/>
+<path d="M23 33Q37 25 43 36Q41 46 28 46Q34 40 23 33Z" fill="#e4d5b1" stroke="#bda77e" stroke-width="1.5" stroke-linejoin="round"/>
+<circle cx="48" cy="20" r="2.5" fill="#465443"/><circle cx="48.7" cy="19.2" r=".8" fill="#fff9e8"/>
+<path d="M40 16Q42 13 45 14" fill="none" stroke="#fff9e8" stroke-width="2" stroke-linecap="round"/>
+</svg><div class="freeze-meter" hidden aria-hidden="true"><span id="freezeCountdown"></span><div class="freeze-track"><div class="freeze-fill"></div></div></div></div>
+<div class="gameOver" hidden aria-labelledby="game-over-title"><div class="result-card"><span class="result-flower" aria-hidden="true">✳</span><div class="eyebrow">EVERY ESCAPE IS A LITTLE WIN</div><h2 id="game-over-title">What a little adventure.</h2><p id="result"></p><form id="score-name-form" class="score-name-form" hidden><label for="score-player-name">You made the top ten! Your name</label><div class="score-name-controls"><input id="score-player-name" name="playerName" type="text" maxlength="20" required autocomplete="nickname" placeholder="Player name" aria-describedby="score-entry-note"><button type="submit">Save score</button></div></form><p id="score-entry-note" class="score-entry-note" role="status"></p><button class="restart" type="button">One more try <span aria-hidden="true">↗</span></button><button id="result-market" class="result-market" type="button">Visit the marketplace ↗</button><a class="scores-jump" href="#local-score-panel">View local high scores ↓</a><small>A fresh round. Your coins and upgrades stay.</small></div></div>
+</div>
+<div class="arena-bottom"><span class="status-star" aria-hidden="true">✧</span><div id="status" role="status">Click the character or Click Me block to start.</div><span class="arena-bottom-label">ONE CLICK AT A TIME</span></div>
+</section>
+<aside class="sidebar" aria-label="How to play">
+<section class="guide-panel"><div class="eyebrow">YOUR LITTLE FIELD GUIDE</div><h2>A knack for<br>narrow escapes.</h2><p class="guide-intro">A few good clicks. A little help from your finds.</p>
+<ol class="guide-steps"><li><span class="step-icon step-friend" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="32" cy="59" rx="17" ry="3" fill="#7b8060" opacity=".2"/>
+<path d="M25 44L24 54M39 44L40 54" fill="none" stroke="#697b70" stroke-width="8" stroke-linecap="round"/>
+<path d="M19 57H27M37 57H45" stroke="#8e6c53" stroke-width="6" stroke-linecap="round"/>
+<path d="M22 31L14 41M42 31L50 41" fill="none" stroke="#e7b78f" stroke-width="7" stroke-linecap="round"/>
+<rect x="20" y="27" width="24" height="21" rx="8" fill="#759a87"/>
+<path d="M28 29Q32 34 36 29M32 36V44" stroke="#fff1d4" stroke-width="2" fill="none" stroke-linecap="round"/>
+<ellipse cx="32" cy="17" rx="14" ry="15" fill="#edc49e"/>
+<path d="M18 16Q14 2 28 2Q40 -3 46 10L46 19L41 13Q34 17 26 9Q25 16 18 16Z" fill="#7a5b48"/>
+<ellipse cx="23" cy="22" rx="3" ry="2" fill="#de9e87"/><ellipse cx="41" cy="22" rx="3" ry="2" fill="#de9e87"/>
+<circle cx="27" cy="18" r="1.6" fill="#4c493a"/><circle cx="37" cy="18" r="1.6" fill="#4c493a"/>
+<path d="M28 24Q32 28 36 24" fill="none" stroke="#946850" stroke-width="1.8" stroke-linecap="round"/>
+</svg></span><div><strong>Keep them moving.</strong><p>Click a character to hop somewhere safe. Every jump makes the chicken a little faster. Its minimum speed also rises with time.</p></div></li>
+<li><span class="step-icon step-block" aria-hidden="true">✧</span><div><strong>Send a little backup.</strong><p>Click the bouncing block to aim at the chicken. A hit freezes it for a breather.</p></div></li>
+<li><span class="step-icon step-coin" aria-hidden="true">✦</span><div><strong>Add more characters.</strong><p>Collect 10 coins in a round to spawn another character. Keep at least one human safe.</p></div></li></ol>
+<div class="drop-guide"><strong>Unlock finds in the marketplace.</strong><p><b>Shield</b> · Keeps the next character in the courtyard.<br><b>Banana</b> · Two tight circles; characters can still be chased away.<br><b>String</b> · A 10-second tether; characters can still be chased away.<br><b>Treadmill</b> · Accelerates the block, then resets.<br><b>Cow poop</b> · Chicken contact repels it for 3–10 seconds by cow tier. Homing hits trim teleport speed. Repel cannot refresh; it needs 3s recovery.</p></div>
+<div class="guide-footnote"><span aria-hidden="true">↗</span> Click or tap to play. No arrow keys needed.</div></section>
+<section class="cat-note"><div class="cat-portrait" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="31" cy="59" rx="21" ry="3" fill="#7b8060" opacity=".2"/>
+<path d="M43 47Q60 52 57 32Q56 27 53 29" fill="none" stroke="#c37d4e" stroke-width="7" stroke-linecap="round"/>
+<ellipse cx="30" cy="43" rx="16" ry="17" fill="#d8915d"/><ellipse cx="30" cy="47" rx="9" ry="11" fill="#f1c994"/>
+<path d="M14 24L13 5L25 14M36 14L49 5L48 25" fill="#d8915d" stroke="#d8915d" stroke-width="2" stroke-linejoin="round"/>
+<path d="M17 12L18 22L24 17M44 12L38 17L44 22" fill="#e9b3a0"/>
+<ellipse cx="31" cy="25" rx="20" ry="17" fill="#dfa06c"/>
+<path d="M26 10L27 15M32 9V15M38 11L37 15" stroke="#b7784b" stroke-width="2.5" stroke-linecap="round"/>
+<ellipse cx="19" cy="29" rx="4" ry="2.5" fill="#edb59a"/><ellipse cx="43" cy="29" rx="4" ry="2.5" fill="#edb59a"/>
+<ellipse cx="24" cy="25" rx="2" ry="3" fill="#4a3a30"/><ellipse cx="38" cy="25" rx="2" ry="3" fill="#4a3a30"/>
+<path d="M28 30Q31 28 34 30L31 33Z" fill="#aa695e"/>
+<path d="M31 33V35Q27 39 25 35M31 35Q35 39 37 35" fill="none" stroke="#805741" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M19 32L8 29M19 35L8 37M43 32L54 29M43 35L54 37" stroke="#a97550" stroke-width="1.2" stroke-linecap="round"/>
+<ellipse cx="20" cy="57" rx="8" ry="4" fill="#df9f6c"/><ellipse cx="40" cy="57" rx="8" ry="4" fill="#df9f6c"/>
+</svg></div><div><div class="eyebrow">A FAMILIAR LITTLE FACE</div><h3>A very helpful cat.</h3><p>Click the cat to lure the chicken. If caught, it escapes, drops five coins, and slows the chase.</p></div></section>
+<div class="magnet-note"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+<path d="M11 9V24A9 9 0 0 0 29 24V9" fill="none" stroke="#be7b67" stroke-width="8"/>
+<path d="M11 7V14M29 7V14" stroke="#839e94" stroke-width="8"/>
+<path d="M8 7H14M26 7H32" stroke="#f5e7c8" stroke-width="2"/>
+</svg></span><p><strong>Found a magnet?</strong> Click it to pull the coins toward your block.</p></div>
+</aside>
+</div>
+<section id="local-score-panel" class="local-score-panel" aria-labelledby="local-score-title"><div class="score-panel-heading"><div><div class="eyebrow">YOUR OWN LITTLE HALL OF FAME</div><h2 id="local-score-title">Your best escapes<span>.</span></h2></div><span class="small-tag">TOP 10 · THIS BROWSER</span></div><p class="score-panel-copy">Longest round wins. Coins, then jumps, break ties. Enter your name after a top-ten round.</p><div class="score-table-scroll"><table class="local-score-table"><thead><tr><th scope="col">Rank</th><th scope="col">Player</th><th scope="col">Time</th><th scope="col">Coins</th><th scope="col">Jumps</th><th scope="col">Date</th></tr></thead><tbody id="local-score-rows"></tbody></table></div><p id="score-save-note" class="save-note" role="status"></p></section>
+<p id="coinSaveNote" class="save-note" hidden>Coin saving is unavailable in this browser. Coins will stay for this session only.</p>
+<footer><span>Made for close calls & little victories.</span><span>Coins & upgrades save on this browser <i class="save-dot" aria-hidden="true">●</i></span></footer>
+</main>
+</div>
+<dialog id="market-dialog" class="market-dialog" aria-labelledby="market-title"><div class="market-heading"><div><div class="eyebrow">A LITTLE PREPARATION GOES A LONG WAY</div><h2 id="market-title">The courtyard marketplace<span>.</span></h2><p>Permanent abilities for your next adventure. Shop between rounds.</p></div><button id="market-close" class="market-close" type="button" aria-label="Close marketplace">×</button></div><div class="market-balance"><span>YOUR COIN PURSE</span><strong>✦ <span id="market-wallet">0</span></strong></div><div id="market-grid" class="market-grid"></div><p class="market-note">Five tiers per ability and drop. Tier prices: 20, 80, 320, 1,280, 5,000 coins. Later tiers give bigger improvements. Helpful drops only appear after you unlock them. Each new human gets a random look.</p><p id="market-save-note" class="save-note" role="status"></p></dialog>
+</body>
+</html>

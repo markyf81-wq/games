@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 660" role="img" aria-label="Illustrated Chicken Major courtyard with characters, Pip the cat, a sage freeze block, and a chasing chicken">
+<defs><pattern id="speckle" width="42" height="42" patternUnits="userSpaceOnUse"><circle cx="10" cy="12" r="1.5" fill="#809477" opacity=".24"/><path d="M30 31L34 27M32 32L37 32" stroke="#a6b293" stroke-width="1.5" stroke-linecap="round"/></pattern></defs>
+<rect width="900" height="660" fill="#e6ead8"/><rect x="24" y="24" width="852" height="612" rx="24" fill="#c8d5b7" stroke="#a4b596" stroke-width="3"/><rect x="40" y="40" width="820" height="580" rx="14" fill="url(#speckle)"/>
+<path d="M46 84H854M46 569H854" stroke="#e8e9d3" stroke-width="3" stroke-dasharray="12 8"/>
+<g fill="#91aa82"><ellipse cx="61" cy="47" rx="64" ry="30"/><ellipse cx="843" cy="617" rx="80" ry="25"/></g><g fill="#f2d092"><circle cx="44" cy="38" r="6"/><circle cx="77" cy="46" r="5"/><circle cx="837" cy="608" r="5"/></g>
+<g font-family="Georgia,serif"><text x="64" y="121" font-size="13" letter-spacing="3" fill="#5f785d">THE LITTLE COURTYARD</text><text x="64" y="163" font-size="32" fill="#405d49">A little courage. A little chaos.</text></g>
+<g transform="translate(470 226)"><rect y="7" width="133" height="133" rx="24" fill="#56705a" opacity=".22"/><rect width="133" height="133" rx="24" fill="#6e9688" stroke="#4b7464" stroke-width="3"/><rect x="9" y="9" width="115" height="115" rx="17" fill="none" stroke="#a9c4af" stroke-width="2"/><text x="66" y="59" text-anchor="middle" font-size="35" fill="#f6e9bd">✧</text><text x="66" y="94" text-anchor="middle" font-family="system-ui,sans-serif" font-size="20" font-weight="600" fill="#fffae9">Click Me</text></g>
+<g transform="translate(170 259) scale(1.9)"><svg class="bomb-art" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="32" cy="60" rx="23" ry="3" fill="#70815e" opacity=".2"/>
+<path d="M25 49V57L18 59M25 57L30 59M40 49V57L35 59M40 57L47 59" fill="none" stroke="#bb884c" stroke-width="3" stroke-linecap="round"/>
+<path d="M18 33Q6 34 5 21Q13 23 16 16Q22 22 24 32" fill="#d9c79e" stroke="#b69c70" stroke-width="2" stroke-linejoin="round"/>
+<path class="bomb-shell" d="M19 28Q23 19 34 21Q36 8 46 10Q58 12 55 28Q59 42 49 49Q32 58 19 48Q11 42 19 28Z" fill="#f6ecd4" stroke="#b69c70" stroke-width="2"/>
+<path d="M37 12Q32 6 37 3Q41 1 43 7Q45 -1 49 3Q52 5 49 11" fill="#bd7764" stroke="#a76957" stroke-width="1.5"/>
+<path d="M54 22L63 27L54 30Z" fill="#e4b65f" stroke="#b78c45" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M51 29Q58 37 51 39Q45 37 49 29" fill="#bd7764"/>
+<path d="M23 33Q37 25 43 36Q41 46 28 46Q34 40 23 33Z" fill="#e4d5b1" stroke="#bda77e" stroke-width="1.5" stroke-linejoin="round"/>
+<circle cx="48" cy="20" r="2.5" fill="#465443"/><circle cx="48.7" cy="19.2" r=".8" fill="#fff9e8"/>
+<path d="M40 16Q42 13 45 14" fill="none" stroke="#fff9e8" stroke-width="2" stroke-linecap="round"/>
+</svg></g>
+<g transform="translate(674 326) scale(2.1)"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="32" cy="59" rx="17" ry="3" fill="#7b8060" opacity=".2"/>
+<path d="M25 44L24 54M39 44L40 54" fill="none" stroke="#697b70" stroke-width="8" stroke-linecap="round"/>
+<path d="M19 57H27M37 57H45" stroke="#8e6c53" stroke-width="6" stroke-linecap="round"/>
+<path d="M22 31L14 41M42 31L50 41" fill="none" stroke="#e7b78f" stroke-width="7" stroke-linecap="round"/>
+<rect x="20" y="27" width="24" height="21" rx="8" fill="#759a87"/>
+<path d="M28 29Q32 34 36 29M32 36V44" stroke="#fff1d4" stroke-width="2" fill="none" stroke-linecap="round"/>
+<ellipse cx="32" cy="17" rx="14" ry="15" fill="#edc49e"/>
+<path d="M18 16Q14 2 28 2Q40 -3 46 10L46 19L41 13Q34 17 26 9Q25 16 18 16Z" fill="#7a5b48"/>
+<ellipse cx="23" cy="22" rx="3" ry="2" fill="#de9e87"/><ellipse cx="41" cy="22" rx="3" ry="2" fill="#de9e87"/>
+<circle cx="27" cy="18" r="1.6" fill="#4c493a"/><circle cx="37" cy="18" r="1.6" fill="#4c493a"/>
+<path d="M28 24Q32 28 36 24" fill="none" stroke="#946850" stroke-width="1.8" stroke-linecap="round"/>
+</svg></g>
+<g transform="translate(328 419) scale(1.9)"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+<ellipse cx="31" cy="59" rx="21" ry="3" fill="#7b8060" opacity=".2"/>
+<path d="M43 47Q60 52 57 32Q56 27 53 29" fill="none" stroke="#c37d4e" stroke-width="7" stroke-linecap="round"/>
+<ellipse cx="30" cy="43" rx="16" ry="17" fill="#d8915d"/><ellipse cx="30" cy="47" rx="9" ry="11" fill="#f1c994"/>
+<path d="M14 24L13 5L25 14M36 14L49 5L48 25" fill="#d8915d" stroke="#d8915d" stroke-width="2" stroke-linejoin="round"/>
+<path d="M17 12L18 22L24 17M44 12L38 17L44 22" fill="#e9b3a0"/>
+<ellipse cx="31" cy="25" rx="20" ry="17" fill="#dfa06c"/>
+<path d="M26 10L27 15M32 9V15M38 11L37 15" stroke="#b7784b" stroke-width="2.5" stroke-linecap="round"/>
+<ellipse cx="19" cy="29" rx="4" ry="2.5" fill="#edb59a"/><ellipse cx="43" cy="29" rx="4" ry="2.5" fill="#edb59a"/>
+<ellipse cx="24" cy="25" rx="2" ry="3" fill="#4a3a30"/><ellipse cx="38" cy="25" rx="2" ry="3" fill="#4a3a30"/>
+<path d="M28 30Q31 28 34 30L31 33Z" fill="#aa695e"/>
+<path d="M31 33V35Q27 39 25 35M31 35Q35 39 37 35" fill="none" stroke="#805741" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M19 32L8 29M19 35L8 37M43 32L54 29M43 35L54 37" stroke="#a97550" stroke-width="1.2" stroke-linecap="round"/>
+<ellipse cx="20" cy="57" rx="8" ry="4" fill="#df9f6c"/><ellipse cx="40" cy="57" rx="8" ry="4" fill="#df9f6c"/>
+</svg></g>
+<g fill="#e7c374" stroke="#b18a45" stroke-width="3"><circle cx="171" cy="484" r="17"/><circle cx="686" cy="234" r="17"/><circle cx="553" cy="486" r="17"/></g>
+<g font-family="system-ui,sans-serif" font-size="23" text-anchor="middle" fill="#9b742d"><text x="171" y="492">✦</text><text x="686" y="242">✦</text><text x="553" y="494">✦</text></g>
+</svg>

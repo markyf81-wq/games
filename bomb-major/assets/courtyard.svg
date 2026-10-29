@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 650" preserveAspectRatio="none">
+<defs>
+<pattern id="grass" width="84" height="78" patternUnits="userSpaceOnUse"><circle cx="16" cy="17" r="1.4" fill="#8da37c" opacity=".28"/><circle cx="62" cy="55" r="1.2" fill="#eef0d6" opacity=".7"/><path d="M48 34L51 29M51 35L55 32" fill="none" stroke="#a8b894" stroke-width="1.5" stroke-linecap="round" opacity=".45"/></pattern>
+<linearGradient id="lawn" x2="0" y2="1"><stop stop-color="#d3ddc3"/><stop offset="1" stop-color="#c5d2b0"/></linearGradient>
+</defs>
+<rect width="1000" height="650" fill="url(#lawn)"/>
+<rect width="1000" height="650" fill="url(#grass)"/>
+<!-- Low stone edging and quiet planting stay behind the unobstructed arena. -->
+<path d="M16 34V16H984V634H16V616" fill="none" stroke="#b1be9c" stroke-width="20"/>
+<path d="M16 34V16H984V634H16V616" fill="none" stroke="#e4e6cb" stroke-width="14"/>
+<path d="M51 14V23M137 9V23M241 9V23M353 9V23M457 9V23M568 9V23M679 9V23M787 9V23M895 9V23M980 90H991M980 183H991M980 280H991M980 378H991M980 476H991M980 571H991M900 627V640M790 627V640M681 627V640M567 627V640M461 627V640M351 627V640M240 627V640M132 627V640M47 627V640" stroke="#bec8ab" stroke-width="2"/>
+<path d="M44 52H956V598H44Z" fill="none" stroke="#aabd98" stroke-opacity=".38" stroke-width="2" stroke-dasharray="2 15" stroke-linecap="round"/>
+<!-- A softly painted garden border, with no collision obstacles. -->
+<g opacity=".74">
+<path d="M0 0H132Q119 19 98 15Q90 39 68 27Q45 44 26 28Q8 40 0 30Z" fill="#a4b891"/>
+<path d="M0 0H100Q85 24 66 17Q39 29 24 16Q9 26 0 20Z" fill="#8fa880"/>
+<path d="M865 650Q874 621 897 629Q914 604 935 621Q960 604 979 624Q991 615 1000 621V650Z" fill="#a1b48a"/>
+<path d="M901 650Q906 629 925 637Q944 617 960 633Q980 623 1000 638V650Z" fill="#8da57c"/>
+</g>
+<g fill="#f5dfa8" opacity=".9"><circle cx="29" cy="18" r="4"/><circle cx="76" cy="13" r="3"/><circle cx="102" cy="15" r="3.5"/><circle cx="929" cy="633" r="3.5"/><circle cx="975" cy="638" r="4"/></g>
+<g fill="#c4967c" opacity=".7"><circle cx="53" cy="22" r="3"/><circle cx="907" cy="639" r="3"/><circle cx="959" cy="628" r="3"/></g>
+<!-- Small stepping stones in the border, rather than objects in the playfield. -->
+<path d="M0 140H26Q32 151 26 163H0M0 206H22Q29 216 23 230H0M0 276H25Q32 286 26 299H0" fill="#e3e3c9" stroke="#c0c9ac" stroke-width="2"/>
+<path d="M0 520Q12 515 24 523L24 540Q12 547 0 540Z" fill="#dbe0c2"/>
+</svg>

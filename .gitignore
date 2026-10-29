@@ -1,0 +1,18 @@
+.DS_Store
+Thumbs.db
+node_modules/
+.env
+.env.*
+!.env.example
+
+# Internal project documentation and research stay local.
+**/AGENTS.md
+/bomb-major/README.md
+/type-tails/README.txt
+/fateless-kingdoms/AI_NOTES.md
+/fateless-kingdoms/ARCHITECTURE.md
+/fateless-kingdoms/REVIEW.md
+/fateless-kingdoms/RULES.md
+
+# Keep runtime code/assets, developer tools and their inputs in Git.
+# Asset licence notices, credit records and the root README remain public.

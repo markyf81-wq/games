@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#ed5a48">
+  <meta name="description" content="Five clues. One mystery Pokémon. How well do you know the original 151?">
+  <title>Guess the Pokémon — The Kanto Files</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="pokemon.js" defer></script>
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <a class="back-link" href="../index.html">← Games library</a>
+      <span class="club"><span class="mini-ball" aria-hidden="true"></span> THE KANTO FILES</span>
+      <button class="text-button" id="help-button" type="button">How to play <span aria-hidden="true">↗</span></button>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div><p class="eyebrow"><span class="live-dot" aria-hidden="true"></span> FIELD CHALLENGE · ORIGINAL 151</p>
+          <h1 id="page-title">Who's that <span>Pokémon?</span></h1>
+          <p class="intro-copy">A little knowledge. A little detective work. Five clues to figure it out.</p>
+        </div>
+        <div class="edition" aria-hidden="true"><span>THE ORIGINAL</span><strong>151</strong><span>KANTO COLLECTION</span></div>
+      </section>
+      <section class="scoreboard" aria-label="Your progress">
+        <div><span class="stat-label">EXPEDITION</span><strong id="round-stat">01 <small>/ 10</small></strong></div>
+        <div><span class="stat-label">SCORE</span><strong id="score-stat">0 <small>pts</small></strong></div>
+        <div><span class="stat-label">BEST EXPEDITION</span><strong id="best-stat">0 <small>/ 50</small></strong></div>
+        <div><span class="stat-label">DISCOVERED</span><strong id="collection-stat">0 <small>/ 151</small></strong></div>
+      </section>
+      <div class="game-layout" id="game-layout">
+        <section class="notebook" aria-labelledby="notes-title">
+          <div class="section-heading"><h2 id="notes-title">Follow the clues.</h2><span id="clue-counter">1 OF 5 OPENED</span></div>
+          <p class="section-copy">The fewer you need, the more points you earn.</p>
+          <ol id="clue-list" class="clue-list"></ol>
+          <div class="notes-foot"><span aria-hidden="true">✧</span> Trust your instincts. There's no timer.</div>
+        </section>
+        <section class="mystery-panel" aria-label="Mystery Pokémon and your guess">
+          <div class="specimen">
+            <div class="specimen-top"><span id="specimen-label">UNIDENTIFIED POKÉMON</span><span id="specimen-number">NO. ???</span></div>
+            <div class="art-stage" id="art-stage">
+              <span class="orbit orbit-one" aria-hidden="true"></span><span class="orbit orbit-two" aria-hidden="true"></span>
+              <span class="stage-spark spark-one" aria-hidden="true">✧</span><span class="stage-spark spark-two" aria-hidden="true">+</span>
+              <div class="mystery-ball" id="mystery-ball" aria-hidden="true"><span>?</span></div>
+              <img id="pokemon-art" width="475" height="475" alt="" hidden>
+              <p id="art-fallback" hidden>Artwork unavailable</p>
+            </div>
+            <div class="specimen-bottom"><h2 id="answer-name">A familiar face.<br>A hidden identity.</h2><div id="answer-types" class="type-badges" hidden></div><p id="points-label">Solve this clue for <strong>5 points</strong></p></div>
+            <span class="corner corner-tl" aria-hidden="true"></span><span class="corner corner-tr" aria-hidden="true"></span><span class="corner corner-bl" aria-hidden="true"></span><span class="corner corner-br" aria-hidden="true"></span>
+          </div>
+          <div class="guess-area">
+            <form id="guess-form">
+              <label for="guess-input">Who's your guess?</label>
+              <div class="input-row"><input id="guess-input" name="pokemon" list="pokemon-names" placeholder="Type a Pokémon name…" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="guess-hint feedback" required><button class="primary-button" id="guess-button" type="submit">Guess <span aria-hidden="true">↗</span></button></div>
+              <datalist id="pokemon-names"></datalist>
+              <p class="input-hint" id="guess-hint">One guess per clue. A wrong guess opens the next one.</p>
+            </form>
+            <p id="feedback" class="feedback" role="status" aria-live="polite" aria-atomic="true"></p>
+            <div id="round-actions" class="round-actions"><button id="clue-button" class="secondary-button" type="button">Next clue <span aria-hidden="true">→</span></button><button id="reveal-button" class="text-button" type="button">Reveal Pokémon</button></div>
+            <button id="next-button" class="primary-button next-button" type="button" hidden>Next Pokémon <span aria-hidden="true">→</span></button>
+          </div>
+        </section>
+      </div>
+      <section id="summary" class="summary" aria-labelledby="summary-title" hidden>
+        <p class="eyebrow">EXPEDITION COMPLETE</p><h2 id="summary-title" tabindex="-1">Nice detective work.</h2>
+        <p id="summary-score" class="summary-score"></p><p id="summary-message"></p>
+        <div id="round-recap" class="round-recap"></div>
+        <button id="play-again" class="primary-button" type="button">Start a new expedition <span aria-hidden="true">→</span></button>
+      </section>
+      <noscript><p class="no-script">Enable JavaScript to play Guess the Pokémon.</p></noscript>
+    </main>
+    <footer><span>FIVE CLUES. ONE POKÉMON. YOU'VE GOT THIS.</span><span>An unofficial fan game · <a href="NOTICE.md">Credits</a></span></footer>
+    <p id="storage-note" class="storage-note" hidden>Browser saving is unavailable. You can still play; your discoveries will last for this visit.</p>
+  </div>
+  <dialog id="help-dialog" aria-labelledby="help-title">
+    <form method="dialog"><button class="dialog-close" aria-label="Close instructions">×</button></form>
+    <p class="eyebrow">A QUICK FIELD GUIDE</p><h2 id="help-title">Know your Kanto?</h2>
+    <p>Identify ten mystery Pokémon from the original 151. Each round begins with one hard clue. Open more clues as you need them, up to five.</p>
+    <ol><li>Type a name and press <strong>Guess</strong> or <strong>Enter</strong>.</li><li>A correct answer earns <strong>5, 4, 3, 2 or 1 points</strong>, depending on the clue.</li><li>A wrong guess opens the next clue. An unrecognised name costs nothing.</li><li>After a wrong fifth guess, or if you choose <strong>Reveal Pokémon</strong>, the answer appears for zero points.</li></ol>
+    <p>You can also open the next clue without guessing. Types and evolution clues use the original Kanto games. There is no timer, and each expedition has ten different Pokémon.</p>
+    <p>Your best completed expedition and the Pokémon you correctly identify are saved in this browser. An unfinished expedition starts fresh when you reload.</p>
+    <form method="dialog"><button class="primary-button">Let's play →</button></form>
+  </dialog>
+</body>
+</html>
